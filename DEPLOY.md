@@ -1,5 +1,20 @@
 # Deploying AbuseRadar to an Ubuntu server
 
+> **TL;DR** — there is a one-shot installer at the repo root: [`deploy.sh`](deploy.sh). The rest of this doc is the manual step-by-step that the installer automates, useful when you want to understand or override what it does.
+>
+> Quickest path:
+>
+> ```bash
+> ssh root@your-server-ip
+> curl -fsSL https://raw.githubusercontent.com/ilkmuratkr/abuseradar/main/deploy.sh -o /tmp/deploy.sh
+> chmod +x /tmp/deploy.sh
+> sudo /tmp/deploy.sh --init --domain abuseradar.org --email you@example.com
+> # then edit /opt/abuseradar/.env and vpn/{tr,us}/wg0.conf
+> cd /opt/abuseradar && sudo ./deploy.sh --check && sudo ./deploy.sh --start && sudo ./deploy.sh --ssl
+> ```
+
+---
+
 Tested on Ubuntu 22.04 LTS and 24.04 LTS. Works on any cloud provider (Hetzner, OVH, AWS, DigitalOcean) with at least:
 
 - 4 vCPUs

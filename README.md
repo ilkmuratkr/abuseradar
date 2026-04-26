@@ -76,31 +76,39 @@ make help             # Full command list
 
 ## Production deployment (Ubuntu)
 
-See [DEPLOY.md](DEPLOY.md) for the full server setup (Docker install, env hardening, nginx + Let's Encrypt, systemd auto-start, backups).
-
-Short version:
+The repo ships a single-file installer/manager: [`deploy.sh`](deploy.sh).
 
 ```bash
-# On a fresh Ubuntu 22.04 / 24.04 box
-git clone git@github.com:<you>/abuseradar.git /opt/abuseradar
+# On a fresh Ubuntu 22.04 / 24.04 box, as root:
+curl -fsSL https://raw.githubusercontent.com/ilkmuratkr/abuseradar/main/deploy.sh -o /tmp/deploy.sh
+chmod +x /tmp/deploy.sh
+sudo /tmp/deploy.sh --init --domain abuseradar.org --email hello@abuseradar.org
+# → installs Docker, ufw, nginx, clones repo to /opt/abuseradar, drops .env / vpn templates
+
+# Edit secrets the installer warned about
+sudo $EDITOR /opt/abuseradar/.env
+sudo $EDITOR /opt/abuseradar/vpn/tr/wg0.conf
+sudo $EDITOR /opt/abuseradar/vpn/us/wg0.conf
+
+# Bring it up + issue SSL
 cd /opt/abuseradar
-cp .env.example .env && $EDITOR .env       # set APP_ENV=production, strong POSTGRES_PASSWORD
-cp vpn/tr/wg0.conf.example vpn/tr/wg0.conf && $EDITOR vpn/tr/wg0.conf
-cp vpn/us/wg0.conf.example vpn/us/wg0.conf && $EDITOR vpn/us/wg0.conf
-
-# Use the prod overlay (127.0.0.1 binds, restart=always, --workers 4)
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
-
-# nginx + SSL  (or use Caddy — see infra/Caddyfile)
-sudo cp infra/nginx/abuseradar.conf /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/abuseradar.conf /etc/nginx/sites-enabled/
-sudo certbot --nginx -d abuseradar.org -d www.abuseradar.org
-sudo systemctl reload nginx
-
-# Boot-time auto-start
-sudo cp infra/systemd/abuseradar.service /etc/systemd/system/
-sudo systemctl daemon-reload && sudo systemctl enable --now abuseradar.service
+sudo ./deploy.sh --check                # preflight: env, vpn, disk, ports
+sudo ./deploy.sh --start
+sudo ./deploy.sh --ssl                  # Let's Encrypt via certbot --nginx
+sudo ./deploy.sh --status
 ```
+
+Day-to-day:
+
+```bash
+sudo ./deploy.sh --update           # git pull + rebuild + restart
+sudo ./deploy.sh --restart          # just restart
+sudo ./deploy.sh --logs app         # tail one service
+sudo ./deploy.sh --backup           # pg_dump → /var/backups/abuseradar/
+sudo ./deploy.sh --help             # full action list
+```
+
+See [DEPLOY.md](DEPLOY.md) for the manual step-by-step (Docker install, env hardening, nginx + Let's Encrypt, systemd auto-start, backups, troubleshooting, Mac↔Ubuntu differences).
 
 ## Architecture
 
