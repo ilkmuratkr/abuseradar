@@ -1,0 +1,17 @@
+[
+  {
+    "out": "evidence-page-shot.png",
+    "ar": "16:9",
+    "prompt": "Photorealistic browser screenshot mockup of a compromised Latin American government website. The page shows a typical municipal portal layout: a blue-and-gold government header with a flag emblem (generic, no real text), navigation links, a hero image of a city, a news section with placeholder articles, and a footer. CRITICAL: in the bottom-right corner of the page, render a slightly visible cluster of small low-contrast injected hyperlinks in pale gold-yellow #C5A800 text on the dark footer area, looking like spam SEO backlinks for gambling sites — these should appear subtly hidden but visible enough to demonstrate the compromise. The browser chrome shows an address bar at the top with a generic URL field, tabs, and a clean modern layout. Background: photo-realistic, sharp, professional, suitable for an evidence document. Color palette restrained: navy government blue, white, gold accent, dark grey. Editorial documentary photography style. Absolutely no readable real text other than placeholder dummy text patterns, no real logos, no real brand names, no real URLs, no people. 16:9 widescreen."
+  },
+  {
+    "out": "evidence-source-view.png",
+    "ar": "16:9",
+    "prompt": "Stylized close-up screenshot of an HTML source code viewer or DevTools inspector panel showing injected malicious code. Dark editor background #0F2A37 with syntax-highlighted HTML — teal #1ACEC9 for tags, gold #EADA24 for attribute names, pale text for values, with a few highlighted lines showing injected anchor tags with hidden display:none style and gambling-themed href patterns. Add subtle line numbers in muted grey on the left. Faint red highlight bar across two suspicious lines indicating they are flagged. CRITICAL: code looks realistic but the actual text strings should be generic placeholder symbols and Lorem-ipsum patterns; no real URLs, no real brand names, no real people names, no real logos. Background: dark editor surface, sharp clean editorial. 16:9 widescreen."
+  },
+  {
+    "out": "evidence-network-panel.png",
+    "ar": "16:9",
+    "prompt": "Stylized DevTools network panel screenshot showing a list of suspect HTTP requests during page load of a compromised site. Dark editor background #0F2A37 with a tabular layout: columns for status, method, URL, type, size, time. Status codes in green (200) and orange (302), with a few highlighted red rows for suspicious cross-domain redirects. Method column shows GET / POST. URL column shows abstracted domain patterns like xxxxxx.dev and xxxxxx.live with small icons. Type column shows document/script/xhr. A small waterfall timeline on the right side with cyan teal bars. Subtle line numbers, hover states. CRITICAL: all text in the table is abstract placeholder patterns — no real URLs, no real brand names, no readable specific data, no people, no logos. Editorial dark technical UI mockup. 16:9 widescreen."
+  }
+]

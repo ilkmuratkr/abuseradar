@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Research — AbuseRadar</title>
+  <meta name="description" content="AbuseRadar research briefings, public reports and threat catalogue updates on government and university web compromises.">
+  <meta name="theme-color" content="#001F29">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23001F29' stroke='%231ACEC9' stroke-width='2'/><circle cx='32' cy='32' r='3' fill='%23EADA24'/></svg>">
+</head>
+<body>
+
+  <div class="utilbar">
+    <div class="utilbar-inner">
+      <span class="alert" data-i18n="util.alert">Live: 701 compromised institutions tracked</span>
+      <span class="sep"></span>
+      <a href="mailto:abuse@abuseradar.org" data-i18n="util.report">Report a Breach</a>
+      <a href="mailto:hello@abuseradar.org" data-i18n="util.contact">Contact</a>
+      <a href="#" data-i18n="util.status">System Status</a>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="index.html" class="brand" aria-label="AbuseRadar">
+        <svg class="brand-mark" viewBox="0 0 64 64" fill="none" stroke-width="2" aria-hidden="true">
+          <circle cx="32" cy="32" r="28" stroke="#1ACEC9" fill="rgba(26,206,201,0.05)"/>
+          <circle cx="32" cy="32" r="18" stroke="#1ACEC9" stroke-opacity=".55" fill="none"/>
+          <circle cx="32" cy="32" r="9"  stroke="#1ACEC9" stroke-opacity=".75" fill="none"/>
+          <circle cx="32" cy="32" r="3"  fill="#EADA24"/>
+          <line x1="32" y1="32" x2="54" y2="12" stroke="#1ACEC9" stroke-width="2"/>
+          <circle cx="48" cy="20" r="2.5" fill="#1ACEC9"/>
+        </svg>
+        <span class="brand-text">Abuse<em>Radar</em></span>
+      </a>
+      <ul class="nav-links">
+        <li><a href="index.html#platform" data-i18n="nav.platform">Platform</a></li>
+        <li><a href="index.html#methodology" data-i18n="nav.methodology">Methodology</a></li>
+        <li><a href="index.html#threats" data-i18n="nav.threats">Threat Index</a></li>
+        <li><a href="research.html" class="active" data-i18n="nav.research">Research</a></li>
+      </ul>
+      <div class="nav-right">
+        <div class="lang-switch" aria-label="Language">
+          <button type="button" class="lang-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="lang-current">EN</span>
+            <svg class="lang-caret" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <ul class="lang-menu" role="listbox">
+            <li><button type="button" data-lang="en" role="option">EN <span>English</span></button></li>
+            <li><button type="button" data-lang="tr" role="option">TR <span>Türkçe</span></button></li>
+            <li><button type="button" data-lang="pt" role="option">PT <span>Português</span></button></li>
+            <li><button type="button" data-lang="es" role="option">ES <span>Español</span></button></li>
+            <li><button type="button" data-lang="fr" role="option">FR <span>Français</span></button></li>
+          </ul>
+        </div>
+        <a href="login.html" class="btn btn-ghost" data-i18n="nav.login">Login</a>
+        <a href="index.html#cta" class="btn btn-primary" data-i18n="nav.demo">Request Briefing <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </nav>
+
+  <header class="page-hero research">
+    <div class="container">
+      <span class="eyebrow">Research</span>
+      <h1>Field-grade reports on the compromised institutional web.</h1>
+      <p class="lead">AbuseRadar publishes quarterly threat briefings, methodology notes and structured datasets on active operator stacks compromising government, academic and public-sector infrastructure. Free for CERT teams, journalists and academic researchers; everyone else by request.</p>
+    </div>
+  </header>
+
+  <section class="section">
+    <div class="container">
+      <div class="report-grid">
+        <article class="report-card featured">
+          <div class="report-image">
+            <img src="img/generated/research-feature-network.png" alt="Operator attribution network visualisation" loading="lazy">
+          </div>
+          <div class="report-body">
+            <span class="report-tag">Quarterly briefing</span>
+            <h3>Q2 2026 — The unlicensed gambling SEO economy.</h3>
+            <p>3,745 attacker domains mapped to 18 operator clusters. Geographic concentration, hosting attribution, registrar choke-points, victim sector breakdown and projected disruption windows.</p>
+            <div class="report-meta">
+              <span>72 pages · April 2026</span>
+              <a href="mailto:research@abuseradar.org?subject=Q2 2026 briefing request" class="report-link">Request briefing →</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="report-card">
+          <span class="report-tag">Sector report</span>
+          <h3>Compromised .gov.* domains: a 6-month longitudinal study.</h3>
+          <p>82 active municipal and central-government compromises tracked across 11 jurisdictions. Time-to-detection, time-to-remediation and recurrence rates.</p>
+          <div class="report-meta">
+            <span>34 pages · March 2026</span>
+            <a href="mailto:research@abuseradar.org?subject=Gov sector report" class="report-link">Request →</a>
+          </div>
+        </article>
+
+        <article class="report-card">
+          <span class="report-tag">Sector report</span>
+          <h3>Universities as link farms: the abandoned-subdomain epidemic.</h3>
+          <p>247 active higher-education compromises. CMS provenance, faculty-page pattern, operator overlap with the gambling stack, recommended audit playbook.</p>
+          <div class="report-meta">
+            <span>41 pages · March 2026</span>
+            <a href="mailto:research@abuseradar.org?subject=Edu sector report" class="report-link">Request →</a>
+          </div>
+        </article>
+
+        <article class="report-card">
+          <span class="report-tag">Methodology note</span>
+          <h3>Cloaking-aware crawl: defeating residential-IP detection.</h3>
+          <p>How AbuseRadar's verification stack renders compromised pages exactly as the attacker serves them — including the failure modes of common SEO tools.</p>
+          <div class="report-meta">
+            <span>18 pages · February 2026</span>
+            <a href="mailto:research@abuseradar.org?subject=Cloaking methodology" class="report-link">Read →</a>
+          </div>
+        </article>
+
+        <article class="report-card">
+          <span class="report-tag">Dataset</span>
+          <h3>Public attacker-domain dataset (sanitised).</h3>
+          <p>3,745 attacker domains, operator cluster IDs, first-seen / last-seen dates, target sector mix. CSV + JSON. Updated weekly. Free for CERT and academic use.</p>
+          <div class="report-meta">
+            <span>Last updated: this week</span>
+            <a href="mailto:research@abuseradar.org?subject=Dataset access" class="report-link">Request access →</a>
+          </div>
+        </article>
+
+        <article class="report-card">
+          <span class="report-tag">Press</span>
+          <h3>Working with journalists.</h3>
+          <p>Investigative journalists working a compromise story: AbuseRadar will share the underlying evidence bundle, attacker attribution and timeline under embargo. We do not pitch.</p>
+          <div class="report-meta">
+            <span>Open inbox</span>
+            <a href="mailto:press@abuseradar.org" class="report-link">press@abuseradar.org →</a>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="cta">
+        <div class="cta-inner">
+          <span class="eyebrow gold">No sales calls</span>
+          <h2>Subscribe to the quarterly briefing.</h2>
+          <p>Email-only. Four times a year. Each issue: top operator stacks, sector compromise rates, takedown wins and one deep-dive case study.</p>
+          <div class="cta-actions">
+            <a href="mailto:research@abuseradar.org?subject=Subscribe to quarterly briefing" class="btn btn-primary">Subscribe <span class="arrow">→</span></a>
+            <a href="index.html" class="btn btn-ghost">Back to overview</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="index.html" class="brand">
+            <svg class="brand-mark" viewBox="0 0 64 64" fill="none" stroke-width="2">
+              <circle cx="32" cy="32" r="28" stroke="#1ACEC9" fill="rgba(26,206,201,0.05)"/>
+              <circle cx="32" cy="32" r="9"  stroke="#1ACEC9" stroke-opacity=".75" fill="none"/>
+              <circle cx="32" cy="32" r="3"  fill="#EADA24"/>
+              <line x1="32" y1="32" x2="54" y2="12" stroke="#1ACEC9" stroke-width="2"/>
+            </svg>
+            <span class="brand-text">Abuse<em>Radar</em></span>
+          </a>
+          <p data-i18n="footer.tagline">Independent breach intelligence for the compromised institutional web. Built and operated from Istanbul.</p>
+        </div>
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.0.h">Platform</h5>
+          <ul>
+            <li><a href="index.html#platform" data-i18n="footer.cols.0.items.0">Exposure</a></li>
+            <li><a href="index.html#platform" data-i18n="footer.cols.0.items.1">Attribution</a></li>
+            <li><a href="index.html#platform" data-i18n="footer.cols.0.items.2">Remediation</a></li>
+            <li><a href="index.html#methodology" data-i18n="footer.cols.0.items.3">Methodology</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.1.h">Threats</h5>
+          <ul>
+            <li><a href="index.html#threats" data-i18n="footer.cols.1.items.0">Government</a></li>
+            <li><a href="index.html#threats" data-i18n="footer.cols.1.items.1">Universities</a></li>
+            <li><a href="index.html#threats" data-i18n="footer.cols.1.items.2">Public sector</a></li>
+            <li><a href="index.html#threats" data-i18n="footer.cols.1.items.3">Operator stacks</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.2.h">Research</h5>
+          <ul>
+            <li><a href="research.html" data-i18n="footer.cols.2.items.0">Quarterly briefing</a></li>
+            <li><a href="research.html" data-i18n="footer.cols.2.items.1">Public reports</a></li>
+            <li><a href="index.html#threats" data-i18n="footer.cols.2.items.2">Threat catalogue</a></li>
+            <li><a href="research.html" data-i18n="footer.cols.2.items.3">Press</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.3.h">Company</h5>
+          <ul>
+            <li><a href="index.html" data-i18n="footer.cols.3.items.0">About</a></li>
+            <li><a href="mailto:hello@abuseradar.org" data-i18n="footer.cols.3.items.1">Contact</a></li>
+            <li><a href="mailto:abuse@abuseradar.org" data-i18n="footer.cols.3.items.2">Report a breach</a></li>
+            <li><a href="#" data-i18n="footer.cols.3.items.3">Status</a></li>
+            <li><a href="privacy.html" data-i18n="footer.cols.3.items.4">Legal</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bot">
+        <span data-i18n="footer.copyright">© 2026 AbuseRadar — abuseradar.org</span>
+        <div class="footer-region">
+          <span class="dot-live"></span>
+          <span data-i18n="footer.live">All systems operational</span>
+        </div>
+        <div>
+          <a href="privacy.html" data-i18n="footer.legal.0">Privacy</a> ·
+          <a href="privacy.html" data-i18n="footer.legal.1">Responsible disclosure</a> ·
+          <a href="privacy.html" data-i18n="footer.legal.2">Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

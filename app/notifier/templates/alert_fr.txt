@@ -1,0 +1,28 @@
+Bonjour,
+
+Nous sommes une equipe de recherche en securite qui surveille les sites web contre les modifications non autorisees. Lors de notre analyse, nous avons identifie du contenu tiers non autorise sur votre site:
+
+  URL affectee: {url}
+  Probleme: {hacklink_count} liens caches injectes dans le code source
+  Detecte le: {first_seen}
+  Rapport: {report_url}
+
+Ce type de modification est generalement cause par une vulnerabilite dans votre CMS ou vos plugins. Le contenu injecte est invisible pour les visiteurs mais indexe par les moteurs de recherche, ce qui peut entrainer des penalites dans le classement de votre site.
+
+ACTIONS RECOMMANDEES:
+  1. Mettez a jour votre CMS et tous les plugins vers les dernieres versions
+  2. Verifiez les fichiers listes dans le rapport pour le code injecte
+  3. Changez tous les mots de passe administratifs
+  4. Signalez le domaine source a Cloudflare (instructions dans le rapport)
+
+Le rapport detaille comprend des captures d'ecran, une analyse technique et des instructions etape par etape pour la correction.
+
+Si vous avez des questions, repondez a cet e-mail.
+
+Cordialement,
+Equipe de Recherche AbuseRadar
+{report_url}
+
+---
+Vous avez recu ce message car {domain} a ete identifie lors de notre analyse de securite.
+Il s'agit d'une notification unique.

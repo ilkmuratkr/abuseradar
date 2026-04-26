@@ -1,0 +1,68 @@
+# ════════════════════════════════════════════════════════
+# AbuseRadar — production overlay
+# Usage:  docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Or set in .env:  COMPOSE_FILE=docker-compose.yml:docker-compose.prod.yml
+#
+# Differences from base:
+#   - All ports bind to 127.0.0.1 only (nginx reverse-proxies them)
+#   - No source code mounts (image is the source of truth)
+#   - No --reload flag on app
+#   - Restart policy: always
+#   - Tighter resource limits + healthcheck-driven restarts
+# ════════════════════════════════════════════════════════
+
+services:
+
+  db:
+    ports:
+      - "127.0.0.1:${PORT_DB:-5432}:5432"
+    restart: always
+
+  redis:
+    ports:
+      - "127.0.0.1:${PORT_REDIS:-6380}:6379"
+    restart: always
+
+  app:
+    volumes:
+      # Override: drop the live source mount so the image owns code
+      - ./data:/data
+    ports:
+      - "127.0.0.1:${PORT_API:-7777}:8000"
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+    restart: always
+
+  crawler:
+    volumes:
+      - ./data:/data
+    restart: always
+
+  dashboard:
+    volumes:
+      - ./data:/data
+      - ./app/notifier/templates:/app/notifier/templates:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "127.0.0.1:${PORT_DASHBOARD:-7778}:8501"
+    restart: always
+
+  openclaw:
+    ports:
+      - "127.0.0.1:${PORT_OPENCLAW:-18789}:18789"
+    restart: always
+
+  # ═══ STATIC WEB (served by nginx in production) ═══
+  # Optional: bundle the website + console as a tiny static container
+  # so a single docker compose up serves everything. nginx host can also
+  # just point root to ./web/ on the host filesystem if you prefer.
+  web:
+    image: nginx:1.27-alpine
+    container_name: abuseradar-web
+    volumes:
+      - ./web:/usr/share/nginx/html:ro
+      - ./infra/nginx/web-static.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:${PORT_WEB:-8765}:80"
+    networks:
+      - internal
+    restart: always

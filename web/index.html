@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AbuseRadar — Global abuse intelligence for the compromised web</title>
+  <meta name="description" content="Map the criminal infrastructure injecting hidden gambling and pharma links into hacked government, education and institutional sites. Detect. Attribute. Take down.">
+  <meta name="theme-color" content="#001F29">
+  <meta property="og:title" content="AbuseRadar — From ghost backlinks to full takedowns">
+  <meta property="og:description" content="Independent abuse intelligence for the compromised web. 14,294 backlinks indexed · 701 victim sites tracked · 3,745 attacker domains mapped.">
+  <meta property="og:image" content="img/generated/hero-radar.png">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23001F29' stroke='%231ACEC9' stroke-width='2'/><circle cx='32' cy='32' r='18' fill='none' stroke='%231ACEC9' stroke-width='1' opacity='.5'/><circle cx='32' cy='32' r='9' fill='none' stroke='%231ACEC9' stroke-width='1' opacity='.7'/><circle cx='32' cy='32' r='3' fill='%23EADA24'/><line x1='32' y1='32' x2='52' y2='14' stroke='%231ACEC9' stroke-width='2'/></svg>">
+</head>
+<body>
+
+  <!-- ═══ TOP UTILITY BAR ═══ -->
+  <div class="utilbar">
+    <div class="utilbar-inner">
+      <span class="alert" data-i18n="util.alert">Live: 701 victim sites tracked</span>
+      <span class="sep"></span>
+      <a href="mailto:abuse@abuseradar.org" data-i18n="util.report">Report Abuse</a>
+      <a href="mailto:hello@abuseradar.org" data-i18n="util.contact">Contact</a>
+      <a href="#" data-i18n="util.status">System Status</a>
+    </div>
+  </div>
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a href="#" class="brand" aria-label="AbuseRadar">
+        <svg class="brand-mark" viewBox="0 0 64 64" fill="none" stroke-width="2" aria-hidden="true">
+          <circle cx="32" cy="32" r="28" stroke="#1ACEC9" fill="rgba(26,206,201,0.05)"/>
+          <circle cx="32" cy="32" r="18" stroke="#1ACEC9" stroke-opacity=".55" fill="none"/>
+          <circle cx="32" cy="32" r="9"  stroke="#1ACEC9" stroke-opacity=".75" fill="none"/>
+          <circle cx="32" cy="32" r="3"  fill="#EADA24"/>
+          <line x1="32" y1="32" x2="54" y2="12" stroke="#1ACEC9" stroke-width="2"/>
+          <circle cx="48" cy="20" r="2.5" fill="#1ACEC9"/>
+          <circle cx="20" cy="44" r="2" fill="#EF4444"/>
+          <circle cx="44" cy="46" r="2" fill="#EF4444"/>
+        </svg>
+        <span class="brand-text">Abuse<em>Radar</em></span>
+      </a>
+
+      <ul class="nav-links">
+        <li><a href="#platform" data-i18n="nav.platform">Platform</a></li>
+        <li><a href="#methodology" data-i18n="nav.methodology">Methodology</a></li>
+        <li><a href="#threats" data-i18n="nav.threats">Threat Index</a></li>
+        <li><a href="research.html" data-i18n="nav.research">Research</a></li>
+      </ul>
+
+      <div class="nav-right">
+        <div class="lang-switch" aria-label="Language">
+          <button type="button" class="lang-trigger" aria-haspopup="listbox" aria-expanded="false">
+            <span class="lang-current">EN</span>
+            <svg class="lang-caret" viewBox="0 0 12 12" width="10" height="10" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <ul class="lang-menu" role="listbox">
+            <li><button type="button" data-lang="en" role="option">EN <span>English</span></button></li>
+            <li><button type="button" data-lang="tr" role="option">TR <span>Türkçe</span></button></li>
+            <li><button type="button" data-lang="pt" role="option">PT <span>Português</span></button></li>
+            <li><button type="button" data-lang="es" role="option">ES <span>Español</span></button></li>
+            <li><button type="button" data-lang="fr" role="option">FR <span>Français</span></button></li>
+          </ul>
+        </div>
+        <a href="login.html" class="btn btn-ghost" data-i18n="nav.login">Login</a>
+        <a href="#cta" class="btn btn-primary" data-i18n="nav.demo">Request Briefing <span class="arrow">→</span></a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ═══ HERO ═══ -->
+  <header class="hero">
+    <div class="container">
+      <div class="hero-grid">
+        <div class="hero-content reveal">
+          <span class="eyebrow" data-i18n="hero.eyebrow">Global abuse intelligence for the compromised web</span>
+
+          <h1>
+            <span class="from" data-i18n="hero.title_from">From</span>
+            <span class="gold" data-i18n="hero.title_main">ghost backlinks</span><br>
+            <span data-i18n="hero.title_to">to</span>
+            <span class="accent" data-i18n="hero.title_main2">full takedowns</span>
+          </h1>
+
+          <p class="hero-desc" data-i18n="hero.desc">
+            AbuseRadar maps the criminal infrastructure injecting hidden gambling and pharma links into hacked government, education and institutional websites — then automates evidence collection, multi-channel notification and coordinated takedown across hosting providers, registrars and CERT teams.
+          </p>
+
+          <div class="hero-actions">
+            <a href="#cta" class="btn btn-primary"><span data-i18n="hero.cta_primary">Request a private briefing</span> <span class="arrow">→</span></a>
+            <a href="#methodology" class="btn-link" data-i18n="hero.cta_secondary">Read the methodology</a>
+          </div>
+
+          <div class="hero-trust">
+            <span class="hero-trust-label" data-i18n="hero.trust_label">Trusted by</span>
+            <div class="hero-trust-row" data-i18n="hero.trust_items"></div>
+          </div>
+        </div>
+
+        <div class="hero-visual reveal">
+          <img src="img/generated/hero-radar.png" alt="Global threat radar visualisation" loading="eager">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ═══ STATS BAR ═══ -->
+  <section aria-label="Live data">
+    <div class="container">
+      <div class="stats reveal">
+        <div class="stat">
+          <div class="stat-num teal" data-i18n="stats.backlinks.num">14,294</div>
+          <div class="stat-label" data-i18n="stats.backlinks.label">Backlinks indexed</div>
+          <div class="stat-sub" data-i18n="stats.backlinks.sub">Across 19 ingest sources</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num gold" data-i18n="stats.victims.num">701</div>
+          <div class="stat-label" data-i18n="stats.victims.label">Victim sites tracked</div>
+          <div class="stat-sub" data-i18n="stats.victims.sub">Government, education, institutional</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num" data-i18n="stats.attackers.num">3,745</div>
+          <div class="stat-label" data-i18n="stats.attackers.label">Attacker domains mapped</div>
+          <div class="stat-sub" data-i18n="stats.attackers.sub">C2, redirector and click-farm</div>
+        </div>
+        <div class="stat">
+          <div class="stat-num red" data-i18n="stats.verified.num">106</div>
+          <div class="stat-label" data-i18n="stats.verified.label">Hacklinks confirmed</div>
+          <div class="stat-sub" data-i18n="stats.verified.sub">Live evidence captured under VPN</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ BIG STAT (Netcraft 95% style) ═══ -->
+  <section class="section">
+    <div class="container">
+      <div class="big reveal">
+        <div class="big-text">
+          <span class="eyebrow" data-i18n="big.eyebrow">The takedown gap</span>
+          <h2>
+            <span data-i18n="big.title_a">Most compromised institutional sites stay infected</span>
+            <span class="accent" data-i18n="big.title_b">for months</span><span data-i18n="big.title_c"> before anyone notices.</span>
+          </h2>
+          <p data-i18n="big.desc">By the time a webmaster reads a vendor email, the affiliate has already monetised the link, rotated the C2, and moved on. AbuseRadar closes that window — from passive detection to coordinated takedown — in days, not months.</p>
+        </div>
+        <div class="big-visual">
+          <div class="big-num"><span data-i18n="big.num">82</span><sup data-i18n="big.num_unit">%</sup></div>
+          <div class="big-num-cap" data-i18n="big.cap">of compromised gov/edu domains we surface have been live for 90+ days, silently leaking visitors and ranking value to attacker affiliate stacks.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CAPABILITIES ═══ -->
+  <section class="section" id="platform">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="caps.eyebrow">End-to-end coverage</span>
+        <h2 data-i18n="caps.title">Detection. Attribution. Takedown.</h2>
+        <p data-i18n="caps.desc">Three capabilities, one pipeline. Built for analysts who need defensible evidence and operations teams who need things to actually disappear from the internet.</p>
+      </div>
+
+      <div class="caps">
+        <article class="cap reveal">
+          <div class="cap-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7"/>
+              <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+              <circle cx="11" cy="11" r="3"/>
+              <line x1="11" y1="4" x2="11" y2="6"/>
+              <line x1="11" y1="16" x2="11" y2="18"/>
+            </svg>
+          </div>
+          <h3 data-i18n="caps.items.0.title">Detection at scale</h3>
+          <p data-i18n="caps.items.0.desc"></p>
+          <ul class="cap-list" data-i18n-html-skip>
+            <li data-i18n="caps.items.0.items.0"></li>
+            <li data-i18n="caps.items.0.items.1"></li>
+            <li data-i18n="caps.items.0.items.2"></li>
+          </ul>
+        </article>
+
+        <article class="cap gold reveal">
+          <div class="cap-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="6" cy="6" r="2.5"/>
+              <circle cx="18" cy="6" r="2.5"/>
+              <circle cx="6" cy="18" r="2.5"/>
+              <circle cx="18" cy="18" r="2.5"/>
+              <circle cx="12" cy="12" r="3.5"/>
+              <line x1="8" y1="8" x2="10" y2="10"/>
+              <line x1="16" y1="8" x2="14" y2="10"/>
+              <line x1="8" y1="16" x2="10" y2="14"/>
+              <line x1="16" y1="16" x2="14" y2="14"/>
+            </svg>
+          </div>
+          <h3 data-i18n="caps.items.1.title">Infrastructure attribution</h3>
+          <p data-i18n="caps.items.1.desc"></p>
+          <ul class="cap-list">
+            <li data-i18n="caps.items.1.items.0"></li>
+            <li data-i18n="caps.items.1.items.1"></li>
+            <li data-i18n="caps.items.1.items.2"></li>
+          </ul>
+        </article>
+
+        <article class="cap red reveal">
+          <div class="cap-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z"/>
+            </svg>
+          </div>
+          <h3 data-i18n="caps.items.2.title">Coordinated takedown</h3>
+          <p data-i18n="caps.items.2.desc"></p>
+          <ul class="cap-list">
+            <li data-i18n="caps.items.2.items.0"></li>
+            <li data-i18n="caps.items.2.items.1"></li>
+            <li data-i18n="caps.items.2.items.2"></li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ THREAT INFRASTRUCTURE (split, image right) ═══ -->
+  <section class="section" id="threats">
+    <div class="container">
+      <div class="split reveal">
+        <div class="split-img">
+          <img src="img/generated/threat-network.png" alt="Attacker infrastructure network graph">
+        </div>
+        <div class="split-text">
+          <span class="eyebrow gold" data-i18n="threats.eyebrow">Threat catalogue</span>
+          <h2 data-i18n="threats.title">What we hunt — and what we have already documented.</h2>
+          <p class="lead" data-i18n="threats.desc">AbuseRadar is purpose-built around the unlicensed-gambling SEO economy and its parasitic neighbours. Categories below are the active investigation streams.</p>
+        </div>
+      </div>
+
+      <div class="threats" style="margin-top:3rem">
+        <article class="threat critical reveal">
+          <span class="threat-tag" data-i18n="threats.items.0.tag">Critical</span>
+          <h3 data-i18n="threats.items.0.title">Hacked government domains</h3>
+          <p data-i18n="threats.items.0.desc"></p>
+          <div class="threat-meta">
+            <span><strong data-i18n="threats.items.0.metaA">82 active</strong></span>
+            <span data-i18n="threats.items.0.metaB">+12 / week</span>
+          </div>
+        </article>
+        <article class="threat high reveal">
+          <span class="threat-tag" data-i18n="threats.items.1.tag">High</span>
+          <h3 data-i18n="threats.items.1.title">Education sector poisoning</h3>
+          <p data-i18n="threats.items.1.desc"></p>
+          <div class="threat-meta">
+            <span><strong data-i18n="threats.items.1.metaA">247 active</strong></span>
+            <span data-i18n="threats.items.1.metaB">+38 / week</span>
+          </div>
+        </article>
+        <article class="threat tracked reveal">
+          <span class="threat-tag" data-i18n="threats.items.2.tag">Tracked</span>
+          <h3 data-i18n="threats.items.2.title">Operator C2 infrastructure</h3>
+          <p data-i18n="threats.items.2.desc"></p>
+          <div class="threat-meta">
+            <span><strong data-i18n="threats.items.2.metaA">3 confirmed</strong></span>
+            <span data-i18n="threats.items.2.metaB">12 candidates</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ METHODOLOGY (horizontal pipeline) ═══ -->
+  <section class="section" id="methodology">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="method.eyebrow">Inside the pipeline</span>
+        <h2 data-i18n="method.title">Evidence-first. Audit-ready. Institution-grade.</h2>
+        <p data-i18n="method.desc">AbuseRadar treats every hop — from raw intelligence feed to a CERT-ready breach report — as a tracked, audit-ready transition.</p>
+      </div>
+      <ol class="pipeline reveal">
+        <li class="pipeline-step">
+          <div class="pipeline-num"><span data-i18n="method.steps.0.n">01</span></div>
+          <h4 data-i18n="method.steps.0.h">Collect</h4>
+          <p data-i18n="method.steps.0.p"></p>
+        </li>
+        <li class="pipeline-step">
+          <div class="pipeline-num"><span data-i18n="method.steps.1.n">02</span></div>
+          <h4 data-i18n="method.steps.1.h">Classify</h4>
+          <p data-i18n="method.steps.1.p"></p>
+        </li>
+        <li class="pipeline-step">
+          <div class="pipeline-num"><span data-i18n="method.steps.2.n">03</span></div>
+          <h4 data-i18n="method.steps.2.h">Verify on-site</h4>
+          <p data-i18n="method.steps.2.p"></p>
+        </li>
+        <li class="pipeline-step">
+          <div class="pipeline-num"><span data-i18n="method.steps.3.n">04</span></div>
+          <h4 data-i18n="method.steps.3.h">Attribute &amp; notify</h4>
+          <p data-i18n="method.steps.3.p"></p>
+        </li>
+        <li class="pipeline-step">
+          <div class="pipeline-num"><span data-i18n="method.steps.4.n">05</span></div>
+          <h4 data-i18n="method.steps.4.h">Force closure</h4>
+          <p data-i18n="method.steps.4.p"></p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ═══ DASHBOARD VISUAL ═══ -->
+  <section class="section tight">
+    <div class="container">
+      <div class="split reveal">
+        <div class="split-text">
+          <span class="eyebrow gold" data-i18n="console.eyebrow">Operations console</span>
+          <h2 style="margin-top:.5rem" data-i18n="console.title">A console that runs itself, audited at every step.</h2>
+          <p class="lead" data-i18n="console.desc">Every detection, classification, crawl, notification and complaint in AbuseRadar is recorded with cryptographic integrity. Operations teams ship abuse complaints in their sleep — not as a sprint deliverable.</p>
+          <div class="hero-actions" style="margin-top:1.6rem">
+            <a href="console/index.html" class="btn btn-ghost"><span data-i18n="console.cta">Walk through the console</span> <span class="arrow">→</span></a>
+          </div>
+        </div>
+        <div class="split-img">
+          <img src="img/generated/dashboard-mockup.png" alt="AbuseRadar operations console">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ USE CASES ═══ -->
+  <section class="section" id="use-cases">
+    <div class="container">
+      <div class="section-head reveal">
+        <span class="eyebrow" data-i18n="uses.eyebrow">Built for</span>
+        <h2 data-i18n="uses.title">Operators who need this stuff to actually disappear.</h2>
+        <p data-i18n="uses.desc">AbuseRadar is not a dashboard you stare at. It is an operations layer for teams whose remit is the live, public-facing web.</p>
+      </div>
+
+      <div class="uses">
+        <article class="use reveal">
+          <div class="use-pict" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><line x1="9" y1="21" x2="9" y2="13"/><line x1="15" y1="21" x2="15" y2="13"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <h3 data-i18n="uses.items.0.title">Government &amp; municipal IT</h3>
+          <p data-i18n="uses.items.0.desc"></p>
+          <div class="use-stat">
+            <div class="use-stat-num" data-i18n="uses.items.0.stat">82</div>
+            <div class="use-stat-lbl" data-i18n="uses.items.0.lbl">gov sites tracked</div>
+          </div>
+        </article>
+
+        <article class="use reveal">
+          <div class="use-pict" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 9l10-5 10 5-10 5L2 9z"/><path d="M6 11v5c0 1.5 3 3 6 3s6-1.5 6-3v-5"/><line x1="22" y1="9" x2="22" y2="15"/>
+            </svg>
+          </div>
+          <h3 data-i18n="uses.items.1.title">Higher education networks</h3>
+          <p data-i18n="uses.items.1.desc"></p>
+          <div class="use-stat">
+            <div class="use-stat-num" data-i18n="uses.items.1.stat">247</div>
+            <div class="use-stat-lbl" data-i18n="uses.items.1.lbl">edu sites tracked</div>
+          </div>
+        </article>
+
+        <article class="use reveal">
+          <div class="use-pict" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="6" rx="1.5"/><rect x="3" y="14" width="18" height="6" rx="1.5"/><line x1="7" y1="7" x2="7.01" y2="7"/><line x1="7" y1="17" x2="7.01" y2="17"/>
+            </svg>
+          </div>
+          <h3 data-i18n="uses.items.2.title">Hosting &amp; registrar abuse</h3>
+          <p data-i18n="uses.items.2.desc"></p>
+          <div class="use-stat">
+            <div class="use-stat-num" data-i18n="uses.items.2.stat">3,745</div>
+            <div class="use-stat-lbl" data-i18n="uses.items.2.lbl">domains mapped</div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ WHY ═══ -->
+  <section class="section">
+    <div class="container">
+      <div class="why reveal">
+        <blockquote class="why-quote">
+          <span data-i18n="why.quote_a">We did not build AbuseRadar to make a dashboard.</span><br>
+          <span data-i18n="why.quote_b">We built it because the people running the gambling-affiliate SEO economy</span>
+          <span data-i18n="why.quote_c">moved faster than the people defending the public web.</span><br>
+          <span class="gold" data-i18n="why.quote_d">Now they don't.</span>
+        </blockquote>
+        <div class="why-cite">
+          <strong data-i18n="why.cite">AbuseRadar — independent abuse intelligence</strong>
+          <div data-i18n="why.cite_loc">Operating from Istanbul · Reporting globally</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ CTA ═══ -->
+  <section class="section" id="cta">
+    <div class="container">
+      <div class="cta reveal">
+        <div class="cta-inner">
+          <span class="eyebrow gold" data-i18n="ctaTag">No sales calls</span>
+          <h2 data-i18n="cta.title">See your slice of the compromised web.</h2>
+          <p data-i18n="cta.desc">Send us your domain or sector and we'll return — within 72 hours — a private briefing with confirmed compromises, attacker attribution and a remediation playbook. No sales calls.</p>
+          <div class="cta-actions">
+            <a href="mailto:alerts@abuseradar.org?subject=Private briefing request" class="btn btn-primary"><span data-i18n="cta.primary">Request your private briefing</span> <span class="arrow">→</span></a>
+            <a href="mailto:alerts@abuseradar.org" class="btn btn-ghost" data-i18n="cta.secondary">alerts@abuseradar.org</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="brand">
+            <svg class="brand-mark" viewBox="0 0 64 64" fill="none" stroke-width="2">
+              <circle cx="32" cy="32" r="28" stroke="#1ACEC9" fill="rgba(26,206,201,0.05)"/>
+              <circle cx="32" cy="32" r="9"  stroke="#1ACEC9" stroke-opacity=".75" fill="none"/>
+              <circle cx="32" cy="32" r="3"  fill="#EADA24"/>
+              <line x1="32" y1="32" x2="54" y2="12" stroke="#1ACEC9" stroke-width="2"/>
+            </svg>
+            <span class="brand-text">Abuse<em>Radar</em></span>
+          </a>
+          <p data-i18n="footer.tagline">Independent abuse intelligence for the compromised web. Built and operated from Istanbul.</p>
+        </div>
+
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.0.h">Platform</h5>
+          <ul>
+            <li><a href="#platform" data-i18n="footer.cols.0.items.0">Exposure</a></li>
+            <li><a href="#platform" data-i18n="footer.cols.0.items.1">Attribution</a></li>
+            <li><a href="#platform" data-i18n="footer.cols.0.items.2">Remediation</a></li>
+            <li><a href="#methodology" data-i18n="footer.cols.0.items.3">Methodology</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.1.h">Threats</h5>
+          <ul>
+            <li><a data-i18n="footer.cols.1.items.0">Government</a></li>
+            <li><a data-i18n="footer.cols.1.items.1">Education</a></li>
+            <li><a data-i18n="footer.cols.1.items.2">C2 operators</a></li>
+            <li><a data-i18n="footer.cols.1.items.3">Cloaking lab</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.2.h">Research</h5>
+          <ul>
+            <li><a data-i18n="footer.cols.2.items.0">Quarterly briefing</a></li>
+            <li><a data-i18n="footer.cols.2.items.1">Public reports</a></li>
+            <li><a data-i18n="footer.cols.2.items.2">Threat catalogue</a></li>
+            <li><a data-i18n="footer.cols.2.items.3">Press</a></li>
+          </ul>
+        </div>
+
+        <div class="footer-col">
+          <h5 data-i18n="footer.cols.3.h">Company</h5>
+          <ul>
+            <li><a data-i18n="footer.cols.3.items.0">About</a></li>
+            <li><a href="mailto:hello@abuseradar.org" data-i18n="footer.cols.3.items.1">Contact</a></li>
+            <li><a href="mailto:abuse@abuseradar.org" data-i18n="footer.cols.3.items.2">Report abuse</a></li>
+            <li><a data-i18n="footer.cols.3.items.3">Status</a></li>
+            <li><a href="privacy.html" data-i18n="footer.cols.3.items.4">Legal</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bot">
+        <span data-i18n="footer.copyright">© 2026 AbuseRadar — abuseradar.org</span>
+        <div class="footer-region">
+          <span class="dot-live"></span>
+          <span data-i18n="footer.live">All systems operational</span>
+        </div>
+        <div>
+          <a href="privacy.html" data-i18n="footer.legal.0">Privacy</a> ·
+          <a data-i18n="footer.legal.1">Responsible disclosure</a> ·
+          <a data-i18n="footer.legal.2">Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

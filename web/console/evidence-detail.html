@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bundle EV-2026-04-25-184 — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="evidence"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs">
+          <a href="index.html">Console</a>
+          <span class="sep">/</span>
+          <a href="evidence.html">Evidence</a>
+          <span class="sep">/</span>
+          <span class="current mono">EV-2026-04-25-184</span>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Download bundle</button>
+        <a href="report.html" class="btn btn-primary">Open report</a>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <!-- Page head with severity -->
+      <div class="page-head">
+        <div>
+          <div style="display:flex;align-items:center;gap:.55rem;margin-bottom:.4rem">
+            <span class="mono" style="font-size:.78rem;color:var(--text-3)">EV-2026-04-25-184</span>
+            <span class="badge red">Confirmed breach</span>
+            <span class="severity"><span class="severity-dot"></span><span class="severity-label">Critical</span></span>
+          </div>
+          <h1>saude.gov.ar</h1>
+          <p>Ministerio de Salud Argentina · public health portal · 84 hidden gambling links injected via outdated CMS plugin. Captured 25 Apr 2026 at 11:54 UTC.</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost">Mark closed</button>
+          <button class="btn btn-ghost">Notify CERT</button>
+        </div>
+      </div>
+
+      <!-- Integrity bar -->
+      <div class="integrity" style="margin-bottom:1.2rem">
+        <div class="integrity-icon"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+        <div class="integrity-info" style="flex:1">
+          <strong>Integrity verified · SHA-256 hash matches capture-time signature</strong>
+          <span>8a4f2d7c1e9b3a5f8c6d2e4f1a8b7c0d3e9f4a2b5c8d1e7f0a3b6c9d2e5f8a4f...c102 · signed by capture-key #07</span>
+        </div>
+        <button class="btn btn-ghost" style="font-size:.78rem">Verify chain</button>
+      </div>
+
+      <div class="detail-grid">
+
+        <div class="stack">
+
+          <!-- Captured page screenshot -->
+          <section class="panel">
+            <div class="panel-head">
+              <h3>Captured page</h3>
+              <span class="meta">rendered via VPN-TR · cloaking-aware probe</span>
+            </div>
+            <div style="padding:1rem 1.1rem 1.1rem">
+              <figure style="margin:0">
+                <img src="../img/generated/evidence-page-shot.png" alt="Compromised page screenshot" style="width:100%;border-radius:8px;border:1px solid var(--border)">
+                <figcaption style="font-size:.74rem;color:var(--text-4);margin-top:.55rem;text-align:center">
+                  Live render of <span class="mono">https://saude.gov.ar/portal</span> on 25 Apr 2026 11:54:23 UTC. Hidden footer cluster highlighted.
+                </figcaption>
+              </figure>
+            </div>
+          </section>
+
+          <!-- DOM source -->
+          <section class="panel">
+            <div class="panel-head">
+              <h3>Injected DOM</h3>
+              <span class="meta">flagged region · lines 412-419</span>
+            </div>
+            <div style="padding:1rem 1.1rem 1.1rem">
+              <figure style="margin:0 0 1rem">
+                <img src="../img/generated/evidence-source-view.png" alt="Source code view" style="width:100%;border-radius:8px;border:1px solid var(--border)">
+              </figure>
+              <div class="code">
+                <div class="code-head">
+                  <span>html · DOM excerpt</span>
+                  <span>2 lines flagged</span>
+                </div>
+                <pre><span class="ln">410<br>411<br>412<br>413<br>414<br>415<br>416<br>417<br>418<br>419<br>420</span><span class="src">&lt;<span class="tag">footer</span> <span class="attr">class</span>=<span class="str">"site-footer"</span>&gt;
+  &lt;<span class="tag">div</span> <span class="attr">class</span>=<span class="str">"footer-inner"</span>&gt;
+<div class="row flag">    &lt;<span class="tag">div</span> <span class="attr">style</span>=<span class="str">"position:absolute;left:-9999px;visibility:hidden"</span>&gt;</div>
+<div class="row flag">      &lt;<span class="tag">a</span> <span class="attr">href</span>=<span class="str">"https://xxxxxx.dev/r?id=g41"</span>&gt;casino bonus 2026&lt;/<span class="tag">a</span>&gt;</div>
+      &lt;<span class="tag">a</span> <span class="attr">href</span>=<span class="str">"https://xxxxxx.live/aff/82"</span>&gt;jackpot oyna&lt;/<span class="tag">a</span>&gt;
+      &lt;<span class="com">// 82 more anchor tags ...</span>&gt;
+    &lt;/<span class="tag">div</span>&gt;
+    &lt;<span class="tag">p</span>&gt;© Ministerio de Salud&lt;/<span class="tag">p</span>&gt;
+  &lt;/<span class="tag">div</span>&gt;
+&lt;/<span class="tag">footer</span>&gt;
+</span></pre>
+              </div>
+            </div>
+          </section>
+
+          <!-- Network requests -->
+          <section class="panel">
+            <div class="panel-head">
+              <h3>Network trace</h3>
+              <span class="meta">12 suspect requests · HAR archived</span>
+            </div>
+            <div style="padding:.85rem 0 0">
+              <figure style="margin:0 1.1rem 1rem">
+                <img src="../img/generated/evidence-network-panel.png" alt="Network trace" style="width:100%;border-radius:8px;border:1px solid var(--border)">
+              </figure>
+              <div class="har">
+                <div class="har-row" style="background:var(--bg-card-2);font-size:.7rem;color:var(--text-3);text-transform:uppercase;letter-spacing:.8px;border-bottom:1px solid var(--border)">
+                  <span>Status</span><span>Method</span><span>URL</span><span>Type</span><span>Time</span>
+                </div>
+                <div class="har-row"><span class="status ok">200</span><span>GET</span><span class="url">saude.gov.ar/portal</span><span class="meta">document</span><span class="meta">412ms</span></div>
+                <div class="har-row flag"><span class="status redir">302</span><span>GET</span><span class="url flag">xxxxxx.dev/r?id=g41</span><span class="meta">script</span><span class="meta">88ms</span></div>
+                <div class="har-row flag"><span class="status ok">200</span><span>GET</span><span class="url flag">xxxxxx.live/aff/82</span><span class="meta">script</span><span class="meta">122ms</span></div>
+                <div class="har-row"><span class="status ok">200</span><span>GET</span><span class="url">cdnjs.cloudflare.com/ajax/jquery</span><span class="meta">script</span><span class="meta">38ms</span></div>
+                <div class="har-row flag"><span class="status redir">301</span><span>GET</span><span class="url flag">xxxxxx-pharma.top/redirect</span><span class="meta">xhr</span><span class="meta">217ms</span></div>
+                <div class="har-row"><span class="status ok">200</span><span>GET</span><span class="url">saude.gov.ar/css/main.css</span><span class="meta">stylesheet</span><span class="meta">21ms</span></div>
+                <div class="har-row"><span class="status err">404</span><span>GET</span><span class="url">saude.gov.ar/api/search</span><span class="meta">xhr</span><span class="meta">12ms</span></div>
+              </div>
+              <div style="padding:.65rem 1.1rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3)">
+                3 cross-domain redirect chains observed · all terminate at cluster #07 redirector pool
+              </div>
+            </div>
+          </section>
+
+          <!-- Certificate chain -->
+          <section class="panel">
+            <div class="panel-head">
+              <h3>TLS certificate</h3>
+              <span class="meta">target host certificate at capture time</span>
+            </div>
+            <div class="panel-body">
+              <dl class="kv">
+                <dt>Subject</dt><dd>CN=*.gov.ar, O=Gobierno Argentina</dd>
+                <dt>Issuer</dt><dd>DigiCert TLS RSA SHA256 2020 CA1</dd>
+                <dt>Serial</dt><dd><span class="mono">0a:f2:1b:8c:4e:6d:9a:33:71:c5:88</span></dd>
+                <dt>Valid from</dt><dd>14 Mar 2026 00:00 UTC</dd>
+                <dt>Valid to</dt><dd>13 Mar 2027 23:59 UTC</dd>
+                <dt>SAN</dt><dd>*.gov.ar, gov.ar, *.salud.gov.ar (4 more)</dd>
+                <dt>Status</dt><dd><span class="badge green" style="margin-left:0">Valid</span> &nbsp;<span style="color:var(--text-3);font-size:.78rem">target host certificate is genuine — compromise is content-injection only</span></dd>
+              </dl>
+            </div>
+          </section>
+
+          <!-- AI classifier output -->
+          <section class="panel">
+            <div class="panel-head">
+              <h3>Classifier scoring</h3>
+              <span class="meta">multi-signal fusion · Gemini-scored</span>
+            </div>
+            <div class="panel-body">
+              <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:.85rem">
+                <div>
+                  <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:.5rem">Spam intent</div>
+                  <div class="progress"><div class="progress-bar"><div style="width:97%;background:var(--red)"></div></div><span class="mono" style="font-size:.78rem;color:var(--red)">0.97</span></div>
+                </div>
+                <div>
+                  <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:.5rem">Cloaking probability</div>
+                  <div class="progress"><div class="progress-bar"><div style="width:88%;background:var(--orange)"></div></div><span class="mono" style="font-size:.78rem;color:var(--orange)">0.88</span></div>
+                </div>
+                <div>
+                  <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:.5rem">Operator confidence (#07)</div>
+                  <div class="progress"><div class="progress-bar"><div style="width:91%;background:var(--teal)"></div></div><span class="mono" style="font-size:.78rem;color:var(--teal)">0.91</span></div>
+                </div>
+                <div>
+                  <div style="font-size:.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--text-3);margin-bottom:.5rem">Compromise persistence</div>
+                  <div class="progress"><div class="progress-bar"><div style="width:74%;background:var(--gold)"></div></div><span class="mono" style="font-size:.78rem;color:var(--gold)">0.74</span></div>
+                </div>
+              </div>
+              <div style="margin-top:1rem;padding:.85rem 1rem;background:var(--bg-card-2);border-radius:7px;font-size:.84rem;color:var(--text-2);line-height:1.65">
+                <strong style="color:var(--text)">Verdict:</strong> high-confidence compromise. Hidden link cluster matches operator stack #07 (hacklinkbacklink) with 91% confidence. Cloaking detected — page renders differently to search-engine bots vs. residential users. Persistent CMS-level injection rather than transient XSS.
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- Right side aside -->
+        <aside class="detail-aside">
+
+          <section class="panel">
+            <div class="panel-head"><h3>Bundle metadata</h3></div>
+            <div class="panel-body">
+              <dl class="kv">
+                <dt>Bundle</dt><dd><span class="mono">EV-2026-04-25-184</span></dd>
+                <dt>Captured</dt><dd>25 Apr 2026 · 11:54:23</dd>
+                <dt>Pipeline run</dt><dd><a href="pipeline.html" class="mono" style="color:var(--teal)">AR-PL-2421</a></dd>
+                <dt>Crawler</dt><dd>VPN-TR · Istanbul</dd>
+                <dt>Artefacts</dt><dd>DOM · 4 PNG · HAR · cert chain</dd>
+                <dt>Size</dt><dd>4.8 MB</dd>
+                <dt>Capture key</dt><dd><span class="mono" style="font-size:.74rem">pk_07_a8c9</span></dd>
+              </dl>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>Timeline</h3></div>
+            <div class="panel-body">
+              <ol class="timeline">
+                <li class="timeline-item done">
+                  <div class="timeline-time">25 APR · 11:54</div>
+                  <div class="timeline-title">Compromise detected</div>
+                  <div class="timeline-desc">Indicator surfaced from backlink graph; verification triggered.</div>
+                </li>
+                <li class="timeline-item done">
+                  <div class="timeline-time">25 APR · 11:55</div>
+                  <div class="timeline-title">Evidence captured</div>
+                  <div class="timeline-desc">Page rendered, screenshots + HAR + DOM stamped and stored.</div>
+                </li>
+                <li class="timeline-item done">
+                  <div class="timeline-time">25 APR · 11:58</div>
+                  <div class="timeline-title">Operator attributed</div>
+                  <div class="timeline-desc">Cluster #07 (hacklinkbacklink) match · 0.91 confidence.</div>
+                </li>
+                <li class="timeline-item active">
+                  <div class="timeline-time">25 APR · 12:14</div>
+                  <div class="timeline-title">Notification sent</div>
+                  <div class="timeline-desc">Spanish-language breach notice to <span class="mono">webmaster@saude.gov.ar</span> — awaiting reply.</div>
+                </li>
+                <li class="timeline-item">
+                  <div class="timeline-time">PENDING</div>
+                  <div class="timeline-title">CERT escalation</div>
+                  <div class="timeline-desc">Auto-trigger after 72h without remediation.</div>
+                </li>
+                <li class="timeline-item">
+                  <div class="timeline-time">PENDING</div>
+                  <div class="timeline-title">Closure verification</div>
+                  <div class="timeline-desc">Re-render scheduled after host responds.</div>
+                </li>
+              </ol>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>Linked operator</h3></div>
+            <div class="panel-body">
+              <a href="attackers.html" style="display:flex;flex-direction:column;gap:.4rem;padding:.55rem;border-radius:7px;background:var(--bg-card-2);transition:background .15s">
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                  <span class="mono strong" style="color:var(--text)">cluster #07</span>
+                  <span class="badge red">Active</span>
+                </div>
+                <span style="font-size:.78rem;color:var(--text-3)">hacklinkbacklink.com · 318 victims · AS197540 (netcup)</span>
+              </a>
+            </div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><h3>Quick actions</h3></div>
+            <div class="panel-body" style="display:flex;flex-direction:column;gap:.4rem">
+              <a href="report.html" class="btn btn-primary" style="justify-content:flex-start">
+                <svg viewBox="0 0 24 24"><polyline points="14 2 14 8 20 8"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+                Generate briefing report
+              </a>
+              <a href="notifications.html" class="btn btn-ghost" style="justify-content:flex-start">
+                <svg viewBox="0 0 24 24"><path d="M3 6l9 7 9-7"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+                Send reminder
+              </a>
+              <a href="complaints.html" class="btn btn-ghost" style="justify-content:flex-start">
+                <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+                File abuse complaint
+              </a>
+              <a href="#" class="btn btn-ghost" style="justify-content:flex-start">
+                <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/></svg>
+                Assign to analyst
+              </a>
+            </div>
+          </section>
+
+        </aside>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

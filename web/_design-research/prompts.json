@@ -1,0 +1,32 @@
+[
+  {
+    "out": "hero-radar.png",
+    "ar": "16:9",
+    "prompt": "Cinematic hero illustration for a cybersecurity intelligence platform. A massive translucent holographic radar dish sweeps across a stylized continental world map rendered as glowing line geometry. Concentric cyan-teal pulse rings emanate from a central node, illuminating dozens of small red threat indicators clustered on Brazil, Turkey, India, Indonesia and Eastern Europe. Faint dotted constellation lines connect compromised nodes to attacker hubs. Background: deep petrol blue gradient #001F29 to #002A38, subtle film grain, a soft warm gold #EADA24 horizon glow on the bottom edge, atmospheric depth-of-field with bokeh particles. Color palette strictly: deep teal, cyan #1ACEC9, gold #EADA24, alert red, dark navy. Premium 3D render aesthetic in the style of Apple keynote graphics or Netcraft hero. No text whatsoever, no logos, no UI elements, no human figures. Editorial quality, 16:9 widescreen composition."
+  },
+  {
+    "out": "threat-network.png",
+    "ar": "4:3",
+    "prompt": "Abstract network topology visualization for a cybersecurity infrastructure analysis tool. A complex node-and-edge graph rendered in 3D space showing dozens of glowing nodes connected by thin luminous lines. Three large central command nodes pulsate in warm gold #EADA24 representing C2 servers, surrounded by clusters of small cyan-teal #1ACEC9 nodes representing compromised victim sites, with red alert nodes #EF4444 showing active injection points. Edges are thin glowing fibers with directional flow particles. Background: deep petrol blue #001F29 with subtle hexagonal grid pattern faintly visible. Atmospheric volumetric light, depth-of-field blur on background nodes. Color palette: petrol blue, cyan teal, gold, alert red. Style: editorial data visualization, premium financial dashboard aesthetic, high-contrast, no text, no labels, no UI chrome, no logos. 4:3 composition."
+  },
+  {
+    "out": "dashboard-mockup.png",
+    "ar": "16:9",
+    "prompt": "Photorealistic 3D render of a modern slim laptop floating at a 30-degree angle, displaying a sophisticated cybersecurity threat intelligence dashboard on its screen. The dashboard interface features: a large area chart in the upper-left showing rising threat detection metrics with cyan teal #1ACEC9 fill and gold #EADA24 trendline, three circular gauge widgets in the upper-right showing percentages, a horizontal data table with rows of incident records, and a small world map widget with red dots in the lower-left. The dashboard has a deep petrol-blue background #001F29 with subtle card surfaces. The laptop is shown against a darker blurred environment with soft cyan rim lighting and warm gold accent light. Subtle reflection on the laptop body. Color palette: petrol blue, cyan teal, gold, charcoal. Style: Apple keynote product render, clean editorial. The chart and gauges are abstract shapes, no readable text, no real brand names, no logos. 16:9 widescreen."
+  },
+  {
+    "out": "pipeline-flow.png",
+    "ar": "4:3",
+    "prompt": "Abstract isometric infographic illustration of a cybersecurity intelligence pipeline. Five large translucent glass-like cubes arranged in a flowing curve, connected by glowing cyan teal #1ACEC9 data-flow channels with bright particle streams moving between them. Each cube contains a stylized 3D icon: cube one has a magnifying glass over a globe (ingestion), cube two has a sorting funnel with sparkling particles (classification), cube three has a network graph (correlation), cube four has a lightning bolt striking a node (disruption), cube five has a document with seal (reporting). The cubes have warm gold #EADA24 corner highlights and edge lighting. Background: deep petrol blue #001F29 with subtle dot grid, soft volumetric atmosphere. Color palette: petrol blue, cyan teal, gold. Style: premium 3D infographic, editorial isometric, depth-of-field, no text, no labels, no logos. 4:3 composition."
+  },
+  {
+    "out": "global-map.png",
+    "ar": "16:9",
+    "prompt": "Editorial dark world map visualization showing global cybersecurity threat distribution. The continents are rendered as fine luminous teal #1ACEC9 dot-matrix outlines on a deep petrol-blue background #001F29, similar to a sophisticated SOC dashboard map. Pulsing red alert beacons cluster densely on Brazil, Turkey, India, Indonesia, Russia, Mexico, Vietnam — each beacon is a glowing dot with subtle radiating rings. Thin curved gold #EADA24 attack-vector arcs connect a few hub locations across continents. Subtle latitude/longitude grid faintly visible. Lower-right corner has a soft warm gold horizon glow. Atmospheric particles in foreground bokeh. Color palette: petrol blue, cyan teal, alert red, warm gold. Style: premium news-channel cyber-attack map, Bloomberg Terminal aesthetic, no text, no country labels, no UI panels, no logos. 16:9 widescreen."
+  },
+  {
+    "out": "victim-injection.png",
+    "ar": "4:3",
+    "prompt": "Conceptual illustration of a compromised government website code injection. A clean institutional government building rendered as translucent glass architecture in cyan teal #1ACEC9 line geometry on the left, with thin glowing data tendrils of warm gold #EADA24 sinister code threads infiltrating its facade and weaving through invisible HTML structure. Each tendril ends in small floating alert markers. Background: deep petrol blue #001F29, atmospheric haze, particles, depth of field. Color palette: petrol blue, cyan teal, gold, faint red. Style: editorial cybersecurity feature illustration, premium 3D render, abstract architectural, no text, no labels, no real logos, no people. 4:3 composition."
+  }
+]

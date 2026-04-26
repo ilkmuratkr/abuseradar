@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="settings"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Settings</span></nav>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost">Discard</button>
+        <button class="btn btn-primary">Save changes</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Settings</h1>
+          <p>System health, integrations, jurisdiction scope and team access. Changes audit-logged.</p>
+        </div>
+      </div>
+
+      <div class="grid-1-2">
+        <!-- Sub-nav -->
+        <nav class="panel" style="padding:.5rem">
+          <div style="display:flex;flex-direction:column">
+            <a href="#system" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--teal);background:var(--teal-soft);font-weight:600">System health</a>
+            <a href="#integrations" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Integrations</a>
+            <a href="#scope" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Jurisdiction scope</a>
+            <a href="#team" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Team &amp; access</a>
+            <a href="#api" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">API keys</a>
+            <a href="#audit" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Audit log</a>
+          </div>
+        </nav>
+
+        <div class="stack">
+          <!-- System health -->
+          <section class="panel" id="system">
+            <div class="panel-head"><h3>System health</h3><span class="meta">live</span></div>
+            <div class="panel-body">
+              <table class="tbl">
+                <tbody>
+                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Database (PostgreSQL)</span></td><td><span style="color:var(--text-3);font-size:.78rem">14 connections · 23ms p99</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
+                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Cache (Redis)</span></td><td><span style="color:var(--text-3);font-size:.78rem">112MB used · 0 evictions</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
+                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Backend API (FastAPI)</span></td><td><span style="color:var(--text-3);font-size:.78rem">v1.4.2 · uptime 12d</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
+                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Crawler · VPN-TR</span></td><td><span style="color:var(--text-3);font-size:.78rem">149.102.229.145 · Istanbul</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
+                  <tr><td><span class="dot-status warn"></span> &nbsp;<span class="strong">Crawler · VPN-US</span></td><td><span style="color:var(--text-3);font-size:.78rem">185.213.193.203 · Washington · slow rotation</span></td><td class="right"><span class="badge orange">Slow</span></td></tr>
+                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Notifier · Resend</span></td><td><span style="color:var(--text-3);font-size:.78rem">domain verified · DKIM ok</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
+                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">OpenClaw agent</span></td><td><span style="color:var(--text-3);font-size:.78rem">v0.6.1 · last action 4m ago</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <!-- Integrations -->
+          <section class="panel" id="integrations">
+            <div class="panel-head"><h3>Integrations</h3></div>
+            <div class="panel-body" style="display:flex;flex-direction:column;gap:.55rem">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
+                <div><div class="strong" style="font-size:.88rem">Gemini · classifier &amp; vision</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">3 keys active · last call 12s ago</div></div>
+                <span class="badge green">Connected</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
+                <div><div class="strong" style="font-size:.88rem">Resend · outbound email</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">abuseradar.org verified · DMARC pass</div></div>
+                <span class="badge green">Connected</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
+                <div><div class="strong" style="font-size:.88rem">Cloudflare · abuse desk</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">automated complaint filing</div></div>
+                <span class="badge green">Connected</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
+                <div><div class="strong" style="font-size:.88rem">Google Safe Browsing</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">reporting only · no API key required</div></div>
+                <span class="badge muted">Public</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px dashed var(--border);border-radius:7px">
+                <div><div class="strong" style="font-size:.88rem;color:var(--text-3)">Slack · alert routing</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">not configured</div></div>
+                <button class="btn btn-ghost" style="padding:.4rem .75rem;font-size:.78rem">Connect</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Jurisdiction scope -->
+          <section class="panel" id="scope">
+            <div class="panel-head"><h3>Jurisdiction scope</h3></div>
+            <div class="panel-body">
+              <p style="color:var(--text-3);font-size:.85rem;margin-bottom:1rem">Define which national TLDs and sectors AbuseRadar should track for your engagement.</p>
+              <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.2rem">
+                <span class="badge teal">.gov.tr</span>
+                <span class="badge teal">.edu.tr</span>
+                <span class="badge teal">.bel.tr</span>
+                <span class="badge teal">.gov.br</span>
+                <span class="badge teal">.edu.br</span>
+                <span class="badge teal">.gov.ar</span>
+                <span class="badge muted">+12 more</span>
+                <button class="btn btn-ghost" style="padding:.25rem .55rem;font-size:.7rem;border-radius:99px">+ add TLD</button>
+              </div>
+              <div class="field">
+                <label>Sectors in scope</label>
+                <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+                  <span class="badge gold">Government</span>
+                  <span class="badge gold">Higher education</span>
+                  <span class="badge gold">Healthcare</span>
+                  <span class="badge muted">Financial</span>
+                  <span class="badge muted">Critical infra</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Compromised institutions — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="victims"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Compromised</span></nav>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="text" placeholder="Search domain, sector, jurisdiction…">
+          <kbd>⌘K</kbd>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Compromised institutions</h1>
+          <p>701 institutions tracked across 22 jurisdictions. 106 verified breaches, 47 closed in the last 30 days.</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Export CSV</button>
+          <button class="btn btn-primary">Add domain to watch</button>
+        </div>
+      </div>
+
+      <!-- Filter tabs -->
+      <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.1rem;border-bottom:1px solid var(--border);padding-bottom:.5rem">
+        <button class="btn btn-ghost" style="background:var(--teal-soft);color:var(--teal);border-color:var(--border-hi)">All <span style="color:var(--text-4);font-weight:500;margin-left:.3rem">701</span></button>
+        <button class="btn btn-ghost">Confirmed breach <span style="color:var(--text-4);font-weight:500;margin-left:.3rem">106</span></button>
+        <button class="btn btn-ghost">Notified <span style="color:var(--text-4);font-weight:500;margin-left:.3rem">312</span></button>
+        <button class="btn btn-ghost">Pending re-check <span style="color:var(--text-4);font-weight:500;margin-left:.3rem">87</span></button>
+        <button class="btn btn-ghost">Closed <span style="color:var(--text-4);font-weight:500;margin-left:.3rem">196</span></button>
+      </div>
+
+      <section class="panel">
+        <table class="tbl">
+          <thead>
+            <tr>
+              <th><input type="checkbox" style="accent-color:var(--teal)"></th>
+              <th>Institution</th>
+              <th>Sector</th>
+              <th>Jurisdiction</th>
+              <th>Operator</th>
+              <th class="right">Hidden links</th>
+              <th>Status</th>
+              <th>First seen</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">saogoncalo.rj.gov.br</div><div style="font-size:.7rem;color:var(--text-4)">Prefeitura · Rio de Janeiro</div></td>
+              <td>Government</td>
+              <td>BR</td>
+              <td><span class="mono">#03</span></td>
+              <td class="right strong">106</td>
+              <td><span class="badge red">Confirmed</span></td>
+              <td>11 Mar 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">saude.gov.ar</div><div style="font-size:.7rem;color:var(--text-4)">Ministerio de Salud</div></td>
+              <td>Government</td>
+              <td>AR</td>
+              <td><span class="mono">#07</span></td>
+              <td class="right strong">84</td>
+              <td><span class="badge red">Confirmed</span></td>
+              <td>25 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">faculty.ankara.edu.tr</div><div style="font-size:.7rem;color:var(--text-4)">Faculty subdomain</div></td>
+              <td>Higher ed</td>
+              <td>TR</td>
+              <td><span class="mono">#07</span></td>
+              <td class="right strong">34</td>
+              <td><span class="badge orange">Notified</span></td>
+              <td>22 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">portal.unipa.edu.br</div><div style="font-size:.7rem;color:var(--text-4)">University CMS · Pará</div></td>
+              <td>Higher ed</td>
+              <td>BR</td>
+              <td><span class="mono">#03</span></td>
+              <td class="right strong">52</td>
+              <td><span class="badge gold">Pending</span></td>
+              <td>15 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">istanbul.bel.tr</div><div style="font-size:.7rem;color:var(--text-4)">Istanbul Municipality</div></td>
+              <td>Government</td>
+              <td>TR</td>
+              <td><span class="mono">#11</span></td>
+              <td class="right strong">0</td>
+              <td><span class="badge green">Closed</span></td>
+              <td>12 Mar 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">library.unesp.br</div><div style="font-size:.7rem;color:var(--text-4)">UNESP library</div></td>
+              <td>Higher ed</td>
+              <td>BR</td>
+              <td><span class="mono">#07</span></td>
+              <td class="right strong">18</td>
+              <td><span class="badge teal">Investigating</span></td>
+              <td>20 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">consejo.gob.mx</div><div style="font-size:.7rem;color:var(--text-4)">Federal council portal</div></td>
+              <td>Government</td>
+              <td>MX</td>
+              <td><span class="mono">#14</span></td>
+              <td class="right strong">71</td>
+              <td><span class="badge red">Confirmed</span></td>
+              <td>17 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">cs.purdue.edu</div><div style="font-size:.7rem;color:var(--text-4)">Computer Science faculty page</div></td>
+              <td>Higher ed</td>
+              <td>US</td>
+              <td><span class="mono">#03</span></td>
+              <td class="right strong">22</td>
+              <td><span class="badge orange">Notified</span></td>
+              <td>16 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">cdc.gov.in</div><div style="font-size:.7rem;color:var(--text-4)">Health regulator portal</div></td>
+              <td>Healthcare</td>
+              <td>IN</td>
+              <td><span class="mono">#18</span></td>
+              <td class="right strong">128</td>
+              <td><span class="badge red">Confirmed</span></td>
+              <td>09 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+            <tr>
+              <td><input type="checkbox" style="accent-color:var(--teal)"></td>
+              <td><div class="strong">municipio.bh.gov.br</div><div style="font-size:.7rem;color:var(--text-4)">Belo Horizonte municipal</div></td>
+              <td>Government</td>
+              <td>BR</td>
+              <td><span class="mono">#03</span></td>
+              <td class="right strong">45</td>
+              <td><span class="badge red">Confirmed</span></td>
+              <td>05 Apr 2026</td>
+              <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+            </tr>
+          </tbody>
+        </table>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.85rem 1.1rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3)">
+          <span>Showing 10 of 701</span>
+          <div style="display:flex;gap:.3rem">
+            <button class="btn btn-ghost" style="padding:.35rem .65rem">←</button>
+            <button class="btn btn-ghost" style="padding:.35rem .65rem;color:var(--teal);background:var(--teal-soft);border-color:var(--border-hi)">1</button>
+            <button class="btn btn-ghost" style="padding:.35rem .65rem">2</button>
+            <button class="btn btn-ghost" style="padding:.35rem .65rem">3</button>
+            <span style="padding:.35rem .65rem;color:var(--text-4)">…</span>
+            <button class="btn btn-ghost" style="padding:.35rem .65rem">71</button>
+            <button class="btn btn-ghost" style="padding:.35rem .65rem">→</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

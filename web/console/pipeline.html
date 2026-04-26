@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pipeline — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="pipeline"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail aria-label="Toggle sidebar" style="display:none">
+          <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Pipeline</span></nav>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="text" placeholder="Search runs, batches, errors…">
+          <kbd>⌘K</kbd>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Pipeline</h1>
+          <p>Five-stage breach pipeline. Each transition is cryptographically logged. Cycle: weekly continuous + on-demand runs.</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost">Pause cycle</button>
+          <button class="btn btn-primary">
+            <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
+            Run full pipeline
+          </button>
+        </div>
+      </div>
+
+      <!-- Pipeline progress visual -->
+      <section class="panel">
+        <div class="panel-head">
+          <h3>Current run · AR-PL-2421</h3>
+          <span class="meta">Started 3 hours ago · ETA 18 minutes</span>
+        </div>
+        <div class="panel-body">
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem;margin-bottom:1.4rem">
+            <!-- Stage cards -->
+            <div style="background:var(--bg-card-2);border:1px solid var(--border-hi);border-radius:8px;padding:.85rem">
+              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);letter-spacing:1px;margin-bottom:.4rem">01 · DONE</div>
+              <div style="font-weight:600;color:var(--text);font-size:.88rem;margin-bottom:.5rem">Collect</div>
+              <div style="font-size:.74rem;color:var(--text-3);line-height:1.5">3,418 rows ingested · 117 new · 2 disputed</div>
+              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:100%;background:var(--green)"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--green)">100%</span></div>
+            </div>
+            <div style="background:var(--bg-card-2);border:1px solid var(--border-hi);border-radius:8px;padding:.85rem">
+              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);letter-spacing:1px;margin-bottom:.4rem">02 · DONE</div>
+              <div style="font-weight:600;color:var(--text);font-size:.88rem;margin-bottom:.5rem">Classify</div>
+              <div style="font-size:.74rem;color:var(--text-3);line-height:1.5">3,418 scored · 117 new flagged · Gemini ok</div>
+              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:100%;background:var(--green)"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--green)">100%</span></div>
+            </div>
+            <div style="background:var(--bg-card-2);border:1px solid rgba(244,161,74,0.4);border-radius:8px;padding:.85rem;box-shadow:0 0 0 1px rgba(244,161,74,0.15)">
+              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--orange);letter-spacing:1px;margin-bottom:.4rem">03 · ACTIVE</div>
+              <div style="font-weight:600;color:var(--text);font-size:.88rem;margin-bottom:.5rem">Verify on-site</div>
+              <div style="font-size:.74rem;color:var(--text-3);line-height:1.5">187 of 248 pages rendered via VPN-TR</div>
+              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:75%;background:var(--orange)"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--orange)">75%</span></div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.85rem;opacity:.55">
+              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-4);letter-spacing:1px;margin-bottom:.4rem">04 · QUEUED</div>
+              <div style="font-weight:600;color:var(--text-2);font-size:.88rem;margin-bottom:.5rem">Attribute &amp; notify</div>
+              <div style="font-size:.74rem;color:var(--text-4);line-height:1.5">Awaiting verification batch</div>
+              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:0%"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-4)">—</span></div>
+            </div>
+            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.85rem;opacity:.55">
+              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-4);letter-spacing:1px;margin-bottom:.4rem">05 · QUEUED</div>
+              <div style="font-weight:600;color:var(--text-2);font-size:.88rem;margin-bottom:.5rem">Force closure</div>
+              <div style="font-size:.74rem;color:var(--text-4);line-height:1.5">Awaiting notification batch</div>
+              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:0%"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-4)">—</span></div>
+            </div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:.5rem;font-size:.78rem">
+            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Run ID</span><span class="mono" style="color:var(--text);font-family:var(--font-mono)">AR-PL-2421</span></div>
+            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Started</span><span style="color:var(--text)">25 Apr · 14:31</span></div>
+            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Triggered by</span><span style="color:var(--text)">Weekly cron</span></div>
+            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Audit log</span><a href="report.html" class="btn-link" style="font-size:.78rem">Open trace →</a></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Recent runs -->
+      <section class="panel row-gap">
+        <div class="panel-head">
+          <h3>Recent runs</h3>
+          <span class="meta">last 14 days</span>
+        </div>
+        <table class="tbl">
+          <thead><tr><th>Run ID</th><th>Started</th><th>Trigger</th><th>Duration</th><th>Outcome</th><th>Stage details</th></tr></thead>
+          <tbody>
+            <tr><td class="mono">AR-PL-2421</td><td>25 Apr · 14:31</td><td>Weekly cron</td><td>3h 12m (active)</td><td><span class="badge orange">Running</span></td><td>117 new · 187/248 verified</td></tr>
+            <tr><td class="mono">AR-PL-2420</td><td>18 Apr · 14:30</td><td>Weekly cron</td><td>3h 48m</td><td><span class="badge green">Completed</span></td><td>284 new · 41 newly verified · 22 closed</td></tr>
+            <tr><td class="mono">AR-PL-2419</td><td>14 Apr · 09:12</td><td>Manual · analyst@cert.tr</td><td>1h 02m</td><td><span class="badge green">Completed</span></td><td>Re-verification batch only · 47 sites</td></tr>
+            <tr><td class="mono">AR-PL-2418</td><td>11 Apr · 14:30</td><td>Weekly cron</td><td>4h 11m</td><td><span class="badge green">Completed</span></td><td>312 new · 38 newly verified · 18 closed</td></tr>
+            <tr><td class="mono">AR-PL-2417</td><td>04 Apr · 14:30</td><td>Weekly cron</td><td>2h 56m</td><td><span class="badge red">Partial</span></td><td>Crawler VPN-TR rotation failure · 38/241 verified</td></tr>
+            <tr><td class="mono">AR-PL-2416</td><td>28 Mar · 14:30</td><td>Weekly cron</td><td>3h 22m</td><td><span class="badge green">Completed</span></td><td>198 new · 33 newly verified · 14 closed</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <div class="grid-2 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>Upcoming runs</h3></div>
+          <div class="panel-body">
+            <ul class="activity-list">
+              <li><div class="activity-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></div><div class="activity-body"><div class="activity-title">Weekly cron — full cycle</div><div class="activity-meta">Tomorrow · 14:30 UTC+3</div></div></li>
+              <li><div class="activity-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></div><div class="activity-body"><div class="activity-title">Re-verification sweep</div><div class="activity-meta">Tomorrow · 03:00 UTC+3 · 47 sites pending recheck</div></div></li>
+              <li><div class="activity-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></div><div class="activity-body"><div class="activity-title">Notification retry batch</div><div class="activity-meta">In 6 hours · 12 bounces from previous send</div></div></li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>Manual ingest</h3></div>
+          <div class="panel-body">
+            <p style="color:var(--text-3);font-size:.85rem;margin-bottom:1rem">Drop a backlink CSV from Ahrefs, Majestic or your own crawler — the pipeline will dedupe, score and verify on the next run.</p>
+            <div style="border:2px dashed var(--border-strong);border-radius:8px;padding:1.6rem 1rem;text-align:center;color:var(--text-3);font-size:.85rem;cursor:pointer;transition:border-color .15s">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:28px;height:28px;margin:0 auto .55rem;display:block;color:var(--text-4)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="color:var(--text-2);font-weight:500">Drop CSV here or <a href="#" style="color:var(--teal)">browse files</a></div>
+              <div style="margin-top:.4rem;font-size:.74rem;color:var(--text-4)">Up to 50 MB · UTF-8 · auto-detected delimiter</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+Prezado(a),
+
+Somos uma equipe de pesquisa em seguranca que monitora sites contra modificacoes nao autorizadas. Durante nossa analise, identificamos conteudo de terceiros nao autorizado em seu site:
+
+  URL afetada: {url}
+  Problema: {hacklink_count} links ocultos injetados no codigo da pagina
+  Detectado em: {first_seen}
+  Relatorio: {report_url}
+
+Esse tipo de modificacao geralmente e causado por uma vulnerabilidade no CMS ou plugins. O conteudo injetado e invisivel para os visitantes, mas indexado pelos motores de busca, o que pode resultar em penalizacoes no ranking do seu site.
+
+ACOES RECOMENDADAS:
+  1. Atualize seu CMS e todos os plugins para as versoes mais recentes
+  2. Verifique os arquivos listados no relatorio em busca de codigo injetado
+  3. Altere todas as senhas administrativas
+  4. Denuncie o dominio de origem ao Cloudflare (instrucoes no relatorio)
+
+O relatorio detalhado inclui capturas de tela, analise tecnica e instrucoes passo a passo para correcao.
+
+Se tiver duvidas, responda a este e-mail.
+
+Atenciosamente,
+Equipe de Pesquisa AbuseRadar
+{report_url}
+
+---
+Voce recebeu esta mensagem porque {domain} foi identificado em nossa varredura de seguranca.
+Esta e uma notificacao unica.

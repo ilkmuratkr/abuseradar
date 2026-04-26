@@ -1,0 +1,131 @@
+{
+  "nav": {
+    "platform": "Platform",
+    "methodology": "Methodology",
+    "threats": "Threat Index",
+    "research": "Research",
+    "login": "Login",
+    "demo": "Request Briefing"
+  },
+  "util": {
+    "alert": "Live: 701 compromised institutions tracked",
+    "report": "Report a Breach",
+    "contact": "Contact",
+    "status": "System Status"
+  },
+  "hero": {
+    "eyebrow": "Independent breach intelligence for the compromised institutional web",
+    "title_from": "From",
+    "title_main": "silent compromises",
+    "title_to": "to",
+    "title_main2": "public accountability",
+    "desc": "AbuseRadar exposes the hidden compromises sitting inside government, university and institutional websites — leaked admin panels, web shells, exfiltrated documents, hijacked subdomains and the criminal SEO injections layered on top of them. We follow the operator stack across the wider compromised web, then turn invisible breaches into evidence packages that hosting providers, registrars, CERT teams and the institutions themselves cannot ignore.",
+    "cta_primary": "Request a private briefing",
+    "cta_secondary": "Read the methodology",
+    "trust_label": "Trusted by",
+    "trust_items": ["Independent CERT analysts", "Government IT teams", "University CSIRT units", "Investigative journalists"]
+  },
+  "stats": {
+    "backlinks": { "num": "14,294", "label": "Breach indicators indexed", "sub": "Across 19 intelligence sources" },
+    "victims":   { "num": "701",    "label": "Compromised institutions", "sub": "Ministries, universities, municipalities and beyond" },
+    "attackers": { "num": "3,745",  "label": "Attacker domains mapped", "sub": "C2, redirector, exfil and click-farm" },
+    "verified":  { "num": "106",    "label": "Active breaches verified", "sub": "Live on-site evidence captured" }
+  },
+  "big": {
+    "eyebrow": "The exposure gap",
+    "title_a": "Most institutional compromises stay live",
+    "title_b": "for months",
+    "title_c": " before the affected organisation notices.",
+    "num": "82",
+    "num_unit": "%",
+    "cap": "of the compromised gov, edu and institutional domains we surface have been silently breached for 90+ days — long after the attacker pivoted from the entry point into adjacent systems.",
+    "desc": "By the time an internal team hears about it, the attacker has already chained the foothold into other subdomains, exfiltrated what they wanted, and rented the residual surface to SEO operators and other parasites. AbuseRadar closes that exposure window — from silent breach to public accountability — in days, not months."
+  },
+  "caps": {
+    "eyebrow": "End-to-end coverage",
+    "title": "Expose. Attribute. Force remediation.",
+    "desc": "Three capabilities, one pipeline. Built for analysts who need defensible breach evidence and operations teams who need compromised institutions — and the operators behind them — to actually clean up rather than silently rotate the symptom.",
+    "items": [
+      {
+        "title": "Breach exposure at scale",
+        "desc": "Continuous intelligence ingestion — backlink graphs, DNS, certificate transparency, leaked-credential feeds and HTTP fingerprinting — fused with multi-signal classifiers and Gemini-scored anomalies. We surface compromised admin panels, abandoned subdomains, web shells and the criminal SEO injections that betray them, including activity invisible to standard security tooling.",
+        "items": ["19 intelligence sources, weekly cycle", "Compromise scoring across gov, edu and institutional surfaces", "Residential VPN rendering to defeat geo-cloaking and bot blocks"]
+      },
+      {
+        "title": "Operator and infrastructure attribution",
+        "desc": "Every confirmed breach is graphed against the wider attacker stack — the C2 redirectors, link farms, exfiltration endpoints and operator footprints behind it. We track who is breaching the institution, not just the symptom they leave behind, so disruption sticks instead of being rewritten the following week.",
+        "items": ["3,745 attacker domains mapped", "Cluster ranking by victim and operator overlap", "Hosting, registrar and ASN attribution"]
+      },
+      {
+        "title": "Coordinated remediation",
+        "desc": "Evidence packages pushed to the institution's own IT and security contacts, national CERTs, hosting abuse desks, registrars, Cloudflare and Google Safe Browsing — in their own language, with the exact DOM trace, screenshot and timeline needed to act. We follow the case until the breach is closed, not just until the symptom is hidden.",
+        "items": ["5-language breach notification templates", "OpenClaw-driven complaint and form filing", "CERT directory, ministerial routing and escalation path"]
+      }
+    ]
+  },
+  "threats": {
+    "eyebrow": "What we expose",
+    "title": "Compromise classes we hunt — with priority on public-sector and academic infrastructure.",
+    "desc": "AbuseRadar is purpose-built to expose silent compromises in the institutional web. Government and academic targets are the priority because of statutory obligations and downstream impact, but coverage extends to the wider compromised web wherever the same operator stacks reappear.",
+    "items": [
+      { "tag": "Critical", "klass": "critical", "title": "Breached government domains", "desc": "Compromised .gov.* and municipal subdomains running unauthorised content, hidden payloads, leaked admin panels or cloaked redirector chains. Highest priority due to statutory disclosure obligations and the potential for adjacent-system compromise.", "metaA": "82 active", "metaB": "+12 / week" },
+      { "tag": "High", "klass": "high", "title": "Compromised university infrastructure", "desc": "Universities and research networks running outdated CMS instances, exposed staging environments and abandoned faculty subdomains — repurposed as link farms, document drops and credential phishing surfaces by external operators.", "metaA": "247 active", "metaB": "+38 / week" },
+      { "tag": "Tracked", "klass": "tracked", "title": "Attacker C2 and exfiltration infrastructure", "desc": "The few-dozen redirector, template-server and exfiltration domains powering thousands of compromised institutional and commercial pages. Disrupting these collapses entire operator stacks at once.", "metaA": "3 confirmed", "metaB": "12 candidates" }
+    ]
+  },
+  "method": {
+    "eyebrow": "Inside the pipeline",
+    "title": "Evidence-first. Audit-ready. Institution-grade.",
+    "desc": "AbuseRadar treats every hop — from a raw intelligence feed to a CERT-ready breach report — as a tracked, audit-ready transition. Five stages, one container stack, every step cryptographically logged.",
+    "steps": [
+      { "n": "01", "h": "Collect", "p": "Pull backlink graphs, DNS, certificate transparency, leaked-credential feeds and HTTP fingerprints. Deduplicate, normalise, score." },
+      { "n": "02", "h": "Classify", "p": "Rule + n-gram + Gemini multi-signal fusion. Each indicator scored for breach severity, sector, geography and operator linkage." },
+      { "n": "03", "h": "Verify on-site", "p": "Render suspect pages under residential VPN with cloaking-aware probes. Capture DOM, screenshot, HAR and certificate chain as legal-grade evidence." },
+      { "n": "04", "h": "Attribute & notify", "p": "Resolve the breach to operator infrastructure. Notify the affected institution's IT or CSIRT in their language with the full evidence package." },
+      { "n": "05", "h": "Force closure", "p": "OpenClaw files reports to CERTs, hosting, registrars, Cloudflare and Safe Browsing in parallel. Track until closed — re-emit on recurrence." }
+    ]
+  },
+  "console": {
+    "eyebrow": "Operations console",
+    "title": "A console that runs itself, audited at every step.",
+    "desc": "Every detection, classification, on-site verification, notification and complaint in AbuseRadar is recorded with cryptographic integrity. Operations teams ship breach reports in their sleep — not as a quarterly deliverable.",
+    "cta": "Walk through the console"
+  },
+  "ctaTag": "No sales calls",
+  "uses": {
+    "eyebrow": "Built for",
+    "title": "Teams responsible for public-facing infrastructure that cannot fail quietly.",
+    "desc": "AbuseRadar is not a dashboard you stare at. It is an operations layer for the people whose remit is the live infrastructure of governments, universities, public institutions and the wider regulated web.",
+    "items": [
+      { "title": "Government & municipal IT", "desc": "Surface compromised domains across your jurisdiction before they appear in a journalist's article or a parliamentary question. Pre-built CERT and ministerial escalation routing.", "stat": "82", "lbl": "gov institutions tracked" },
+      { "title": "University CSIRT teams", "desc": "Catch outdated CMS instances, exposed staging environments and abandoned faculty subdomains before the next academic-year compromise wave.", "stat": "247", "lbl": "edu institutions tracked" },
+      { "title": "Investigative researchers & journalists", "desc": "Receive structured, evidence-bundled breach packages — not one-line tips. Audit-grade format, deduplicated, source-attributed, ready for publication or escalation.", "stat": "3,745", "lbl": "attacker domains mapped" }
+    ]
+  },
+  "why": {
+    "quote_a": "We did not build AbuseRadar to make a dashboard.",
+    "quote_b": "We built it because the people compromising public institutional infrastructure",
+    "quote_c": "moved faster than the organisations defending it.",
+    "quote_d": "Now they don't.",
+    "cite": "AbuseRadar — independent breach intelligence",
+    "cite_loc": "Operating from Istanbul · Reporting globally"
+  },
+  "cta": {
+    "title": "See your organisation's actual exposure surface.",
+    "desc": "Send us your domain, sector or jurisdiction and we'll return — within 72 hours — a private breach briefing with confirmed compromises, attacker attribution, evidence bundle and a remediation playbook. No sales calls.",
+    "primary": "Request your private briefing",
+    "secondary": "alerts@abuseradar.org"
+  },
+  "footer": {
+    "tagline": "Independent breach intelligence for the compromised institutional web. Built and operated from Istanbul.",
+    "cols": [
+      { "h": "Platform", "items": ["Exposure", "Attribution", "Remediation", "Methodology"] },
+      { "h": "Threats",  "items": ["Government", "Universities", "Public sector", "Operator stacks"] },
+      { "h": "Research", "items": ["Quarterly briefing", "Public reports", "Threat catalogue", "Press"] },
+      { "h": "Company",  "items": ["About", "Contact", "Report a breach", "Status", "Legal"] }
+    ],
+    "copyright": "© 2026 AbuseRadar — abuseradar.org",
+    "legal": ["Privacy", "Responsible disclosure", "Terms"],
+    "live": "All systems operational"
+  }
+}

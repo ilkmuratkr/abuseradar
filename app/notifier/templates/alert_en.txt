@@ -1,0 +1,28 @@
+Hello,
+
+We are a security research team that monitors websites for unauthorized modifications. During our analysis, we identified unauthorized third-party content on your website:
+
+  Affected URL: {url}
+  Issue: {hacklink_count} hidden links injected into page source
+  First detected: {first_seen}
+  Report: {report_url}
+
+This type of modification is typically caused by a vulnerability in your CMS or plugins. The injected content is invisible to visitors but indexed by search engines, which may result in search ranking penalties for your site.
+
+RECOMMENDED ACTIONS:
+  1. Update your CMS and all plugins to the latest versions
+  2. Review the files listed in the report for injected code
+  3. Change all administrative passwords
+  4. Report the source domain to Cloudflare (instructions in report)
+
+The detailed report includes screenshots, technical analysis, and step-by-step remediation instructions.
+
+If you have questions, reply to this email.
+
+Best regards,
+AbuseRadar Research Team
+{report_url}
+
+---
+You received this because {domain} was identified in our security scan.
+This is a one-time notification.

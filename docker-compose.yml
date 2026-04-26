@@ -1,0 +1,216 @@
+# ════════════════════════════════════════════════════════
+# AbuseRadar — base compose (works on Mac and Linux)
+# Dev defaults. For production overlay docker-compose.prod.yml.
+# ════════════════════════════════════════════════════════
+
+services:
+
+  # ═══ VPN LAYER ═══
+  vpn-tr:
+    image: linuxserver/wireguard:latest
+    container_name: vpn-tr
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./vpn/tr/wg0.conf:/config/wg_confs/wg0.conf:ro
+      - ./vpn/start-proxy.sh:/custom-cont-init.d/start-proxy.sh:ro
+    environment:
+      - PUID=1000
+      - PGID=1000
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s --max-time 5 https://ipinfo.io/ip || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  vpn-us:
+    image: linuxserver/wireguard:latest
+    container_name: vpn-us
+    cap_add:
+      - NET_ADMIN
+      - SYS_MODULE
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv4.ip_forward=1
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./vpn/us/wg0.conf:/config/wg_confs/wg0.conf:ro
+      - ./vpn/start-proxy.sh:/custom-cont-init.d/start-proxy.sh:ro
+    environment:
+      - PUID=1000
+      - PGID=1000
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s --max-time 5 https://ipinfo.io/ip || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+    restart: unless-stopped
+
+  # ═══ DB + CACHE ═══
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-spamwatch}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-spamwatch}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "${PORT_BIND:-}${PORT_BIND:+:}${PORT_DB:-5432}:5432"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-spamwatch}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "${PORT_BIND:-}${PORT_BIND:+:}${PORT_REDIS:-6380}:6379"
+    networks:
+      - internal
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ═══ APP (FastAPI backend) ═══
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-spamwatch}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-spamwatch}
+      - REDIS_URL=redis://redis:6379/0
+      # All outbound HTTP through VPN-US SOCKS proxy
+      - HTTP_PROXY=socks5h://vpn-us:1080
+      - HTTPS_PROXY=socks5h://vpn-us:1080
+      - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us
+    volumes:
+      - ./app:/app
+      - ./data:/data
+    ports:
+      - "${PORT_BIND:-}${PORT_BIND:+:}${PORT_API:-7777}:8000"
+    networks:
+      - internal
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
+
+  # ═══ CRAWLER (Playwright + VPN-TR) ═══
+  crawler:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.crawler
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER:-spamwatch}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-spamwatch}
+      - REDIS_URL=redis://redis:6379/0
+      - HTTP_PROXY=socks5h://vpn-tr:1080
+      - HTTPS_PROXY=socks5h://vpn-tr:1080
+      - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us
+    volumes:
+      - ./app:/app
+      - ./data:/data
+    networks:
+      - internal
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      vpn-tr:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: ${CRAWLER_MEMORY_LIMIT:-4G}
+    command: python -m crawler.worker
+    restart: unless-stopped
+
+  # ═══ DASHBOARD (Streamlit) ═══
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      - DATABASE_URL=postgresql+psycopg2://${POSTGRES_USER:-spamwatch}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-spamwatch}
+      - API_URL=http://app:8000
+    volumes:
+      - ./dashboard:/dashboard
+      - ./data:/data
+      - ./app/notifier/templates:/app/notifier/templates:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "${PORT_BIND:-}${PORT_BIND:+:}${PORT_DASHBOARD:-7778}:8501"
+    networks:
+      - internal
+    depends_on:
+      db:
+        condition: service_healthy
+    command: streamlit run app.py --server.port 8501 --server.address 0.0.0.0
+    restart: unless-stopped
+
+  # ═══ OPENCLAW (autonomous AI agent for abuse complaints) ═══
+  openclaw:
+    image: alpine/openclaw:latest
+    container_name: openclaw
+    user: "0:0"
+    environment:
+      - HTTP_PROXY=socks5h://vpn-us:1080
+      - HTTPS_PROXY=socks5h://vpn-us:1080
+      - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - OPENCLAW_HOME=/root/.openclaw
+      - OPENCLAW_LLM_PROVIDER=gemini
+      - OPENCLAW_LLM_MODEL=gemini-2.5-pro
+    volumes:
+      - openclaw-config:/root/.openclaw
+      - ./data/openclaw-workspace:/root/workspace
+      - ./app/complainant/openclaw_tasks:/root/workspace/tasks
+    ports:
+      - "${PORT_BIND:-}${PORT_BIND:+:}${PORT_OPENCLAW:-18789}:18789"
+    networks:
+      - internal
+    depends_on:
+      vpn-us:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          memory: ${OPENCLAW_MEMORY_LIMIT:-2G}
+    restart: unless-stopped
+
+networks:
+  internal:
+    driver: bridge
+
+volumes:
+  pgdata:
+  openclaw-config:

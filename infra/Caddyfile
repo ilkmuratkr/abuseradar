@@ -1,0 +1,43 @@
+# ════════════════════════════════════════════════════════
+# AbuseRadar — Caddy alternative (zero-config TLS, simpler than nginx)
+# Place at /etc/caddy/Caddyfile and `systemctl reload caddy`.
+# Caddy auto-provisions Let's Encrypt certs on first start.
+# ════════════════════════════════════════════════════════
+
+abuseradar.org, www.abuseradar.org {
+    encode gzip
+
+    # ─── Security headers ───
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "SAMEORIGIN"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Permissions-Policy "geolocation=(), microphone=(), camera=()"
+    }
+
+    # Static site (web/ directory, deployed to /var/www/abuseradar/web)
+    root * /var/www/abuseradar/web
+
+    # FastAPI backend
+    handle_path /api/* {
+        reverse_proxy 127.0.0.1:7777
+    }
+
+    # Streamlit dashboard (websocket-aware). Protect with basic auth in prod.
+    handle_path /admin/* {
+        # Uncomment to enable basic auth:
+        # basicauth {
+        #     analyst $2a$14$...   # caddy hash-password
+        # }
+        reverse_proxy 127.0.0.1:7778
+    }
+
+    # Long-cache static assets
+    @static path *.png *.jpg *.jpeg *.webp *.svg *.woff *.woff2
+    header @static Cache-Control "public, max-age=2592000, immutable"
+
+    # Pretty URLs
+    try_files {path} {path}.html {path}/index.html
+    file_server
+}

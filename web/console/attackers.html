@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Attackers — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="attackers"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Attackers</span></nav>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="text" placeholder="Search domain, ASN, registrar…">
+          <kbd>⌘K</kbd>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Attacker infrastructure</h1>
+          <p>3,745 attacker domains mapped to 18 operator clusters. C2 servers, redirectors, link farms and exfiltration endpoints.</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost">Export graph</button>
+          <button class="btn btn-primary">Map new operator</button>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi red">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></span>Total domains</div>
+          <div class="kpi-value" data-target="3745">3,745</div>
+          <div class="kpi-trend">across 18 clusters</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>C2 servers</div>
+          <div class="kpi-value" data-target="42">42</div>
+          <div class="kpi-trend">3 confirmed primary</div>
+        </div>
+        <div class="kpi orange">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span>Redirectors</div>
+          <div class="kpi-value" data-target="187">187</div>
+          <div class="kpi-trend">12 just rotated</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="22,6 12,16 6,10"/></svg></span>Disrupted</div>
+          <div class="kpi-value" data-target="64">64</div>
+          <div class="kpi-trend">last 90 days</div>
+        </div>
+      </div>
+
+      <div class="grid-2-1 row-gap">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Operator clusters</h3>
+            <span class="meta">ranked by victim impact</span>
+          </div>
+          <table class="tbl">
+            <thead><tr><th>Cluster</th><th>Operator hint</th><th>Victims</th><th>Domains</th><th>Hosting / ASN</th><th>Status</th><th></th></tr></thead>
+            <tbody>
+              <tr><td><span class="mono strong">#03</span></td><td>scriptapi.dev</td><td>412</td><td>1,184</td><td>AS14618 · AWS</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+              <tr><td><span class="mono strong">#07</span></td><td>hacklinkbacklink.com</td><td>318</td><td>892</td><td>AS197540 · netcup</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+              <tr><td><span class="mono strong">#11</span></td><td>adsfarm-x</td><td>241</td><td>514</td><td>AS24940 · Hetzner</td><td><span class="badge orange">Disrupting</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+              <tr><td><span class="mono strong">#14</span></td><td>cobet-network</td><td>174</td><td>421</td><td>AS9009 · M247</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+              <tr><td><span class="mono strong">#18</span></td><td>pharma-rdr</td><td>117</td><td>312</td><td>AS16276 · OVH</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+              <tr><td><span class="mono strong">#02</span></td><td>cas-spinner</td><td>89</td><td>168</td><td>AS200752 · Stark</td><td><span class="badge gold">Watching</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+              <tr><td><span class="mono strong">#09</span></td><td>scriptdrop</td><td>71</td><td>142</td><td>AS21859 · Zenlayer</td><td><span class="badge green">Closed</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+              <tr><td><span class="mono strong">#21</span></td><td>multifarm</td><td>54</td><td>112</td><td>AS47583 · Hostinger</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>Hosting concentration</h3></div>
+          <div class="panel-body">
+            <div class="chart-bars">
+              <div class="chart-bar-row"><span class="chart-bar-label">AWS (AS14618)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="100"></span></span><span class="chart-bar-value">1,184</span></div>
+              <div class="chart-bar-row"><span class="chart-bar-label">netcup (AS197540)</span><span class="chart-bar-track"><span class="chart-bar-fill orange" data-pct="75"></span></span><span class="chart-bar-value">892</span></div>
+              <div class="chart-bar-row"><span class="chart-bar-label">Hetzner (AS24940)</span><span class="chart-bar-track"><span class="chart-bar-fill gold" data-pct="43"></span></span><span class="chart-bar-value">514</span></div>
+              <div class="chart-bar-row"><span class="chart-bar-label">M247 (AS9009)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="36"></span></span><span class="chart-bar-value">421</span></div>
+              <div class="chart-bar-row"><span class="chart-bar-label">OVH (AS16276)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="26"></span></span><span class="chart-bar-value">312</span></div>
+              <div class="chart-bar-row"><span class="chart-bar-label">Other (12 ASNs)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="36"></span></span><span class="chart-bar-value">422</span></div>
+            </div>
+            <div style="margin-top:1.4rem;padding-top:.9rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3);line-height:1.55">
+              Top 5 hosts account for <strong style="color:var(--text)">88.7%</strong> of mapped attacker infra. Disrupting AWS + netcup unhooks an estimated 2,076 domains.
+            </div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+[
+  {
+    "out": "bg-research-hero.png",
+    "ar": "16:9",
+    "prompt": "Atmospheric backdrop for a cybersecurity research / publications page header. Deep petrol blue #001F29 dominant. Subtle stacked translucent document silhouettes drifting at low opacity from upper-right, like layered briefing reports floating in space, rendered in cyan teal #1ACEC9 line geometry. Faint warm gold #EADA24 highlights on document edges. Atmospheric haze, dust particles, depth-of-field. Image must remain dark and quiet so headline text overlays cleanly on the left. No text, no logos, no people, no UI chrome. Editorial atmospheric backdrop, premium investigative-journalism aesthetic. 16:9 widescreen."
+  },
+  {
+    "out": "bg-pricing-hero.png",
+    "ar": "16:9",
+    "prompt": "Atmospheric backdrop for a cybersecurity pricing / engagement page header. Deep petrol blue #001F29 dominant. Subtle abstract architectural light beams in cyan teal #1ACEC9 forming three faint vertical pillars on the right side at low opacity, suggesting tiers / structure without any text. A soft warm gold #EADA24 horizon glow at the bottom. Faint dot-matrix particles. Atmospheric depth-of-field, premium financial dashboard aesthetic. Image must remain dark and quiet for headline overlay on the left. No text, no labels, no logos, no UI elements. 16:9 widescreen."
+  },
+  {
+    "out": "bg-login-vault.png",
+    "ar": "16:9",
+    "prompt": "Atmospheric backdrop for a cybersecurity console login page. Deep petrol blue #001F29 base. Center-left has very subtle concentric security-vault ring patterns in cyan teal #1ACEC9 at 12% opacity, like a slowly closing iris or biometric scanner. Faint warm gold #EADA24 radial glow emanating from the center at low intensity. Heavy atmospheric haze, particles, depth-of-field, soft volumetric light. Image must be very dark and quiet so a centered login card overlays it cleanly. No text, no logos, no UI elements, no human figures. Editorial atmospheric backdrop. 16:9 widescreen."
+  },
+  {
+    "out": "research-feature-network.png",
+    "ar": "16:9",
+    "prompt": "Editorial illustration for a cybersecurity research featured report card. A complex but elegant network attribution graph rendered in 3D space: 18 distinct operator-cluster nodes in warm gold #EADA24 connected to hundreds of small victim-domain nodes in cyan teal #1ACEC9, with thin glowing fiber edges showing the attack flow. Three central command nodes pulse brighter than the rest. Background: deep petrol blue #001F29 with a subtle hexagonal grid faintly visible. Atmospheric volumetric light, depth-of-field blur on background nodes, particles. Color palette: petrol blue, cyan teal, gold, accent red. Style: premium financial-research data visualization, Bloomberg Terminal aesthetic. Absolutely no text, no labels, no UI chrome, no logos. 16:9 widescreen composition."
+  }
+]

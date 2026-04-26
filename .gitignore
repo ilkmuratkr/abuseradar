@@ -1,0 +1,77 @@
+# ═══ SECRETS — never commit ═══
+.env
+.env.local
+.env.production
+.env.*.local
+
+# WireGuard private keys
+vpn/tr/wg0.conf
+vpn/us/wg0.conf
+vpn/**/*.conf
+!vpn/**/*.conf.example
+
+# API key dumps, credential files
+*.pem
+*.key
+*.crt
+!**/init.sql
+secrets/
+credentials/
+
+# ═══ Runtime data (regenerable, large, sometimes sensitive) ═══
+data/csv/processing/
+data/csv/processed/
+data/csv/duplicate/
+data/csv/error/
+data/csv/inbox/*
+!data/csv/inbox/.gitkeep
+data/evidence/*
+!data/evidence/.gitkeep
+data/openclaw-workspace/*
+!data/openclaw-workspace/.gitkeep
+
+# ═══ Docker volumes / runtime ═══
+pgdata/
+*.log
+logs/
+
+# ═══ Python ═══
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# ═══ Node / web tooling (if added later) ═══
+node_modules/
+dist/
+.cache/
+*.tsbuildinfo
+
+# ═══ Web design research workdir (generated assets are committed) ═══
+web/_design-research/*.jpeg
+# Keep prompts.json and gen scripts
+
+# ═══ Editor / OS ═══
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ═══ Local notes / scratch ═══
+TODO-SONRAKI-OTURUM.md
+NOTES.md
+scratch/
+tmp/

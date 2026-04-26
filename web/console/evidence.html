@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Evidence — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="evidence"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Evidence</span></nav>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost">Export bundle</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Evidence vault</h1>
+          <p>DOM snapshots, screenshots, HAR traces and certificate chains. Cryptographically integrity-stamped at capture, audit-ready for CERT and registrar submission.</p>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h3>Recent captures</h3><span class="meta">2,418 bundles · 11.2 GB total</span></div>
+        <table class="tbl">
+          <thead><tr><th>Bundle ID</th><th>Domain</th><th>Captured</th><th>Artefacts</th><th>Hash</th><th></th></tr></thead>
+          <tbody>
+            <tr><td class="mono">EV-2026-04-25-184</td><td><span class="strong">saude.gov.ar</span></td><td>11:54</td><td>DOM · 4 screenshots · HAR · certs</td><td class="mono" style="color:var(--text-4);font-size:.74rem">8a4f…c102</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
+            <tr><td class="mono">EV-2026-04-25-183</td><td><span class="strong">faculty.ankara.edu.tr</span></td><td>13:08</td><td>DOM · 3 screenshots · HAR</td><td class="mono" style="color:var(--text-4);font-size:.74rem">f221…4a90</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
+            <tr><td class="mono">EV-2026-04-25-182</td><td><span class="strong">saogoncalo.rj.gov.br</span></td><td>14:22</td><td>DOM · 6 screenshots · HAR · certs</td><td class="mono" style="color:var(--text-4);font-size:.74rem">3c58…b8e1</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
+            <tr><td class="mono">EV-2026-04-25-181</td><td><span class="strong">portal.unipa.edu.br</span></td><td>09:31</td><td>DOM · 2 screenshots · HAR</td><td class="mono" style="color:var(--text-4);font-size:.74rem">7e09…1f33</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
+            <tr><td class="mono">EV-2026-04-25-180</td><td><span class="strong">cdc.gov.in</span></td><td>08:14</td><td>DOM · 5 screenshots · HAR · certs</td><td class="mono" style="color:var(--text-4);font-size:.74rem">b9d2…7c40</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

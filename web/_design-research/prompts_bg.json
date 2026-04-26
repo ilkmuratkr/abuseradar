@@ -1,0 +1,32 @@
+[
+  {
+    "out": "bg-hero-ambient.png",
+    "ar": "16:9",
+    "prompt": "Ultra-subtle atmospheric background texture for a cybersecurity website hero section. Very dark deep petrol blue #001F29 base color filling 90% of frame. Layered with extremely faint cyan teal #1ACEC9 concentric radar pulse rings emanating from upper-right corner, barely visible at 8% opacity. Add subtle scattered nebula-like volumetric haze in cyan teal and soft warm gold #EADA24 tones, very low intensity, like distant galaxies. Faint dot-matrix world map outline ghosting through the haze on lower-left, almost imperceptible. Soft horizontal gradient darker on left to slightly lighter petrol on right. Heavy atmospheric depth, film grain, bokeh particles. CRITICAL: image must be very dark and low-contrast so that white text overlaid on it remains perfectly readable. Color palette strictly: deep petrol blue dominant, faint cyan teal accents, faint warm gold accents. No bright spots, no high-contrast elements, no central focal point, no text, no logos, no people, no UI. Editorial atmospheric backdrop only. 16:9 ultra-wide."
+  },
+  {
+    "out": "bg-section-divider.png",
+    "ar": "16:9",
+    "prompt": "Extremely subtle horizontal section divider backdrop for a cybersecurity website. A wide thin band showing topographic contour lines rendered in faint cyan teal #1ACEC9 at 12% opacity, flowing horizontally like distant mountain ridge data. Deep petrol blue #001F29 background. Add very faint warm gold #EADA24 highlight along one ridge. Subtle film grain, atmospheric haze. The composition must be dark and quiet, not draw attention, suitable as a divider between content blocks. No bright focal points, no text, no labels, no logos. Editorial subtle backdrop, very low contrast. 16:9 ultra-wide."
+  },
+  {
+    "out": "bg-big-stat.png",
+    "ar": "16:9",
+    "prompt": "Atmospheric background panel for a large statistic display section on a cybersecurity website. Deep petrol blue #001F29 base. Layered with a very subtle hexagonal honeycomb data-grid pattern in cyan teal #1ACEC9 at 10% opacity covering the right half. Soft warm gold #EADA24 radial glow emanating from upper-right corner at 15% opacity. Subtle vertical light streaks like data falling. Faint particles and atmospheric depth. The image must remain dark and low-contrast so a giant white percentage number overlaid on it stands out. No central focus, no text, no logos. Editorial backdrop, premium financial dashboard aesthetic. 16:9 widescreen."
+  },
+  {
+    "out": "bg-cta-aurora.png",
+    "ar": "16:9",
+    "prompt": "Soft aurora atmospheric backdrop for a cybersecurity website call-to-action section. Deep petrol blue #001F29 base color filling most of the frame. A gentle ribbon of cyan teal #1ACEC9 aurora light flows diagonally from lower-left to upper-right at low opacity, like northern lights. A warm gold #EADA24 secondary aurora ribbon crosses subtly. Atmospheric depth, particles, very soft glow, dreamy quality. The image must remain quiet and dark enough to overlay readable headline text and a primary button. No central subject, no text, no logos, no UI. Editorial atmospheric only. 16:9 widescreen."
+  },
+  {
+    "out": "bg-threats-grid.png",
+    "ar": "16:9",
+    "prompt": "Subtle technical grid backdrop for a cybersecurity threat catalogue section. Deep petrol blue #001F29 dominant. A very faint isometric data-grid pattern in cyan teal #1ACEC9 at 10% opacity, like a SOC operations grid. Scattered tiny red alert pin dots #EF4444 sparingly distributed across the grid at low intensity, like distant threats on radar. Soft warm gold #EADA24 horizontal scan-line sweep across the middle at 12% opacity. Atmospheric haze, particles, depth-of-field. Image must remain dark and quiet so threat cards overlaid on it remain crisp. No bright focal points, no text, no labels, no logos. Editorial dark technical backdrop. 16:9 widescreen."
+  },
+  {
+    "out": "bg-uses-fabric.png",
+    "ar": "16:9",
+    "prompt": "Ultra-subtle institutional architecture backdrop for a cybersecurity website use-cases section. Very dark deep petrol blue #001F29 base. Faint silhouettes of classical institutional architecture (government buildings with columns, university towers) rendered in cyan teal #1ACEC9 line geometry at 10% opacity, like ghosted blueprints fading into atmosphere. Soft warm gold #EADA24 dawn glow on the horizon line at low intensity. Atmospheric haze, depth-of-field, subtle particles. Image must remain quiet and dark for text card overlay. No people, no text, no labels, no logos, no bright focus. Editorial institutional atmospheric backdrop. 16:9 widescreen."
+  }
+]

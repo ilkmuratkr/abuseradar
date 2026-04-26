@@ -1,0 +1,19 @@
+# WireGuard config for VPN-TR (Turkey egress)
+# Replace with your provider's config. Real wg0.conf is gitignored.
+#
+# How to get this:
+#   - Sign up with a WireGuard VPN provider (Mullvad, AzireVPN, IVPN, etc.)
+#   - Pick a Turkey endpoint
+#   - Download the WireGuard config
+#   - Save as vpn/tr/wg0.conf
+
+[Interface]
+PrivateKey = REPLACE_WITH_YOUR_PRIVATE_KEY
+Address = 10.0.0.2/32
+DNS = 10.0.0.1
+
+[Peer]
+PublicKey = REPLACE_WITH_PEER_PUBLIC_KEY
+AllowedIPs = 0.0.0.0/0
+Endpoint = your-tr-endpoint.example.com:51820
+PersistentKeepalive = 25

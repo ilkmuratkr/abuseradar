@@ -1,0 +1,131 @@
+{
+  "nav": {
+    "platform": "Plataforma",
+    "methodology": "Metodologia",
+    "threats": "Índice de Ameaças",
+    "research": "Pesquisa",
+    "login": "Entrar",
+    "demo": "Solicitar Briefing"
+  },
+  "util": {
+    "alert": "Ao vivo: 701 instituições comprometidas monitoradas",
+    "report": "Reportar Vazamento",
+    "contact": "Contato",
+    "status": "Status do Sistema"
+  },
+  "hero": {
+    "eyebrow": "Inteligência independente de vazamentos para a web institucional comprometida",
+    "title_from": "De",
+    "title_main": "comprometimentos silenciosos",
+    "title_to": "à",
+    "title_main2": "responsabilização pública",
+    "desc": "AbuseRadar expõe os comprometimentos ocultos que vivem dentro de sites governamentais, universitários e institucionais — painéis de administração vazados, web shells, documentos exfiltrados, subdomínios sequestrados e as injeções criminosas de SEO sobrepostas a eles. Seguimos a pilha do operador através da web comprometida mais ampla; depois transformamos vazamentos invisíveis em pacotes de evidência que provedores de hospedagem, registradores, equipes CERT e as próprias instituições não podem ignorar.",
+    "cta_primary": "Solicitar briefing privado",
+    "cta_secondary": "Ler a metodologia",
+    "trust_label": "Com a confiança de",
+    "trust_items": ["Analistas CERT independentes", "Equipes de TI governamentais", "Unidades CSIRT universitárias", "Jornalistas investigativos"]
+  },
+  "stats": {
+    "backlinks": { "num": "14.294", "label": "Indicadores de vazamento indexados", "sub": "Em 19 fontes de inteligência" },
+    "victims":   { "num": "701",    "label": "Instituições comprometidas", "sub": "Ministérios, universidades, prefeituras e além" },
+    "attackers": { "num": "3.745",  "label": "Domínios atacantes mapeados", "sub": "C2, redirecionador, exfil e click-farm" },
+    "verified":  { "num": "106",    "label": "Vazamentos ativos verificados", "sub": "Evidência ao vivo capturada in loco" }
+  },
+  "big": {
+    "eyebrow": "A lacuna de exposição",
+    "title_a": "A maioria dos comprometimentos institucionais permanece ativa",
+    "title_b": "por meses",
+    "title_c": " antes que a organização afetada perceba.",
+    "num": "82",
+    "num_unit": "%",
+    "cap": "dos domínios gov, edu e institucionais comprometidos que identificamos estão silenciosamente vazando há mais de 90 dias — muito depois que o atacante pivotou do ponto de entrada para sistemas adjacentes.",
+    "desc": "Quando uma equipe interna ouve falar disso, o atacante já encadeou o ponto de apoio em outros subdomínios, exfiltrou o que queria e alugou a superfície residual para operadores de SEO e outros parasitas. AbuseRadar fecha essa janela de exposição — do vazamento silencioso à responsabilização pública — em dias, não meses."
+  },
+  "caps": {
+    "eyebrow": "Cobertura de ponta a ponta",
+    "title": "Expor. Atribuir. Forçar correção.",
+    "desc": "Três capacidades, um pipeline. Construído para analistas que precisam de evidência defensável de vazamento e equipes de operações que precisam que instituições comprometidas — e os operadores por trás delas — realmente limpem em vez de apenas rotacionar o sintoma silenciosamente.",
+    "items": [
+      {
+        "title": "Exposição de vazamentos em escala",
+        "desc": "Ingestão contínua de inteligência — grafos de backlink, DNS, transparência de certificados, feeds de credenciais vazadas e fingerprinting HTTP — fundida com classificadores multi-sinal e anomalias pontuadas pelo Gemini. Identificamos painéis de administração comprometidos, subdomínios abandonados, web shells e as injeções criminosas de SEO que os denunciam, incluindo atividade invisível para ferramentas de segurança padrão.",
+        "items": ["19 fontes de inteligência, ciclo semanal", "Pontuação de comprometimento em superfícies gov, edu e institucionais", "Renderização VPN residencial para vencer geo-cloaking e bloqueios de bot"]
+      },
+      {
+        "title": "Atribuição de operador e infraestrutura",
+        "desc": "Cada vazamento confirmado é mapeado contra a pilha mais ampla do atacante — os redirecionadores C2, link farms, endpoints de exfiltração e pegadas de operador por trás dele. Rastreamos quem está comprometendo a instituição, não apenas o sintoma deixado para trás, para que a interrupção dure em vez de ser reescrita na semana seguinte.",
+        "items": ["3.745 domínios atacantes mapeados", "Classificação de cluster por sobreposição de vítima e operador", "Atribuição de hospedagem, registrador e ASN"]
+      },
+      {
+        "title": "Correção coordenada",
+        "desc": "Pacotes de evidência enviados aos próprios contatos de TI e segurança da instituição, CERTs nacionais, balcões de abuso de hospedagem, registradores, Cloudflare e Google Safe Browsing — em sua própria língua, com o rastreamento DOM exato, captura de tela e linha do tempo necessários para agir. Acompanhamos o caso até o vazamento ser fechado, não apenas o sintoma escondido.",
+        "items": ["Modelos de notificação de vazamento em 5 idiomas", "Preenchimento de queixas e formulários via OpenClaw", "Diretório CERT, roteamento ministerial e caminho de escalação"]
+      }
+    ]
+  },
+  "threats": {
+    "eyebrow": "O que expomos",
+    "title": "Classes de comprometimento que caçamos — com prioridade no setor público e infraestrutura acadêmica.",
+    "desc": "AbuseRadar é construído sob medida para expor comprometimentos silenciosos na web institucional. Alvos governamentais e acadêmicos são prioridade devido a obrigações legais e impacto em cadeia, mas a cobertura se estende à web comprometida mais ampla onde quer que as mesmas pilhas de operador reapareçam.",
+    "items": [
+      { "tag": "Crítico", "klass": "critical", "title": "Domínios governamentais comprometidos", "desc": "Subdomínios .gov.* e municipais comprometidos executando conteúdo não autorizado, payloads ocultos, painéis de administração vazados ou cadeias de redirecionamento cloakadas. Prioridade máxima devido a obrigações legais de divulgação e potencial de comprometimento de sistemas adjacentes.", "metaA": "82 ativos", "metaB": "+12 / semana" },
+      { "tag": "Alto", "klass": "high", "title": "Infraestrutura universitária comprometida", "desc": "Universidades e redes de pesquisa executando instâncias CMS desatualizadas, ambientes de staging expostos e subdomínios docentes abandonados — reaproveitados como link farms, drops de documentos e superfícies de phishing de credenciais por operadores externos.", "metaA": "247 ativos", "metaB": "+38 / semana" },
+      { "tag": "Monitorado", "klass": "tracked", "title": "Infraestrutura C2 e exfil de atacantes", "desc": "As poucas dezenas de domínios redirecionadores, servidores-modelo e exfiltração que alimentam milhares de páginas institucionais e comerciais comprometidas. Interromper estes colapsa pilhas inteiras de operadores de uma vez.", "metaA": "3 confirmados", "metaB": "12 candidatos" }
+    ]
+  },
+  "method": {
+    "eyebrow": "Dentro do pipeline",
+    "title": "Evidência primeiro. Pronto para auditoria. Nível institucional.",
+    "desc": "AbuseRadar trata cada salto — do feed bruto de inteligência a um relatório de vazamento pronto para CERT — como uma transição rastreada e pronta para auditoria. Cinco estágios, uma pilha de containers, cada passo logado criptograficamente.",
+    "steps": [
+      { "n": "01", "h": "Coletar", "p": "Puxe grafos de backlink, DNS, transparência de certificados, feeds de credenciais vazadas e fingerprints HTTP. Deduplique, normalize, pontue." },
+      { "n": "02", "h": "Classificar", "p": "Fusão regra + n-gram + multi-sinal Gemini. Cada indicador pontuado por gravidade do vazamento, setor, geografia e ligação com operador." },
+      { "n": "03", "h": "Verificar in loco", "p": "Renderize páginas suspeitas via VPN residencial com sondas conscientes de cloaking. Capture DOM, captura de tela, HAR e cadeia de certificados como evidência de grau jurídico." },
+      { "n": "04", "h": "Atribuir e notificar", "p": "Resolva o vazamento para a infraestrutura do operador. Notifique a TI ou CSIRT da instituição afetada em sua língua com o pacote completo de evidências." },
+      { "n": "05", "h": "Forçar fechamento", "p": "OpenClaw arquiva relatórios CERT, hospedagem, registrador, Cloudflare e Safe Browsing em paralelo. Acompanhe até fechar — reemita em recorrência." }
+    ]
+  },
+  "console": {
+    "eyebrow": "Console de operações",
+    "title": "Um console que se executa sozinho, auditado a cada passo.",
+    "desc": "Cada detecção, classificação, verificação in loco, notificação e queixa no AbuseRadar é registrada com integridade criptográfica. As equipes de operações enviam relatórios de vazamento dormindo — não como entregável trimestral.",
+    "cta": "Percorra o console"
+  },
+  "ctaTag": "Sem ligações de vendas",
+  "uses": {
+    "eyebrow": "Construído para",
+    "title": "Equipes responsáveis por infraestrutura voltada ao público que não pode falhar em silêncio.",
+    "desc": "AbuseRadar não é um dashboard para olhar. É uma camada de operações para as pessoas cuja missão é a infraestrutura ao vivo de governos, universidades, instituições públicas e a web regulada mais ampla.",
+    "items": [
+      { "title": "TI governamental e municipal", "desc": "Identifique domínios comprometidos em sua jurisdição antes que apareçam no artigo de um jornalista ou em uma pergunta parlamentar. Roteamento de escalação CERT e ministerial pré-construído.", "stat": "82", "lbl": "instituições gov monitoradas" },
+      { "title": "Equipes CSIRT universitárias", "desc": "Capture instâncias CMS desatualizadas, ambientes de staging expostos e subdomínios docentes abandonados antes da próxima onda de comprometimento do ano letivo.", "stat": "247", "lbl": "instituições edu monitoradas" },
+      { "title": "Pesquisadores investigativos", "desc": "Receba pacotes de vazamento estruturados e empacotados com evidência — não dicas de uma linha. Formato de grau auditável, deduplicado, fonte atribuída, pronto para publicação ou escalação.", "stat": "3.745", "lbl": "domínios atacantes mapeados" }
+    ]
+  },
+  "why": {
+    "quote_a": "Não construímos o AbuseRadar para fazer um dashboard.",
+    "quote_b": "Construímos porque as pessoas que comprometem a infraestrutura institucional pública",
+    "quote_c": "se moviam mais rápido que as organizações que a defendiam.",
+    "quote_d": "Agora não mais.",
+    "cite": "AbuseRadar — inteligência independente de vazamentos",
+    "cite_loc": "Operando de Istambul · Reportando globalmente"
+  },
+  "cta": {
+    "title": "Veja a verdadeira superfície de exposição da sua organização.",
+    "desc": "Envie-nos seu domínio, setor ou jurisdição e retornaremos — em até 72 horas — um briefing privado de vazamento com comprometimentos confirmados, atribuição de atacante, pacote de evidências e um manual de correção. Sem ligações de vendas.",
+    "primary": "Solicite seu briefing privado",
+    "secondary": "alerts@abuseradar.org"
+  },
+  "footer": {
+    "tagline": "Inteligência independente de vazamentos para a web institucional comprometida. Construída e operada a partir de Istambul.",
+    "cols": [
+      { "h": "Plataforma", "items": ["Exposição", "Atribuição", "Correção", "Metodologia"] },
+      { "h": "Ameaças",    "items": ["Governo", "Universidades", "Setor público", "Pilhas de operador"] },
+      { "h": "Pesquisa",   "items": ["Briefing trimestral", "Relatórios públicos", "Catálogo de ameaças", "Imprensa"] },
+      { "h": "Empresa",    "items": ["Sobre", "Contato", "Reportar vazamento", "Status", "Legal"] }
+    ],
+    "copyright": "© 2026 AbuseRadar — abuseradar.org",
+    "legal": ["Privacidade", "Divulgação responsável", "Termos"],
+    "live": "Todos os sistemas operacionais"
+  }
+}

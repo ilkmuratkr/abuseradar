@@ -1,0 +1,131 @@
+{
+  "nav": {
+    "platform": "Platform",
+    "methodology": "Metodoloji",
+    "threats": "Tehdit Endeksi",
+    "research": "Araştırma",
+    "login": "Giriş",
+    "demo": "Özel Brifing İste"
+  },
+  "util": {
+    "alert": "Canlı: 701 ele geçirilmiş kurum izleniyor",
+    "report": "Sızıntı Bildir",
+    "contact": "İletişim",
+    "status": "Sistem Durumu"
+  },
+  "hero": {
+    "eyebrow": "Ele geçirilmiş kurumsal web için bağımsız sızıntı istihbaratı",
+    "title_from": "Sessiz",
+    "title_main": "kurum sızıntılarından",
+    "title_to": "kamusal",
+    "title_main2": "hesap verebilirliğe",
+    "desc": "AbuseRadar; devlet, üniversite ve kurumsal web sitelerinin içinde sessizce yaşayan ele geçirme vakalarını ortaya çıkarır — sızdırılmış yönetim panelleri, web shell'ler, dışarı sızdırılmış belgeler, ele geçirilmiş alt alan adları ve bunların üzerine binen suç amaçlı SEO enjeksiyonları. Operatör yığınını ele geçirilmiş web'in tamamı boyunca takip eder; ardından görünmez sızıntıları, hosting sağlayıcıların, registrarların, CERT ekiplerinin ve kurumların kendisinin görmezden gelemeyeceği kanıt paketlerine dönüştürür.",
+    "cta_primary": "Özel brifing iste",
+    "cta_secondary": "Metodolojiyi oku",
+    "trust_label": "Bize güvenenler",
+    "trust_items": ["Bağımsız CERT analistleri", "Kamu BT ekipleri", "Üniversite CSIRT birimleri", "Araştırmacı gazeteciler"]
+  },
+  "stats": {
+    "backlinks": { "num": "14.294", "label": "İndekslenen sızıntı göstergesi", "sub": "19 farklı istihbarat kaynağından" },
+    "victims":   { "num": "701",    "label": "Ele geçirilmiş kurum", "sub": "Bakanlık, üniversite, belediye ve ötesi" },
+    "attackers": { "num": "3.745",  "label": "Saldırgan alan adı haritalandı", "sub": "C2, yönlendirici, exfil ve tıklama çiftliği" },
+    "verified":  { "num": "106",    "label": "Aktif sızıntı doğrulandı", "sub": "Saha üzerinde canlı kanıt" }
+  },
+  "big": {
+    "eyebrow": "Deşifre boşluğu",
+    "title_a": "Kurumsal sızıntıların çoğu,",
+    "title_b": "aylarca",
+    "title_c": " etkilenen kurumun kendisi bile fark etmeden açık kalır.",
+    "num": "82",
+    "num_unit": "%",
+    "cap": "yüzeylediğimiz ele geçirilmiş kamu, eğitim ve kurumsal alan adlarının %82'si 90+ gündür sessizce sızıntıda — saldırgan giriş noktasından çoktan komşu sistemlere yayılmış durumda.",
+    "desc": "Kurum içindeki ekip durumu öğrendiğinde, saldırgan o tutunma noktasını çoktan diğer alt alan adlarına zincirlemiş, istediğini dışarı çıkarmış ve geri kalan yüzeyi SEO operatörlerine ve diğer parazitlere kiralamış oluyor. AbuseRadar bu maruziyet penceresini — sessiz sızıntıdan kamusal hesap verebilirliğe — aylarda değil günlerde kapatıyor."
+  },
+  "caps": {
+    "eyebrow": "Uçtan uca kapsam",
+    "title": "Deşifre et. Atfet. Düzeltmeyi zorla.",
+    "desc": "Üç yetenek, tek pipeline. Savunulabilir sızıntı kanıtı isteyen analistler ve ele geçirilmiş kurumların — ve arkalarındaki operatörlerin — belirtiyi sessizce rotasyonla değil, kökten temizlemesini isteyen operasyon ekipleri için kuruldu.",
+    "items": [
+      {
+        "title": "Ölçekte sızıntı deşifresi",
+        "desc": "Sürekli istihbarat akışı — backlink grafları, DNS, sertifika transparansı, sızdırılmış kimlik bilgisi feed'leri ve HTTP parmak izi — çok sinyalli sınıflandırıcılar ve Gemini puanlı anomali kanıtlarıyla birleştirilir. Ele geçirilmiş yönetim panellerini, terk edilmiş alt alan adlarını, web shell'leri ve onları ele veren suç amaçlı SEO enjeksiyonlarını yüzeye çıkarırız — standart güvenlik araçlarının göremediği aktivite dahil.",
+        "items": ["19 istihbarat kaynağı, haftalık döngü", "Kamu, eğitim ve kurumsal yüzeyler için ele geçirme skorlaması", "Geo-cloak ve bot bloklarını kırmak için residential VPN ile render"]
+      },
+      {
+        "title": "Operatör ve altyapı atıfı",
+        "desc": "Doğrulanan her sızıntı, arkasındaki daha geniş saldırgan yığınına karşı grafa dökülür — C2 yönlendiricileri, link çiftlikleri, dışa veri çıkış noktaları ve operatör ayak izleri. Kurumu kimin ele geçirdiğini takip ederiz, sadece bıraktığı belirtiyi değil; böylece sökme kalıcı olur, ertesi hafta yeniden yazılmaz.",
+        "items": ["3.745 saldırgan alan adı haritalandı", "Mağdur ve operatör örtüşmesine göre küme sıralama", "Hosting, registrar ve ASN atıfı"]
+      },
+      {
+        "title": "Koordineli düzeltme",
+        "desc": "Kanıt paketleri kurumun kendi BT ve güvenlik kontaklarına, ulusal CERT'lere, hosting abuse masalarına, registrarlara, Cloudflare'e ve Google Safe Browsing'e — kendi dillerinde, harekete geçmek için gereken DOM izi, ekran görüntüsü ve zaman çizelgesi ile — iletilir. Vakayı belirti gizlenene kadar değil, sızıntı kapanana kadar takip ederiz.",
+        "items": ["5 dilde sızıntı bildirim şablonları", "OpenClaw ile şikayet ve form doldurma", "CERT dizini, bakanlık yönlendirme ve eskalasyon yolu"]
+      }
+    ]
+  },
+  "threats": {
+    "eyebrow": "Neyi deşifre ediyoruz",
+    "title": "Avladığımız ele geçirme sınıfları — öncelik kamu sektörü ve akademik altyapıda.",
+    "desc": "AbuseRadar, kurumsal web'deki sessiz ele geçirmeleri deşifre etmek için özel olarak inşa edildi. Yasal yükümlülükler ve dolaylı etki nedeniyle devlet ve akademik hedefler önceliklidir; ancak kapsam, aynı operatör yığınlarının yeniden ortaya çıktığı her yerde ele geçirilmiş web'in tamamına uzanır.",
+    "items": [
+      { "tag": "Kritik", "klass": "critical", "title": "Ele geçirilmiş devlet alan adları", "desc": "Yetkisiz içerik, gizli yük, sızdırılmış yönetim paneli veya cloaklanmış yönlendirici zincirleri çalıştıran ele geçirilmiş .gov.* ve belediye alt alan adları. Yasal bildirim yükümlülüğü ve komşu sistemlere yayılma potansiyeli nedeniyle en yüksek öncelik.", "metaA": "82 aktif", "metaB": "+12 / hafta" },
+      { "tag": "Yüksek", "klass": "high", "title": "Ele geçirilmiş üniversite altyapısı", "desc": "Eski CMS sürümleri, açıkta kalmış staging ortamları ve terk edilmiş akademisyen alt alan adları çalıştıran üniversiteler ve araştırma ağları — dış operatörler tarafından link çiftliklerine, belge depolarına ve kimlik avı yüzeylerine dönüştürülmüş.", "metaA": "247 aktif", "metaB": "+38 / hafta" },
+      { "tag": "İzleniyor", "klass": "tracked", "title": "Saldırgan C2 ve exfil altyapısı", "desc": "Binlerce ele geçirilmiş kurumsal ve ticari sayfayı besleyen birkaç düzine yönlendirici, şablon-sunucu ve dışa çıkış alan adı. Bunları sökmek tüm operatör yığınlarını tek seferde çökertir.", "metaA": "3 doğrulandı", "metaB": "12 aday" }
+    ]
+  },
+  "method": {
+    "eyebrow": "Pipeline'ın içinde",
+    "title": "Kanıt önce. Denetime hazır. Kurum seviyesi.",
+    "desc": "AbuseRadar her atlamayı — ham istihbarat akışından CERT'e teslim edilebilecek bir sızıntı raporuna kadar — izlenebilir, denetime hazır bir geçiş olarak ele alır. Beş aşama, tek konteyner yığını, her adım kriptografik olarak loglanır.",
+    "steps": [
+      { "n": "01", "h": "Topla", "p": "Backlink grafları, DNS, sertifika transparansı, sızdırılmış kimlik bilgisi feed'leri ve HTTP parmak izlerini çek. Tekilleştir, normalize et, puanla." },
+      { "n": "02", "h": "Sınıflandır", "p": "Kural + n-gram + Gemini çoklu sinyal füzyonu. Her gösterge sızıntı şiddeti, sektör, coğrafya ve operatör bağlantısına göre puanlanır." },
+      { "n": "03", "h": "Sahada doğrula", "p": "Şüpheli sayfaları residential VPN üzerinden cloaking-duyarlı problarla render et. DOM, ekran görüntüsü, HAR ve sertifika zincirini yasal kanıt olarak yakala." },
+      { "n": "04", "h": "Atfet ve bildir", "p": "Sızıntıyı operatör altyapısına çöz. Etkilenen kurumun BT veya CSIRT birimine kendi dilinde tam kanıt paketiyle bildir." },
+      { "n": "05", "h": "Kapanmayı zorla", "p": "OpenClaw, CERT, hosting, registrar, Cloudflare ve Safe Browsing raporlarını paralel olarak dosyalar. Kapanana kadar takip et — tekrarda yeniden tetikle." }
+    ]
+  },
+  "console": {
+    "eyebrow": "Operasyon konsolu",
+    "title": "Kendi kendine çalışan, her adımı denetlenen bir konsol.",
+    "desc": "AbuseRadar'daki her tespit, sınıflandırma, saha doğrulaması, bildirim ve şikayet kriptografik bütünlükle kaydedilir. Operasyon ekipleri sızıntı raporlarını çeyreklik teslimat olarak değil, uykularında bile gönderir.",
+    "cta": "Konsolu adım adım gör"
+  },
+  "ctaTag": "Satış görüşmesi yok",
+  "uses": {
+    "eyebrow": "Hangi ekipler için",
+    "title": "Sessizce başarısız olamayacak dışa açık altyapıdan sorumlu ekipler.",
+    "desc": "AbuseRadar bakacağınız bir dashboard değil. Görev kapsamı devletlerin, üniversitelerin, kamu kurumlarının ve daha geniş düzenlenmiş web'in canlı altyapısı olan kişiler için bir operasyon katmanıdır.",
+    "items": [
+      { "title": "Kamu ve belediye BT", "desc": "Bir gazetecinin makalesinde veya meclis sorusunda belirmeden önce yargı alanınızdaki ele geçirilmiş alan adlarını yüzeyleyin. Hazır CERT ve bakanlık eskalasyon yönlendirmesi.", "stat": "82", "lbl": "kamu kurumu izleniyor" },
+      { "title": "Üniversite CSIRT ekipleri", "desc": "Bir sonraki akademik yıl ele geçirme dalgasından önce eski CMS sürümlerini, açıkta kalmış staging ortamlarını ve terk edilmiş akademisyen alt alan adlarını yakalayın.", "stat": "247", "lbl": "edu kurumu izleniyor" },
+      { "title": "Araştırmacı gazeteciler", "desc": "Tek satırlık ipucu yerine yapısal, kanıt paketli sızıntı dosyaları alın. Denetim seviyesinde format, tekilleştirilmiş, kaynak atıflı, yayına veya eskalasyona hazır.", "stat": "3.745", "lbl": "saldırgan alan adı haritalandı" }
+    ]
+  },
+  "why": {
+    "quote_a": "AbuseRadar'ı bir dashboard yapmak için kurmadık.",
+    "quote_b": "Kurduk çünkü kamu kurumsal altyapısını ele geçirenler",
+    "quote_c": "onu savunan kuruluşlardan daha hızlı hareket ediyordu.",
+    "quote_d": "Artık etmiyorlar.",
+    "cite": "AbuseRadar — bağımsız sızıntı istihbaratı",
+    "cite_loc": "İstanbul'dan operasyon · Küresel raporlama"
+  },
+  "cta": {
+    "title": "Kuruluşunuzun gerçek maruziyet yüzeyini görün.",
+    "desc": "Bize alan adınızı, sektörünüzü veya yargı alanınızı gönderin; 72 saat içinde doğrulanmış ele geçirmeler, saldırgan atıfı, kanıt paketi ve düzeltme playbook'u içeren özel bir sızıntı brifingi göndeririz. Satış görüşmesi yok.",
+    "primary": "Özel brifinginizi isteyin",
+    "secondary": "alerts@abuseradar.org"
+  },
+  "footer": {
+    "tagline": "Ele geçirilmiş kurumsal web için bağımsız sızıntı istihbaratı. İstanbul'dan kurulup işletiliyor.",
+    "cols": [
+      { "h": "Platform", "items": ["Deşifre", "Atıf", "Düzeltme", "Metodoloji"] },
+      { "h": "Tehditler","items": ["Devlet", "Üniversite", "Kamu sektörü", "Operatör yığınları"] },
+      { "h": "Araştırma","items": ["Çeyreklik brifing", "Açık raporlar", "Tehdit kataloğu", "Basın"] },
+      { "h": "Şirket",   "items": ["Hakkında", "İletişim", "Sızıntı bildir", "Durum", "Yasal"] }
+    ],
+    "copyright": "© 2026 AbuseRadar — abuseradar.org",
+    "legal": ["Gizlilik", "Sorumlu açıklama", "Şartlar"],
+    "live": "Tüm sistemler çalışır durumda"
+  }
+}

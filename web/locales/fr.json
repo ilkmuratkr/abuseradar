@@ -1,0 +1,131 @@
+{
+  "nav": {
+    "platform": "Plateforme",
+    "methodology": "Méthodologie",
+    "threats": "Index des Menaces",
+    "research": "Recherche",
+    "login": "Connexion",
+    "demo": "Demander un Briefing"
+  },
+  "util": {
+    "alert": "En direct : 701 institutions compromises suivies",
+    "report": "Signaler une Fuite",
+    "contact": "Contact",
+    "status": "État du Système"
+  },
+  "hero": {
+    "eyebrow": "Renseignement indépendant sur les compromissions du web institutionnel",
+    "title_from": "Des",
+    "title_main": "compromissions silencieuses",
+    "title_to": "à la",
+    "title_main2": "responsabilité publique",
+    "desc": "AbuseRadar expose les compromissions cachées qui vivent à l'intérieur des sites gouvernementaux, universitaires et institutionnels — panneaux d'administration fuités, web shells, documents exfiltrés, sous-domaines détournés et les injections SEO criminelles qui s'y greffent. Nous suivons la pile d'opérateurs à travers le web compromis plus large ; puis nous transformons les compromissions invisibles en paquets de preuves que les hébergeurs, registraires, équipes CERT et les institutions elles-mêmes ne peuvent ignorer.",
+    "cta_primary": "Demander un briefing privé",
+    "cta_secondary": "Lire la méthodologie",
+    "trust_label": "Approuvé par",
+    "trust_items": ["Analystes CERT indépendants", "Équipes IT gouvernementales", "Unités CSIRT universitaires", "Journalistes d'investigation"]
+  },
+  "stats": {
+    "backlinks": { "num": "14 294", "label": "Indicateurs de compromission indexés", "sub": "À travers 19 sources de renseignement" },
+    "victims":   { "num": "701",    "label": "Institutions compromises", "sub": "Ministères, universités, communes et au-delà" },
+    "attackers": { "num": "3 745",  "label": "Domaines attaquants cartographiés", "sub": "C2, redirecteur, exfil et click-farm" },
+    "verified":  { "num": "106",    "label": "Compromissions actives vérifiées", "sub": "Preuve sur site capturée en direct" }
+  },
+  "big": {
+    "eyebrow": "L'écart d'exposition",
+    "title_a": "La plupart des compromissions institutionnelles restent actives",
+    "title_b": "pendant des mois",
+    "title_c": " avant que l'organisation affectée ne s'en aperçoive.",
+    "num": "82",
+    "num_unit": "%",
+    "cap": "des domaines gouvernementaux, éducatifs et institutionnels que nous identifions sont silencieusement compromis depuis plus de 90 jours — bien après que l'attaquant ait pivoté du point d'entrée vers les systèmes adjacents.",
+    "desc": "Le temps qu'une équipe interne en entende parler, l'attaquant a déjà chaîné le point d'appui dans d'autres sous-domaines, exfiltré ce qu'il voulait, et loué la surface résiduelle aux opérateurs SEO et autres parasites. AbuseRadar ferme cette fenêtre d'exposition — de la compromission silencieuse à la responsabilité publique — en jours, pas en mois."
+  },
+  "caps": {
+    "eyebrow": "Couverture de bout en bout",
+    "title": "Exposer. Attribuer. Forcer la remédiation.",
+    "desc": "Trois capacités, un pipeline. Construit pour les analystes ayant besoin de preuves défendables de compromission et les équipes opérationnelles ayant besoin que les institutions compromises — et les opérateurs derrière elles — nettoient réellement plutôt que de faire silencieusement tourner le symptôme.",
+    "items": [
+      {
+        "title": "Exposition des compromissions à grande échelle",
+        "desc": "Ingestion continue de renseignement — graphes de backlinks, DNS, transparence des certificats, flux de credentials fuités et empreintes HTTP — fusionnée avec des classifieurs multi-signaux et des anomalies notées par Gemini. Nous identifions les panneaux d'administration compromis, les sous-domaines abandonnés, les web shells et les injections SEO criminelles qui les trahissent, y compris l'activité invisible aux outils de sécurité standard.",
+        "items": ["19 sources de renseignement, cycle hebdomadaire", "Notation de compromission sur surfaces gouv, édu et institutionnelles", "Rendu via VPN résidentiel pour vaincre geo-cloaking et blocs de bots"]
+      },
+      {
+        "title": "Attribution d'opérateur et d'infrastructure",
+        "desc": "Chaque compromission confirmée est mise en graphe contre la pile d'attaquants plus large — les redirecteurs C2, link farms, points d'exfiltration et empreintes d'opérateur derrière elle. Nous suivons qui compromet l'institution, pas seulement le symptôme laissé derrière, pour que la disruption tienne au lieu d'être réécrite la semaine suivante.",
+        "items": ["3 745 domaines attaquants cartographiés", "Classement par chevauchement de victime et d'opérateur", "Attribution d'hébergement, de registraire et d'ASN"]
+      },
+      {
+        "title": "Remédiation coordonnée",
+        "desc": "Paquets de preuves envoyés aux propres contacts IT et sécurité de l'institution, aux CERT nationaux, bureaux d'abus d'hébergement, registraires, Cloudflare et Google Safe Browsing — dans leur propre langue, avec la trace DOM exacte, capture d'écran et chronologie nécessaires pour agir. Nous suivons le cas jusqu'à la fermeture de la compromission, pas seulement la dissimulation du symptôme.",
+        "items": ["Modèles de notification de compromission en 5 langues", "Dépôt de plaintes et formulaires via OpenClaw", "Annuaire CERT, routage ministériel et chemin d'escalade"]
+      }
+    ]
+  },
+  "threats": {
+    "eyebrow": "Ce que nous exposons",
+    "title": "Classes de compromissions que nous chassons — avec priorité au secteur public et à l'infrastructure académique.",
+    "desc": "AbuseRadar est conçu spécifiquement pour exposer les compromissions silencieuses dans le web institutionnel. Les cibles gouvernementales et académiques sont prioritaires en raison des obligations légales et de l'impact en aval, mais la couverture s'étend au web compromis plus large partout où les mêmes piles d'opérateurs réapparaissent.",
+    "items": [
+      { "tag": "Critique", "klass": "critical", "title": "Domaines gouvernementaux compromis", "desc": "Sous-domaines .gov.* et municipaux compromis exécutant du contenu non autorisé, des charges utiles cachées, des panneaux d'administration fuités ou des chaînes de redirection cloakées. Priorité maximale en raison des obligations légales de divulgation et du potentiel de compromission de systèmes adjacents.", "metaA": "82 actifs", "metaB": "+12 / semaine" },
+      { "tag": "Élevé", "klass": "high", "title": "Infrastructure universitaire compromise", "desc": "Universités et réseaux de recherche exécutant des instances CMS obsolètes, des environnements de staging exposés et des sous-domaines de faculté abandonnés — réutilisés comme link farms, dépôts de documents et surfaces de phishing de credentials par des opérateurs externes.", "metaA": "247 actifs", "metaB": "+38 / semaine" },
+      { "tag": "Suivi", "klass": "tracked", "title": "Infrastructure C2 et exfil d'attaquants", "desc": "Les quelques douzaines de domaines redirecteurs, serveurs-modèles et exfiltration alimentant des milliers de pages institutionnelles et commerciales compromises. Perturber ceux-ci effondre des piles entières d'opérateurs d'un coup.", "metaA": "3 confirmés", "metaB": "12 candidats" }
+    ]
+  },
+  "method": {
+    "eyebrow": "À l'intérieur du pipeline",
+    "title": "Preuve d'abord. Prêt pour audit. Niveau institutionnel.",
+    "desc": "AbuseRadar traite chaque saut — du flux de renseignement brut à un rapport de compromission prêt pour CERT — comme une transition tracée et prête pour audit. Cinq étapes, une pile de containers, chaque étape journalisée cryptographiquement.",
+    "steps": [
+      { "n": "01", "h": "Collecter", "p": "Tirez des graphes de backlinks, DNS, transparence des certificats, flux de credentials fuités et empreintes HTTP. Dédupliquez, normalisez, notez." },
+      { "n": "02", "h": "Classifier", "p": "Fusion règle + n-gram + multi-signal Gemini. Chaque indicateur noté par gravité de compromission, secteur, géographie et lien d'opérateur." },
+      { "n": "03", "h": "Vérifier sur site", "p": "Rendez les pages suspectes via VPN résidentiel avec des sondes conscientes du cloaking. Capturez DOM, capture d'écran, HAR et chaîne de certificats comme preuve de niveau juridique." },
+      { "n": "04", "h": "Attribuer et notifier", "p": "Résolvez la compromission vers l'infrastructure de l'opérateur. Notifiez l'IT ou le CSIRT de l'institution affectée dans sa langue avec le paquet complet de preuves." },
+      { "n": "05", "h": "Forcer la fermeture", "p": "OpenClaw dépose des rapports CERT, hébergement, registraire, Cloudflare et Safe Browsing en parallèle. Suivez jusqu'à la fermeture — réémettez en cas de récurrence." }
+    ]
+  },
+  "console": {
+    "eyebrow": "Console d'opérations",
+    "title": "Une console qui s'exécute seule, auditée à chaque étape.",
+    "desc": "Chaque détection, classification, vérification sur site, notification et plainte dans AbuseRadar est enregistrée avec intégrité cryptographique. Les équipes opérationnelles envoient des rapports de compromission en dormant — pas comme livrable trimestriel.",
+    "cta": "Parcourez la console"
+  },
+  "ctaTag": "Pas d'appels de vente",
+  "uses": {
+    "eyebrow": "Construit pour",
+    "title": "Les équipes responsables d'infrastructures publiques qui ne peuvent pas échouer en silence.",
+    "desc": "AbuseRadar n'est pas un dashboard à regarder. C'est une couche d'opérations pour les personnes dont la mission est l'infrastructure en direct des gouvernements, universités, institutions publiques et du web régulé plus large.",
+    "items": [
+      { "title": "IT gouvernementale et municipale", "desc": "Faites émerger les domaines compromis dans votre juridiction avant qu'ils n'apparaissent dans l'article d'un journaliste ou une question parlementaire. Routage CERT et ministériel pré-construit.", "stat": "82", "lbl": "institutions gouv suivies" },
+      { "title": "Équipes CSIRT universitaires", "desc": "Attrapez les instances CMS obsolètes, environnements de staging exposés et sous-domaines de faculté abandonnés avant la prochaine vague de compromissions de l'année académique.", "stat": "247", "lbl": "institutions édu suivies" },
+      { "title": "Chercheurs investigateurs", "desc": "Recevez des paquets de compromission structurés et empaquetés avec preuves — pas des tuyaux d'une ligne. Format auditable, dédupliqué, source attribuée, prêt pour publication ou escalade.", "stat": "3 745", "lbl": "domaines attaquants cartographiés" }
+    ]
+  },
+  "why": {
+    "quote_a": "Nous n'avons pas construit AbuseRadar pour faire un dashboard.",
+    "quote_b": "Nous l'avons construit parce que les personnes qui compromettent l'infrastructure institutionnelle publique",
+    "quote_c": "se déplaçaient plus vite que les organisations qui la défendaient.",
+    "quote_d": "Plus maintenant.",
+    "cite": "AbuseRadar — renseignement indépendant sur les compromissions",
+    "cite_loc": "Opérant depuis Istanbul · Rapportant globalement"
+  },
+  "cta": {
+    "title": "Voyez la véritable surface d'exposition de votre organisation.",
+    "desc": "Envoyez-nous votre domaine, secteur ou juridiction et nous reviendrons — sous 72 heures — avec un briefing privé contenant les compromissions confirmées, l'attribution d'attaquant, le paquet de preuves et un manuel de remédiation. Pas d'appels de vente.",
+    "primary": "Demandez votre briefing privé",
+    "secondary": "alerts@abuseradar.org"
+  },
+  "footer": {
+    "tagline": "Renseignement indépendant sur les compromissions du web institutionnel. Construit et opéré depuis Istanbul.",
+    "cols": [
+      { "h": "Plateforme", "items": ["Exposition", "Attribution", "Remédiation", "Méthodologie"] },
+      { "h": "Menaces",    "items": ["Gouvernement", "Universités", "Secteur public", "Piles d'opérateur"] },
+      { "h": "Recherche",  "items": ["Briefing trimestriel", "Rapports publics", "Catalogue des menaces", "Presse"] },
+      { "h": "Société",    "items": ["À propos", "Contact", "Signaler une compromission", "État", "Légal"] }
+    ],
+    "copyright": "© 2026 AbuseRadar — abuseradar.org",
+    "legal": ["Confidentialité", "Divulgation responsable", "Conditions"],
+    "live": "Tous les systèmes opérationnels"
+  }
+}

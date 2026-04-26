@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Notifications — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="notifications"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Notifications</span></nav>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="text" placeholder="Search recipient, subject…">
+          <kbd>⌘K</kbd>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Breach notifications</h1>
+          <p>Multi-language outbound notifications to victim institutions and CERT routing. Audit-grade send log.</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost">Templates</button>
+          <button class="btn btn-primary"><svg viewBox="0 0 24 24"><path d="M3 6l9 7 9-7"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg> Compose</button>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M3 6l9 7 9-7"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></span>Sent (30d)</div>
+          <div class="kpi-value" data-target="312">312</div>
+          <div class="kpi-trend">5 languages</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="22,6 12,16 6,10"/></svg></span>Delivered</div>
+          <div class="kpi-value" data-target="278">278</div>
+          <div class="kpi-trend">89% rate</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg></span>Bounced</div>
+          <div class="kpi-value" data-target="22">22</div>
+          <div class="kpi-trend">retry queued</div>
+        </div>
+        <div class="kpi orange">
+          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>Replies</div>
+          <div class="kpi-value" data-target="48">48</div>
+          <div class="kpi-trend">15% engagement</div>
+        </div>
+      </div>
+
+      <div class="grid-2-1 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>Recent sends</h3><a href="#" class="btn-link">Full log →</a></div>
+          <table class="tbl">
+            <thead><tr><th>Recipient</th><th>Subject</th><th>Lang</th><th>Status</th><th>Sent</th></tr></thead>
+            <tbody>
+              <tr><td><div class="strong">it@unipa.edu.br</div><div style="font-size:.7rem;color:var(--text-4)">portal.unipa.edu.br</div></td><td>Compromisso de segurança detectado em portal.unipa.edu.br</td><td><span class="badge muted">PT</span></td><td><span class="badge green">Delivered</span></td><td>42m ago</td></tr>
+              <tr><td><div class="strong">webmaster@saude.gov.ar</div><div style="font-size:.7rem;color:var(--text-4)">saude.gov.ar</div></td><td>Compromiso de seguridad detectado en saude.gov.ar</td><td><span class="badge muted">ES</span></td><td><span class="badge green">Delivered</span></td><td>1h ago</td></tr>
+              <tr><td><div class="strong">bilgi@ankara.edu.tr</div><div style="font-size:.7rem;color:var(--text-4)">faculty.ankara.edu.tr</div></td><td>faculty.ankara.edu.tr üzerinde güvenlik ihlali tespit edildi</td><td><span class="badge muted">TR</span></td><td><span class="badge green">Delivered</span></td><td>3h ago</td></tr>
+              <tr><td><div class="strong">webmaster@bh.gov.br</div><div style="font-size:.7rem;color:var(--text-4)">municipio.bh.gov.br</div></td><td>Compromisso de segurança detectado em municipio.bh.gov.br</td><td><span class="badge muted">PT</span></td><td><span class="badge orange">Bounced · retry</span></td><td>6h ago</td></tr>
+              <tr><td><div class="strong">contact@cs.purdue.edu</div><div style="font-size:.7rem;color:var(--text-4)">cs.purdue.edu</div></td><td>Security compromise detected on cs.purdue.edu</td><td><span class="badge muted">EN</span></td><td><span class="badge teal">Reply received</span></td><td>Yesterday</td></tr>
+              <tr><td><div class="strong">cert@gob.mx</div><div style="font-size:.7rem;color:var(--text-4)">consejo.gob.mx · CERT routing</div></td><td>Compromiso institucional confirmado — paquete de evidencias adjunto</td><td><span class="badge muted">ES</span></td><td><span class="badge green">Delivered</span></td><td>Yesterday</td></tr>
+              <tr><td><div class="strong">it@cdc.gov.in</div><div style="font-size:.7rem;color:var(--text-4)">cdc.gov.in</div></td><td>Security compromise detected on cdc.gov.in</td><td><span class="badge muted">EN</span></td><td><span class="badge green">Delivered</span></td><td>Yesterday</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>Templates</h3></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:.5rem">
+            <div style="display:flex;justify-content:space-between;padding:.7rem .85rem;border:1px solid var(--border);border-radius:7px"><div><div style="font-weight:600;font-size:.85rem;color:var(--text)">First notification</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">EN · TR · PT · ES · FR</div></div><a href="#" class="btn-link">Edit</a></div>
+            <div style="display:flex;justify-content:space-between;padding:.7rem .85rem;border:1px solid var(--border);border-radius:7px"><div><div style="font-weight:600;font-size:.85rem;color:var(--text)">Reminder · 7 days</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">EN · TR · PT · ES · FR</div></div><a href="#" class="btn-link">Edit</a></div>
+            <div style="display:flex;justify-content:space-between;padding:.7rem .85rem;border:1px solid var(--border);border-radius:7px"><div><div style="font-weight:600;font-size:.85rem;color:var(--text)">Escalation · CERT</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">EN only · CERT routing</div></div><a href="#" class="btn-link">Edit</a></div>
+            <div style="display:flex;justify-content:space-between;padding:.7rem .85rem;border:1px solid var(--border);border-radius:7px"><div><div style="font-weight:600;font-size:.85rem;color:var(--text)">Closure confirmation</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">EN · TR · PT · ES · FR</div></div><a href="#" class="btn-link">Edit</a></div>
+            <button class="btn btn-ghost" style="margin-top:.4rem;justify-content:center">+ New template</button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

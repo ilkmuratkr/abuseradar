@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Overview — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23001F29' stroke='%231ACEC9' stroke-width='2'/><circle cx='32' cy='32' r='3' fill='%23EADA24'/></svg>">
+</head>
+<body>
+
+<div class="app">
+
+  <aside class="rail" data-active="overview"></aside>
+
+  <main class="main">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail aria-label="Toggle sidebar" style="display:none">
+          <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <nav class="crumbs">
+          <a href="index.html">Console</a>
+          <span class="sep">/</span>
+          <span class="current">Overview</span>
+        </nav>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="text" placeholder="Search domains, operators, complaints…">
+          <kbd>⌘K</kbd>
+        </div>
+        <button class="icon-btn" aria-label="Notifications" style="position:relative">
+          <svg viewBox="0 0 24 24"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="dot" aria-hidden="true"></span>
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+
+      <div class="page-head">
+        <div>
+          <h1>Overview</h1>
+          <p>Real-time picture of compromised institutional infrastructure under your jurisdiction. Last full sync 6 minutes ago.</p>
+        </div>
+        <div class="page-head-actions">
+          <button class="btn btn-ghost">
+            <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+            Refresh
+          </button>
+          <a href="pipeline.html" class="btn btn-primary">
+            <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
+            Run pipeline
+          </a>
+        </div>
+      </div>
+
+      <!-- KPIs -->
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z"/></svg></span>
+            Compromised
+          </div>
+          <div class="kpi-value" data-target="701">701</div>
+          <div class="kpi-trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7,17 17,7"/><polyline points="9,7 17,7 17,15"/></svg>
+            +12 this week
+          </div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></span>
+            Verified breaches
+          </div>
+          <div class="kpi-value" data-target="106">106</div>
+          <div class="kpi-trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7,17 17,7"/><polyline points="9,7 17,7 17,15"/></svg>
+            +5 today
+          </div>
+        </div>
+        <div class="kpi red">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></span>
+            Attacker domains
+          </div>
+          <div class="kpi-value" data-target="3745">3,745</div>
+          <div class="kpi-trend up">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7,17 17,7"/><polyline points="9,7 17,7 17,15"/></svg>
+            +38 this week
+          </div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="22,6 12,16 6,10"/></svg></span>
+            Closed (30d)
+          </div>
+          <div class="kpi-value" data-target="47">47</div>
+          <div class="kpi-trend">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/></svg>
+            68% on first notice
+          </div>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi orange">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M3 6l9 7 9-7"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></span>
+            Notifications sent
+          </div>
+          <div class="kpi-value" data-target="312">312</div>
+          <div class="kpi-trend">5 languages · 89% delivered</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></span>
+            Active complaints
+          </div>
+          <div class="kpi-value" data-target="58">58</div>
+          <div class="kpi-trend">CERT · hosting · registrar</div>
+        </div>
+        <div class="kpi gold">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 3v6h-6"/><path d="M3 21l9-9"/></svg></span>
+            Backlinks indexed
+          </div>
+          <div class="kpi-value" data-target="14294">14,294</div>
+          <div class="kpi-trend">19 ingest sources</div>
+        </div>
+        <div class="kpi green">
+          <div class="kpi-label">
+            <span class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></span>
+            Avg. time-to-fix
+          </div>
+          <div class="kpi-value" data-target="9">9</div>
+          <div class="kpi-trend down">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="7,7 17,17"/><polyline points="9,17 17,17 17,9"/></svg>
+            ↓ from 14 days last quarter
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-column main row -->
+      <div class="grid-2-1 row-gap">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Recent activity</h3>
+            <a href="evidence.html" class="btn-link">View all →</a>
+          </div>
+          <div class="panel-body">
+            <ul class="activity-list">
+              <li>
+                <div class="activity-icon green"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+                <div class="activity-body">
+                  <div class="activity-title"><span class="strong">istanbul.bel.tr</span> remediation confirmed — host removed cloaked redirect chain.</div>
+                  <div class="activity-meta">14 minutes ago · CERT-TR notified · case AR-7K-2026-1184</div>
+                </div>
+              </li>
+              <li>
+                <div class="activity-icon"><svg viewBox="0 0 24 24"><path d="M3 6l9 7 9-7"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg></div>
+                <div class="activity-body">
+                  <div class="activity-title">Notification sent to <span class="strong">it@unipa.edu.br</span> in Portuguese — full evidence bundle attached.</div>
+                  <div class="activity-meta">42 minutes ago · template v3 · sent via Resend</div>
+                </div>
+              </li>
+              <li>
+                <div class="activity-icon red"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+                <div class="activity-body">
+                  <div class="activity-title">New compromise detected on <span class="strong">saude.gov.ar</span> — 84 hidden gambling links injected via outdated CMS plugin.</div>
+                  <div class="activity-meta">1 hour ago · operator stack: cluster #07 · severity Critical</div>
+                </div>
+              </li>
+              <li>
+                <div class="activity-icon gold"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg></div>
+                <div class="activity-body">
+                  <div class="activity-title">Crawl batch finished — 248 suspect pages rendered under residential VPN, 17 cloaking failures recovered.</div>
+                  <div class="activity-meta">2 hours ago · evidence bundles archived</div>
+                </div>
+              </li>
+              <li>
+                <div class="activity-icon"><svg viewBox="0 0 24 24"><polyline points="14 2 14 8 20 8"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></div>
+                <div class="activity-body">
+                  <div class="activity-title">CSV ingested — <span class="mono">backlinks-2026-04-25.csv</span> (3,418 rows, 117 new, 2 disputed).</div>
+                  <div class="activity-meta">3 hours ago · source: Ahrefs · pipeline run AR-PL-2421</div>
+                </div>
+              </li>
+              <li>
+                <div class="activity-icon green"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg></div>
+                <div class="activity-body">
+                  <div class="activity-title">Registrar abuse desk closed C2 domain <span class="mono">scriptapi[.]dev</span> — 47 victims unhooked.</div>
+                  <div class="activity-meta">5 hours ago · operator cluster #03 · case AR-CL-188</div>
+                </div>
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Compromise by sector</h3>
+            <span class="meta">last 30 days</span>
+          </div>
+          <div class="panel-body">
+            <div class="chart-bars">
+              <div class="chart-bar-row">
+                <span class="chart-bar-label">Government</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill red" data-pct="78"></span></span>
+                <span class="chart-bar-value">82</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label">Higher education</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill orange" data-pct="100"></span></span>
+                <span class="chart-bar-value">247</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label">Municipalities</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill gold" data-pct="55"></span></span>
+                <span class="chart-bar-value">61</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label">Healthcare</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill" data-pct="32"></span></span>
+                <span class="chart-bar-value">29</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label">NGO &amp; civic</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill" data-pct="22"></span></span>
+                <span class="chart-bar-value">18</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label">Other public</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill" data-pct="14"></span></span>
+                <span class="chart-bar-value">11</span>
+              </div>
+            </div>
+
+            <div style="margin-top:1.4rem;padding-top:1rem;border-top:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;font-size:.78rem;color:var(--text-3);margin-bottom:.5rem">
+                <span>Operator clusters tracked</span>
+                <span class="strong" style="color:var(--text)">18</span>
+              </div>
+              <div class="progress">
+                <div class="progress-bar"><div style="width:72%"></div></div>
+                <span style="font-family:var(--font-mono);color:var(--text-3);font-size:.74rem">72%</span>
+              </div>
+              <div style="font-size:.7rem;color:var(--text-4);margin-top:.4rem">13 of 18 clusters under active disruption</div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Recent crawls table -->
+      <div class="row-gap">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Recent on-site verifications</h3>
+            <a href="evidence.html" class="btn-link">Open evidence vault →</a>
+          </div>
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>Domain</th>
+                <th>Sector</th>
+                <th>Operator cluster</th>
+                <th>Hidden links</th>
+                <th>Status</th>
+                <th>Verified</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="strong">saogoncalo.rj.gov.br</span><div style="font-size:.7rem;color:var(--text-4);margin-top:.15rem">Municipal portal · BR</div></td>
+                <td>Government</td>
+                <td><span class="mono">#03 · scriptapi</span></td>
+                <td>106</td>
+                <td><span class="badge red">Confirmed</span></td>
+                <td>Today, 14:22</td>
+                <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+              </tr>
+              <tr>
+                <td><span class="strong">faculty.ankara.edu.tr</span><div style="font-size:.7rem;color:var(--text-4);margin-top:.15rem">Faculty subdomain · TR</div></td>
+                <td>Higher ed</td>
+                <td><span class="mono">#07 · hacklink-bk</span></td>
+                <td>34</td>
+                <td><span class="badge orange">Notified</span></td>
+                <td>Today, 13:08</td>
+                <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+              </tr>
+              <tr>
+                <td><span class="strong">saude.gov.ar</span><div style="font-size:.7rem;color:var(--text-4);margin-top:.15rem">Ministry portal · AR</div></td>
+                <td>Government</td>
+                <td><span class="mono">#07 · hacklink-bk</span></td>
+                <td>84</td>
+                <td><span class="badge red">Confirmed</span></td>
+                <td>Today, 11:54</td>
+                <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+              </tr>
+              <tr>
+                <td><span class="strong">portal.unipa.edu.br</span><div style="font-size:.7rem;color:var(--text-4);margin-top:.15rem">Faculty CMS · BR</div></td>
+                <td>Higher ed</td>
+                <td><span class="mono">#03 · scriptapi</span></td>
+                <td>52</td>
+                <td><span class="badge gold">Pending re-check</span></td>
+                <td>Today, 09:31</td>
+                <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+              </tr>
+              <tr>
+                <td><span class="strong">istanbul.bel.tr</span><div style="font-size:.7rem;color:var(--text-4);margin-top:.15rem">Municipal portal · TR</div></td>
+                <td>Government</td>
+                <td><span class="mono">#11 · adsfarm</span></td>
+                <td>0</td>
+                <td><span class="badge green">Closed</span></td>
+                <td>Yesterday</td>
+                <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+              </tr>
+              <tr>
+                <td><span class="strong">library.unesp.br</span><div style="font-size:.7rem;color:var(--text-4);margin-top:.15rem">University library · BR</div></td>
+                <td>Higher ed</td>
+                <td><span class="mono">#07 · hacklink-bk</span></td>
+                <td>18</td>
+                <td><span class="badge teal">Investigating</span></td>
+                <td>Yesterday</td>
+                <td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+
+      <!-- System health row -->
+      <div class="grid-3 row-gap">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Pipeline health</h3>
+            <span class="dot-status live" title="Live"></span>
+          </div>
+          <div class="panel-body">
+            <div style="display:flex;flex-direction:column;gap:.65rem;font-size:.82rem">
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">Ingest worker</span><span class="badge green">Healthy</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">Classifier (Gemini)</span><span class="badge green">Healthy</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">Crawler · VPN-TR</span><span class="badge green">Healthy</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">Crawler · VPN-US</span><span class="badge orange">Slow</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">Notifier · Resend</span><span class="badge green">Healthy</span></div>
+              <div style="display:flex;justify-content:space-between"><span style="color:var(--text-3)">OpenClaw agent</span><span class="badge green">Healthy</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Top operator clusters</h3>
+            <span class="meta">by victim count</span>
+          </div>
+          <div class="panel-body">
+            <div class="chart-bars">
+              <div class="chart-bar-row">
+                <span class="chart-bar-label" style="font-family:var(--font-mono);font-size:.76rem">cluster #03</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill red" data-pct="100"></span></span>
+                <span class="chart-bar-value">412</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label" style="font-family:var(--font-mono);font-size:.76rem">cluster #07</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill orange" data-pct="78"></span></span>
+                <span class="chart-bar-value">318</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label" style="font-family:var(--font-mono);font-size:.76rem">cluster #11</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill gold" data-pct="58"></span></span>
+                <span class="chart-bar-value">241</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label" style="font-family:var(--font-mono);font-size:.76rem">cluster #14</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill" data-pct="42"></span></span>
+                <span class="chart-bar-value">174</span>
+              </div>
+              <div class="chart-bar-row">
+                <span class="chart-bar-label" style="font-family:var(--font-mono);font-size:.76rem">cluster #18</span>
+                <span class="chart-bar-track"><span class="chart-bar-fill" data-pct="28"></span></span>
+                <span class="chart-bar-value">117</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Quick actions</h3>
+          </div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:.5rem">
+            <a href="pipeline.html" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
+              Run full pipeline
+            </a>
+            <a href="#" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              Upload backlink CSV
+            </a>
+            <a href="notifications.html" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><path d="M3 6l9 7 9-7"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+              Compose breach notification
+            </a>
+            <a href="complaints.html" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+              File new abuse complaint
+            </a>
+            <a href="settings.html" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              System settings
+            </a>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+
+</div>
+
+<script src="console.js"></script>
+</body>
+</html>

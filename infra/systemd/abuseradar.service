@@ -1,0 +1,24 @@
+# /etc/systemd/system/abuseradar.service
+# Boot-time auto-start for the AbuseRadar Docker stack.
+# Install:
+#   sudo cp infra/systemd/abuseradar.service /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now abuseradar.service
+
+[Unit]
+Description=AbuseRadar Docker stack
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/abuseradar
+EnvironmentFile=/opt/abuseradar/.env
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.prod.yml down
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target
