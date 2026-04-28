@@ -371,23 +371,32 @@ async function loadAll() {
       const scoreColor = score >= 80 ? "var(--red)" : score >= 40 ? "var(--orange)" : "var(--text-3)";
       const anchor = (l.text || l.anchor_text || "").trim();
       const title = (l.title || "").trim();
-      // Anchor + title birlikte göster (saldırganın hangi keyword + title ile backlink verdiği)
       const anchorCell = anchor || title
         ? `<div class="mono" style="color:var(--text)">${AR.escapeHtml(AR.fmt.truncate(anchor || "—", 36))}</div>${title && title !== anchor ? `<div style="font-size:.66rem;color:var(--text-4);margin-top:.15rem;font-style:italic" class="mono">title: ${AR.escapeHtml(AR.fmt.truncate(title, 50))}</div>` : ""}`
         : `<span class="mono" style="color:var(--text-4)">—</span>`;
+      // Hangi sayfada bulundu — backend `_page` field'ından
+      const foundOnRaw = l._page || "";
+      let foundOn = "—";
+      if (foundOnRaw) {
+        try {
+          const u = new URL(foundOnRaw);
+          foundOn = (u.pathname === "/" || !u.pathname) ? "/ (homepage)" : u.pathname + (u.search || "");
+        } catch { foundOn = foundOnRaw; }
+      }
       return `
         <tr class="${score >= 50 ? 'hi' : ''}">
           <td style="text-align:right;color:${scoreColor};vertical-align:top" class="strong">${score || "—"}</td>
           <td style="vertical-align:top">${anchorCell}</td>
           <td style="vertical-align:top"><span class="mono">${AR.escapeHtml(AR.fmt.truncate(l.href || "", 60))}</span></td>
           <td style="vertical-align:top"><span style="font-size:.7rem;color:var(--text-4)">${AR.escapeHtml(AR.fmt.truncate(reasons, 40))}</span></td>
+          <td style="vertical-align:top"><span class="mono" style="font-size:.7rem;color:var(--text-3)" title="${AR.escapeHtml(foundOnRaw)}">${AR.escapeHtml(AR.fmt.truncate(foundOn, 28))}</span></td>
         </tr>
       `;
     }).join("");
     return `
       ${sourceInfo ? `<div class="rpt-callout red" style="margin-bottom:.5rem">${sourceInfo}</div>` : ""}
       <table class="rpt-tbl">
-        <thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor / title</th><th>URL</th><th style="width:200px">Hiding / reasons</th></tr></thead>
+        <thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor / title</th><th>URL</th><th style="width:170px">Hiding / reasons</th><th style="width:160px">Found on page</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       ${items.length > 200 ? `<div style="font-size:.7rem;color:var(--text-4);margin-top:.4rem">Showing first 200 of ${items.length}</div>` : ""}
