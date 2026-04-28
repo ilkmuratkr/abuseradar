@@ -43,6 +43,17 @@ def get_hacklinks(domain: str) -> Optional[dict]:
         return None
 
 
+def get_hosting(domain: str) -> Optional[dict]:
+    """Cache'lenmiş hosting/WHOIS bilgisi (crawl sırasında yazılır)."""
+    p = EVIDENCE_ROOT / domain / "analysis" / "hosting.json"
+    if not p.exists():
+        return None
+    try:
+        return json.loads(p.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+
 def get_screenshot_path(domain: str, index: int) -> Optional[Path]:
     """N. ekran görüntüsünün dosya yolu."""
     ss_dir = EVIDENCE_ROOT / domain / "screenshots"

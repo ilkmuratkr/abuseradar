@@ -523,6 +523,19 @@ async def crawl_site(homepage_url: str, max_pages: int = MAX_PAGES_PER_SITE) -> 
         f"durum={aggregate['status']}"
     )
 
+    # Hosting/WHOIS info — crawl sonunda 1 kez al, cache'le (her sayfa açılışında WHOIS yapma)
+    try:
+        from complainant.hosting import get_hosting_info
+        hosting_info = await get_hosting_info(domain)
+        out_dir = Path(settings.evidence_path) / domain / "analysis"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        (out_dir / "hosting.json").write_text(
+            json.dumps(hosting_info or {}, indent=2, default=str), encoding="utf-8"
+        )
+        logger.info(f"[{domain}] Hosting info cached → analysis/hosting.json")
+    except Exception as e:
+        logger.warning(f"[{domain}] Hosting cache yazma hatası: {e}")
+
     # Aggregate kanıt: evidence/{domain}/analysis/aggregate.json
     try:
         out_dir = Path(settings.evidence_path) / domain / "analysis"

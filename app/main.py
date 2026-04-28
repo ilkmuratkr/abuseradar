@@ -1042,7 +1042,8 @@ async def public_report(token: str):
 
 @app.get("/public/reports/{token}/hosting")
 async def public_report_hosting(token: str):
-    """AUTH GEREKMEZ. Hosting/WHOIS info — yavaş çağrı, frontend lazy load eder."""
+    """AUTH GEREKMEZ. Hosting/WHOIS info — CACHE'TEN (crawl sırasında yazılan hosting.json).
+    Cache yoksa anlık WHOIS fallback (sadece bir kez)."""
     async with async_session() as session:
         rt_q = await session.execute(
             select(ReportToken).where(ReportToken.token == token)
@@ -1053,9 +1054,25 @@ async def public_report_hosting(token: str):
         if rt.expires_at and rt.expires_at < datetime.now(timezone.utc):
             raise HTTPException(410, "Link expired")
         domain = rt.domain
+    # Cache hit
+    cached = evidence_reader.get_hosting(domain)
+    if cached:
+        cached["_cached"] = True
+        return cached
+    # Fallback — anlık WHOIS
     try:
         from complainant.hosting import get_hosting_info
-        return await get_hosting_info(domain)
+        info = await get_hosting_info(domain)
+        # Cache'e yaz (sonraki çağrılar için)
+        try:
+            from pathlib import Path
+            out = Path(settings.evidence_path) / domain / "analysis"
+            out.mkdir(parents=True, exist_ok=True)
+            import json as _json
+            (out / "hosting.json").write_text(_json.dumps(info, default=str), encoding="utf-8")
+        except Exception:
+            pass
+        return info
     except Exception as e:
         return {"error": str(e)}
 
