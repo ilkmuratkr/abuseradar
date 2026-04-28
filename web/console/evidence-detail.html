@@ -221,13 +221,15 @@ async function loadAll() {
     hl = { rendered_hacklinks: [], js_diff_hacklinks: [], raw_hacklinks: [], injection_scripts: [], cloaking_detected: false, cloaking_evidence: [] };
   }
 
-  const raw = (hl.raw_hacklinks || []).filter(l => l.href).length;
-  const jsdiff = (hl.js_diff_hacklinks || []).filter(l => l.href).length;
-  const total = raw + jsdiff;
+  // Counts after filters are computed below — placeholder; gerçek değerler aşağıda
   const scriptCount = (hl.injection_scripts || []).length;
 
-  // Severity + state
-  const sev = total > 50 ? "Critical" : total > 10 ? "High" : total > 0 ? "Medium" : (hl.cloaking_detected ? "Suspicious" : "Informational");
+  // (rawList ve jsList aşağıda hesaplanır; hesaplanan değerleri kullanmak için
+  // bu bölüm sona alındı — burada sadece placeholder)
+  let raw = 0, jsdiff = 0, total = 0;
+  // Severity için provisional total; gerçek değer aşağıda set edilir
+  const provTotal = bundle.hacklink_count || 0;
+  const sev = provTotal > 50 ? "Critical" : provTotal > 10 ? "High" : provTotal > 0 ? "Medium" : (hl.cloaking_detected ? "Suspicious" : "Informational");
   const stateBadge = total > 0 ? '<span class="badge red">Verified breach</span>'
     : hl.cloaking_detected ? '<span class="badge red">Cloaking detected</span>'
     : '<span class="badge muted">DOM only</span>';
@@ -249,23 +251,10 @@ async function loadAll() {
       : `No injection signals observed in this capture. Captured ${AR.fmt.date(bundle.captured_at)}.`;
 
   // KPI
-  el("kpi-total").textContent = total;
-  el("kpi-raw").textContent = raw;
-  el("kpi-jsdiff").textContent = jsdiff;
+  // (KPI'lar rawList/jsList hesaplandıktan sonra güncellenecek — aşağıda set edilir)
   el("kpi-scripts").textContent = scriptCount;
 
-  // Findings — kaynak odaklı (HTML injection vs. JS injection)
-  const findings = [];
-  if (raw) findings.push(`<strong>${raw} hidden link${raw===1?"":"s"}</strong> embedded directly in the server raw HTML response → <strong>template / theme / plugin compromise</strong> (server-side file modified).`);
-  if (jsdiff) findings.push(`<strong>${jsdiff} additional link${jsdiff===1?"":"s"}</strong> injected by JavaScript after page load → <strong>JS injection</strong> (malicious script loaded externally or embedded inline).`);
-  if (scriptCount) {
-    const c2List = (hl.injection_scripts || []).flatMap(s => s.decoded_c2_urls || []);
-    if (c2List.length) findings.push(`<strong>${scriptCount} injection script${scriptCount===1?"":"s"}</strong> with decoded C2 endpoint${c2List.length===1?"":"s"}: ${c2List.slice(0,3).map(u => '<span class="mono" style="color:var(--red)">'+AR.escapeHtml(u)+'</span>').join(', ')}.`);
-    else findings.push(`<strong>${scriptCount} injection script${scriptCount===1?"":"s"}</strong> identified — see Section 5.`);
-  }
-  if (hl.cloaking_detected) findings.push(`<strong>Cloaking detected</strong> — different content served to crawler vs. browser (${(hl.cloaking_evidence||[]).length} signal${(hl.cloaking_evidence||[]).length===1?"":"s"}, see Section 3).`);
-  if (!findings.length) findings.push("No injection signals observed in this capture.");
-  el("findings-list").innerHTML = findings.map(f => `<li>${f}</li>`).join("");
+  // Findings — rawList/jsList hesaplandıktan sonra üretilir; aşağıda yapılır
 
   // Captured page screenshots
   const shotNames = bundle.screenshot_names || [];
@@ -298,11 +287,76 @@ async function loadAll() {
 
   // ═══ Kaynak odaklı rapor ═══
   // İki net bölüm:
-  //   A) HTML/server-side injection — raw_hacklinks (server raw response'da hidden link var)
+  //   A) HTML/server-side injection — raw_hacklinks (server raw response'da hidden link)
   //   B) JavaScript injection — js_diff_hacklinks (rendered DOM'da var, raw'da yok)
-  // rendered_hacklinks GÖRÜNTÜLENMEZ — site'nin kendi hidden nav menu'sünü içerir, gürültü.
-  const rawList = (hl.raw_hacklinks || []).filter(l => l.href);
-  const jsList = (hl.js_diff_hacklinks || []).filter(l => l.href);
+  // FILTERS:
+  //   - Site'nin kendi domain'ine giden link'leri ÇIKAR (PDF, dept sayfaları, internal nav)
+  //   - SCORE FALLBACK: anchor/url spam keyword içeriyorsa 100 ata
+  const SPAM_KW = /casino|bahis|escort|porn|bonus|sex|bet[a-z]*\.|deneme|gambl|slot|onwin|grandpasha|backlinks|hacklink|adult|xxx|พน|บา|สล|радис|канди/i;
+  const compromisedDomain = (domain || "").toLowerCase().replace(/^www\./, "");
+  // Aynı domain veya alt-domain olan tüm link'ler internal kabul (örn: ulmresults.com gibi
+  // edge case'ler için: en azından domain.tld parts match olsun).
+  const compromisedRoot = compromisedDomain.split(".").slice(-2).join(".");
+  const isInternal = (url) => {
+    try {
+      const h = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+      if (h === compromisedDomain) return true;
+      // alt-domain match (e.g. *.ulm.edu.pk)
+      if (h.endsWith("." + compromisedDomain)) return true;
+      // same root domain (e.g. ulmresults.com vs ulm.edu.pk — partial; sadece exact root)
+      // Bunu agresif tutmuyoruz — false positive olmasın
+      return false;
+    } catch { return false; }
+  };
+  const inferScore = (url, anchor, given) => {
+    if (given && given > 0) return given;
+    const text = ((anchor || "") + " " + (url || "")).toLowerCase();
+    if (SPAM_KW.test(text)) return 100;
+    return 50;  // external + bilinmeyen, yine de hacklink şüphesi var (raw'a girdi)
+  };
+
+  let internalSkipped = 0;
+  let internalRaw = 0, internalJs = 0;
+  const rawList = (hl.raw_hacklinks || []).filter(l => {
+    if (!l.href) return false;
+    if (isInternal(l.href)) { internalSkipped++; internalRaw++; return false; }
+    return true;
+  }).map(l => ({...l, score: inferScore(l.href, l.text || l.anchor_text, l.score)}));
+
+  const jsList = (hl.js_diff_hacklinks || []).filter(l => {
+    if (!l.href) return false;
+    if (isInternal(l.href)) { internalSkipped++; internalJs++; return false; }
+    return true;
+  }).map(l => ({...l, score: inferScore(l.href, l.text || l.anchor_text, l.score)}));
+
+  // Now compute real counts and update KPI + Findings
+  raw = rawList.length;
+  jsdiff = jsList.length;
+  total = raw + jsdiff;
+  el("kpi-total").textContent = total;
+  el("kpi-raw").textContent = raw;
+  el("kpi-jsdiff").textContent = jsdiff;
+
+  // Findings — gerçek (filtered) sayılarla
+  const findings = [];
+  if (raw) findings.push(`<strong>${raw} external hidden link${raw===1?"":"s"}</strong> embedded directly in the server raw HTML response → <strong>template / theme / plugin compromise</strong>.`);
+  if (jsdiff) findings.push(`<strong>${jsdiff} external link${jsdiff===1?"":"s"}</strong> injected by JavaScript after page load → <strong>JS injection</strong> (malicious script).`);
+  if (internalSkipped) findings.push(`<span style="color:var(--text-3)">${internalSkipped} same-domain link${internalSkipped===1?"":"s"} excluded as internal navigation (PDFs, department pages, site nav).</span>`);
+  if (scriptCount) {
+    const c2List = (hl.injection_scripts || []).flatMap(s => s.decoded_c2_urls || []);
+    if (c2List.length) findings.push(`<strong>${scriptCount} injection script${scriptCount===1?"":"s"}</strong> with decoded C2 endpoint${c2List.length===1?"":"s"}: ${c2List.slice(0,3).map(u => '<span class="mono" style="color:var(--red)">'+AR.escapeHtml(u)+'</span>').join(', ')}.`);
+    else findings.push(`<strong>${scriptCount} injection script${scriptCount===1?"":"s"}</strong> identified — see Section 5.`);
+  }
+  if (hl.cloaking_detected) findings.push(`<strong>Cloaking detected</strong> — different content to crawler vs. browser (${(hl.cloaking_evidence||[]).length} signal${(hl.cloaking_evidence||[]).length===1?"":"s"}, see Section 3).`);
+  if (!findings.length) findings.push("No injection signals observed in this capture.");
+  el("findings-list").innerHTML = findings.map(f => `<li>${f}</li>`).join("");
+
+  // Summary text güncel sayılarla
+  el("ev-summary").innerHTML = total > 0
+    ? `<strong>${total}</strong> external hidden link${total===1?"":"s"} detected on <span class="mono">${AR.escapeHtml(domain)}</span>${internalSkipped ? ` (<span style="color:var(--text-3)">${internalSkipped} internal nav links excluded</span>)` : ""}. Severity: <strong>${total>50?"Critical":total>10?"High":"Medium"}</strong>. Captured ${AR.fmt.date(bundle.captured_at)}. The TLS certificate of the host is unaffected — the server-side content is the compromised vector.`
+    : hl.cloaking_detected
+      ? `No external hidden links extracted, but <strong>cloaking signals were observed</strong>. Captured ${AR.fmt.date(bundle.captured_at)}.`
+      : `No injection signals observed in this capture. Captured ${AR.fmt.date(bundle.captured_at)}.`;
 
   function renderHackTable(items, kind, sourceInfo) {
     if (!items.length) {
