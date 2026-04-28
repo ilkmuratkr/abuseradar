@@ -172,9 +172,28 @@ async def crawl_and_analyze(
 
             # ═══ KATMAN 3: Raw vs Rendered fark ═══
             if raw_link_set:
-                result["js_diff_hacklinks"] = compare_raw_vs_rendered(
+                js_diff_raw = compare_raw_vs_rendered(
                     raw_link_set, rendered_link_set, domain
                 )
+                # Enrich: all_links'ten anchor metnini ve link bilgisini eşle
+                links_by_href = {}
+                for link in all_links:
+                    h = link.get("href", "")
+                    if h and h not in links_by_href:
+                        links_by_href[h] = link
+                enriched = []
+                for hl in js_diff_raw:
+                    h = hl.get("href", "")
+                    src_link = links_by_href.get(h, {})
+                    enriched_hl = dict(hl)
+                    # Anchor metnini ekle
+                    if not enriched_hl.get("text") and not enriched_hl.get("anchor_text"):
+                        enriched_hl["text"] = (src_link.get("text") or src_link.get("title") or "").strip()
+                    # title attribute (gambling sites bazen title kullanır)
+                    if src_link.get("title"):
+                        enriched_hl["title"] = src_link["title"]
+                    enriched.append(enriched_hl)
+                result["js_diff_hacklinks"] = enriched
                 if result["js_diff_hacklinks"]:
                     logger.info(
                         f"[{domain}] JS diff: {len(result['js_diff_hacklinks'])} "

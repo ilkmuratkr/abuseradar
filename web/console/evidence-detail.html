@@ -476,8 +476,6 @@ async function loadAll() {
     <tr><th>Capture timestamp</th><td>${AR.fmt.date(bundle.captured_at)}</td></tr>
     <tr><th>Screenshots</th><td>${bundle.screenshots}</td></tr>
     <tr><th>DOM dumps</th><td>${bundle.dom_files}</td></tr>
-    <tr class="op-only"><th>Bundle size</th><td>${AR.fmt.bytes(bundle.size_bytes)}</td></tr>
-    <tr class="op-only"><th>Egress / VPN</th><td>VPN-TR (Istanbul) · fallback chain TR → US → host</td></tr>
     <tr><th>Verification</th><td>AbuseRadar Research · <a href="https://abuseradar.org/research.html" style="color:var(--teal)">abuseradar.org</a></td></tr>
   `;
 }
