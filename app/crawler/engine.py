@@ -238,6 +238,20 @@ async def crawl_and_analyze(
     except Exception as e:
         logger.warning(f"[{domain}] Cloaking probe hatası: {e}")
 
+    # ═══ TOTAL HACKLINK (Playwright fail olsa bile yeniden hesapla) ═══
+    # Önemli: bu hesap Playwright try bloğunun İÇİNDE de var ama timeout
+    # alınca atlanıyordu. Burada her zaman, son halinde tekrar hesaplanır.
+    all_hrefs = set()
+    for hl in (
+        result.get("raw_hacklinks", [])
+        + result.get("rendered_hacklinks", [])
+        + result.get("js_diff_hacklinks", [])
+    ):
+        href = hl.get("href", "")
+        if href:
+            all_hrefs.add(href)
+    result["total_hacklinks"] = len(all_hrefs)
+
     # ═══ STATUS LOGIC ═══
     if result["total_hacklinks"] > 0:
         result["status"] = "compromised"
