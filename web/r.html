@@ -231,8 +231,15 @@
 </main>
 
 <script>
-const params = new URLSearchParams(location.search);
-const token = params.get("t");
+// URL pattern: /r/{domain}/{token}  (yeni)  veya  /r.html?t={token}  (eski, geriye dönük uyum)
+let token = null;
+const pathMatch = location.pathname.match(/^\/r\/[^/]+\/([^/]+)$/);
+if (pathMatch) {
+  token = pathMatch[1];
+} else {
+  const params = new URLSearchParams(location.search);
+  token = params.get("t");
+}
 
 function el(id) { return document.getElementById(id); }
 function escapeHtml(s) {

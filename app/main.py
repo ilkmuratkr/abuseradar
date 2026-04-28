@@ -1,7 +1,7 @@
 """AbuseRadar — FastAPI Ana Uygulama."""
 
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Query, UploadFile
@@ -963,17 +963,18 @@ async def share_report(domain: str):
             if existing:
                 existing.token = token
                 existing.revoked = False
-                existing.created_at = datetime.utcnow()
-                existing.expires_at = datetime.utcnow() + timedelta(days=180)
+                existing.created_at = datetime.now(timezone.utc)
+                existing.expires_at = datetime.now(timezone.utc) + timedelta(days=180)
                 existing.view_count = 0
             else:
                 session.add(ReportToken(
                     token=token, domain=safe,
-                    expires_at=datetime.utcnow() + timedelta(days=180),
+                    expires_at=datetime.now(timezone.utc) + timedelta(days=180),
                 ))
             await session.commit()
 
-    public_url = f"{settings.public_base_url}/r.html?t={token}"
+    # Human-readable URL with domain visible: /r/{domain}/{token}
+    public_url = f"{settings.public_base_url}/r/{safe}/{token}"
     return {
         "domain": safe,
         "token": token,
@@ -1013,11 +1014,11 @@ async def public_report(token: str):
             raise HTTPException(404, "Invalid or expired link")
         if rt.revoked:
             raise HTTPException(403, "Link revoked")
-        if rt.expires_at and rt.expires_at < datetime.utcnow():
+        if rt.expires_at and rt.expires_at < datetime.now(timezone.utc):
             raise HTTPException(410, "Link expired")
         # View tracking
         rt.view_count = (rt.view_count or 0) + 1
-        rt.last_viewed_at = datetime.utcnow()
+        rt.last_viewed_at = datetime.now(timezone.utc)
         await session.commit()
         domain = rt.domain
 
@@ -1060,7 +1061,7 @@ async def public_report_screenshot(token: str, name: str):
         rt = rt_q.scalar_one_or_none()
         if not rt or rt.revoked:
             raise HTTPException(404, "Invalid link")
-        if rt.expires_at and rt.expires_at < datetime.utcnow():
+        if rt.expires_at and rt.expires_at < datetime.now(timezone.utc):
             raise HTTPException(410, "Link expired")
         domain = rt.domain
     p = Path(settings.evidence_path) / domain / "screenshots" / name
