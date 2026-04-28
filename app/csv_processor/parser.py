@@ -243,6 +243,17 @@ async def process_csv_file(filepath: str | Path) -> dict:
 
 async def process_inbox():
     """inbox/ klasöründeki tüm CSV'leri işle."""
+    # Tüm gerekli klasörlerin var olduğundan emin ol (bind-mount edilmiş volume'da
+    # yokların oluşturulması — deploy.sh init bu klasörleri oluşturmuyor).
+    for p in (
+        settings.csv_inbox_path,
+        settings.csv_processing_path,
+        settings.csv_processed_path,
+        settings.csv_duplicate_path,
+        settings.csv_error_path,
+    ):
+        Path(p).mkdir(parents=True, exist_ok=True)
+
     inbox = Path(settings.csv_inbox_path)
     csv_files = sorted(inbox.glob("*.csv"))
 
