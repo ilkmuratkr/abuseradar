@@ -117,7 +117,7 @@ function renderTable() {
 
   const rows = items.map(v => {
     const domain = AR.fmt.domain(v.url);
-    // verified state: crawl edildi mi, edildiyse hidden link bulundu mu?
+    // verified state
     const verified = !v.last_crawl
       ? AR.badge("Pending verification", "muted")
       : v.verified === true
@@ -136,17 +136,68 @@ function renderTable() {
         <td class="right strong" style="color:var(--orange)">${v.spam_score}</td>
         <td>${verified}</td>
         <td><span style="font-size:.74rem;color:var(--text-4)">${AR.fmt.relative(v.last_seen)}</span></td>
+        <td class="right">
+          <button class="btn-link crawl-btn" data-domain="${AR.escapeHtml(domain)}" data-url="${AR.escapeHtml(v.url)}">
+            Crawl →
+          </button>
+        </td>
       </tr>
     `;
   }).join("");
 
   host.innerHTML = `
     <table class="tbl">
-      <thead><tr><th>Domain</th><th>Type</th><th>Anchor</th><th class="right">DR</th><th class="right">Traffic</th><th class="right">Spam</th><th>State</th><th>Last seen</th></tr></thead>
+      <thead><tr><th>Domain</th><th>Type</th><th>Anchor</th><th class="right">DR</th><th class="right">Traffic</th><th class="right">Spam</th><th>State</th><th>Last seen</th><th></th></tr></thead>
       <tbody>${rows}</tbody>
     </table>
     <div style="padding:.7rem 1.1rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3)">Showing ${items.length} rows</div>
   `;
+
+  // Crawl butonlarını bağla
+  document.querySelectorAll(".crawl-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const domain = btn.dataset.domain;
+      if (!confirm(`${domain}\n\nCrawl kuyruğuna eklensin mi?\nVPN-TR (Istanbul) üzerinden site açılır, screenshot+DOM+hacklink JSON evidence vault'a kaydedilir. 3-5 dk sürer.`)) return;
+      btn.textContent = "Queuing…";
+      btn.disabled = true;
+      try {
+        await AR.post(`/crawl/${encodeURIComponent(domain)}`);
+        AR.toast(`${domain} → kuyruğa eklendi`, "success");
+        btn.textContent = "Queued ✓";
+        pollCrawlStatus(domain, btn);
+      } catch (e) {
+        AR.toast(e.message, "error");
+        btn.textContent = "Crawl →";
+        btn.disabled = false;
+      }
+    });
+  });
+}
+
+async function pollCrawlStatus(domain, btn) {
+  const start = Date.now();
+  while (Date.now() - start < 600000) {  // 10 dk timeout
+    await new Promise(r => setTimeout(r, 5000));
+    try {
+      const s = await AR.get(`/crawl/${encodeURIComponent(domain)}/status`);
+      if (s.status === "running") {
+        btn.textContent = "Running…";
+      } else if (s.status === "completed") {
+        btn.textContent = `✓ ${s.total_hacklinks || 0} hacklink`;
+        btn.style.color = "var(--green)";
+        AR.toast(`${domain}: ${s.total_hacklinks || 0} hacklink tespit edildi`, "success");
+        setTimeout(loadVictims, 1500);
+        return;
+      } else if (s.status === "error") {
+        btn.textContent = "Error";
+        btn.style.color = "var(--red)";
+        btn.title = s.error || "";
+        AR.toast(`${domain} crawl hatası: ${s.error || "?"}`, "error");
+        return;
+      }
+    } catch (e) { /* retry */ }
+  }
+  btn.textContent = "Timeout";
 }
 
 document.querySelectorAll(".vic-tab").forEach(t => {

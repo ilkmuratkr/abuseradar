@@ -411,10 +411,42 @@ async def recent_sites(limit: int = 20):
 
 @app.post("/crawl/{domain}")
 async def crawl_site(domain: str):
-    return {
-        "message": "Crawler VPN-TR üzerinden çalışır.",
-        "command": f"docker compose run --rm crawler python -m crawler.cli https://{domain}/",
-    }
+    """Bir siteyi crawl kuyruğuna ekle. Crawler container BLPOP ile dinliyor."""
+    import json as _json
+    import redis.asyncio as aioredis
+
+    url = f"https://{domain}/" if not domain.startswith("http") else domain
+    r = aioredis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        await r.lpush("abuseradar:crawl_queue", url)
+        # Status'u "queued" olarak işaretle
+        await r.set(
+            f"abuseradar:crawl_status:{domain}",
+            _json.dumps({"status": "queued", "url": url}),
+            ex=86400,
+        )
+    finally:
+        await r.aclose()
+    return {"queued": True, "domain": domain, "url": url}
+
+
+@app.get("/crawl/{domain}/status")
+async def crawl_status(domain: str):
+    """Crawl durumunu öğren (queued / running / completed / error)."""
+    import json as _json
+    import redis.asyncio as aioredis
+
+    r = aioredis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        raw = await r.get(f"abuseradar:crawl_status:{domain}")
+    finally:
+        await r.aclose()
+    if not raw:
+        return {"domain": domain, "status": "unknown"}
+    try:
+        return {"domain": domain, **_json.loads(raw)}
+    except Exception:
+        return {"domain": domain, "status": "unknown"}
 
 
 @app.post("/contacts/{domain}")

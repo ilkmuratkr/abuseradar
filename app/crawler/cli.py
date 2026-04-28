@@ -14,7 +14,7 @@ logging.basicConfig(
 
 async def crawl_single(url: str):
     """Tek bir siteyi crawl et."""
-    from .engine import crawl_and_analyze, save_crawl_results
+    from .engine import crawl_with_fallback as crawl_and_analyze, save_crawl_results
 
     result = await crawl_and_analyze(url)
 
@@ -54,7 +54,7 @@ async def crawl_victims():
     from sqlalchemy import select
     from models.database import async_session, Backlink
 
-    from .engine import crawl_and_analyze, save_crawl_results
+    from .engine import crawl_with_fallback as crawl_and_analyze, save_crawl_results
 
     async with async_session() as session:
         result = await session.execute(

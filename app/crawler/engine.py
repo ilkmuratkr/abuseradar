@@ -38,18 +38,49 @@ async def get_known_spam_domains() -> set[str]:
     return hacklink_domains | c2_domains
 
 
-async def crawl_and_analyze(url: str, domain: str | None = None) -> dict:
+async def crawl_with_fallback(url: str, domain: str | None = None) -> dict:
+    """Crawl with multi-VPN fallback: VPN-TR → VPN-US → host network direct.
+
+    İlk denemede TR (default crawl trafiği TR'den çıksın). Block/timeout/connection
+    hatası olursa US'e fallback. Yine olmazsa host network (proxy yok). Crawler'da
+    AI/Gemini çağrısı yok, host fallback bilgi sızdırmaz.
+    """
+    proxy_chain = [
+        ("vpn-tr", "socks5h://vpn-tr:1080"),
+        ("vpn-us", "socks5h://vpn-us:1080"),
+        ("host", None),
+    ]
+    last_result = None
+    for label, proxy in proxy_chain:
+        logger.info(f"Crawl attempt via {label}: {url}")
+        r = await crawl_and_analyze(url, domain=domain, proxy=proxy)
+        r["egress"] = label
+        # Başarılı: en az HTTP code geldi VEYA evidence toplandı
+        if r.get("http_code") or r.get("total_hacklinks", 0) > 0 or r.get("evidence_path"):
+            return r
+        last_result = r
+        logger.warning(f"[{label}] Crawl bilgi alınamadı, fallback denenecek. err={r.get('error')}")
+    return last_result or {"status": "error", "error": "all_egresses_failed"}
+
+
+async def crawl_and_analyze(
+    url: str,
+    domain: str | None = None,
+    proxy: str | None = "socks5h://vpn-tr:1080",
+) -> dict:
     """Tek bir siteyi crawl edip analiz et.
 
     3 katmanlı analiz:
     1. Raw HTTP → HTML gömülü enjeksiyon
     2. Playwright render → JS enjeksiyon + 6 kural hacklink
     3. Raw vs Rendered karşılaştırma
+
+    `proxy`: SOCKS5 URL veya None (host network).
     """
     if not domain:
         domain = urlparse(url).hostname or ""
 
-    logger.info(f"[{domain}] Crawl başlıyor: {url}")
+    logger.info(f"[{domain}] Crawl başlıyor: {url} (proxy={proxy})")
     result = {
         "url": url,
         "domain": domain,
@@ -61,6 +92,7 @@ async def crawl_and_analyze(url: str, domain: str | None = None) -> dict:
         "total_hacklinks": 0,
         "evidence_path": None,
         "error": None,
+        "_proxy": proxy,
     }
 
     known_spam = await get_known_spam_domains()
@@ -68,12 +100,18 @@ async def crawl_and_analyze(url: str, domain: str | None = None) -> dict:
     # ═══ KATMAN 1: Raw HTTP ═══
     raw_html = ""
     raw_link_set = set()
+    proxy = result.get("_proxy")
+    trust_env = proxy is None  # explicit None → host network direct
     try:
-        async with httpx.AsyncClient(
-            timeout=settings.crawl_page_timeout / 1000,
-            follow_redirects=True,
-            headers={"User-Agent": settings.crawl_user_agent},
-        ) as client:
+        client_kwargs = {
+            "timeout": settings.crawl_page_timeout / 1000,
+            "follow_redirects": True,
+            "headers": {"User-Agent": settings.crawl_user_agent},
+            "trust_env": trust_env,
+        }
+        if proxy:
+            client_kwargs["proxy"] = proxy
+        async with httpx.AsyncClient(**client_kwargs) as client:
             resp = await client.get(url)
             raw_html = resp.text
             result["http_code"] = resp.status_code
@@ -99,7 +137,13 @@ async def crawl_and_analyze(url: str, domain: str | None = None) -> dict:
     rendered_link_set = set()
     try:
         async with async_playwright() as pw:
-            browser = await pw.chromium.launch(headless=True)
+            launch_opts = {"headless": True}
+            if proxy:
+                # SOCKS proxy URL → Playwright proxy format
+                # socks5h://vpn-tr:1080  →  socks5://vpn-tr:1080
+                pw_proxy = proxy.replace("socks5h://", "socks5://")
+                launch_opts["proxy"] = {"server": pw_proxy}
+            browser = await pw.chromium.launch(**launch_opts)
             page = await browser.new_page(
                 user_agent=settings.crawl_user_agent,
                 viewport={"width": 1920, "height": 1080},
