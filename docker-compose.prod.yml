@@ -15,7 +15,7 @@ services:
 
   db:
     ports:
-      - "127.0.0.1:${PORT_DB:-5432}:5432"
+      - "127.0.0.1:${PORT_DB:-5433}:5432"
     restart: always
 
   redis:
