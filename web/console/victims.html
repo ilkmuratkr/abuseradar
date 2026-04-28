@@ -117,9 +117,12 @@ function renderTable() {
 
   const rows = items.map(v => {
     const domain = AR.fmt.domain(v.url);
-    const verified = v.verified === true ? AR.badge("Verified", "red")
-      : v.verified === false ? AR.badge("Crawled · clean", "green")
-      : AR.badge("Pending", "muted");
+    // verified state: crawl edildi mi, edildiyse hidden link bulundu mu?
+    const verified = !v.last_crawl
+      ? AR.badge("Pending verification", "muted")
+      : v.verified === true
+        ? AR.badge("Verified breach", "red")
+        : AR.badge("Crawled · clean", "green");
     return `
       <tr>
         <td>
