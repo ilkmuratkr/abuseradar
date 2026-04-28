@@ -43,7 +43,7 @@ async def get_known_spam_domains() -> set[str]:
     return hacklink_domains | c2_domains
 
 
-async def crawl_with_fallback(url: str, domain: str | None = None) -> dict:
+async def crawl_with_fallback(url: str, domain: str | None = None, page_index: int = 1) -> dict:
     """Crawl with multi-VPN fallback: VPN-TR → VPN-US → host network direct.
 
     İlk denemede TR (default crawl trafiği TR'den çıksın). Block/timeout/connection
@@ -58,7 +58,7 @@ async def crawl_with_fallback(url: str, domain: str | None = None) -> dict:
     last_result = None
     for label, proxy in proxy_chain:
         logger.info(f"Crawl attempt via {label}: {url}")
-        r = await crawl_and_analyze(url, domain=domain, proxy=proxy)
+        r = await crawl_and_analyze(url, domain=domain, proxy=proxy, page_index=page_index)
         r["egress"] = label
         # Başarılı: en az HTTP code geldi VEYA evidence toplandı
         if r.get("http_code") or r.get("total_hacklinks", 0) > 0 or r.get("evidence_path"):
@@ -72,6 +72,7 @@ async def crawl_and_analyze(
     url: str,
     domain: str | None = None,
     proxy: str | None = "socks5h://vpn-tr:1080",
+    page_index: int = 1,
 ) -> dict:
     """Tek bir siteyi crawl edip analiz et.
 
@@ -224,7 +225,8 @@ async def crawl_and_analyze(
                 "total_hacklinks": result["total_hacklinks"],
             }
             result["evidence_path"] = await collect_evidence(
-                page, domain, raw_html, combined_analysis
+                page, domain, raw_html, combined_analysis,
+                page_url=url, page_index=page_index,
             )
 
             await browser.close()
@@ -432,7 +434,7 @@ async def crawl_site(homepage_url: str, max_pages: int = MAX_PAGES_PER_SITE) -> 
         else:
             logger.info(f"[{domain}] Page {idx}/{len(pages)}: {page_url}")
         try:
-            r = await crawl_with_fallback(page_url, domain=domain)
+            r = await crawl_with_fallback(page_url, domain=domain, page_index=idx)
         except Exception as e:
             logger.error(f"[{domain}] Page {idx} crawl exception: {e}")
             continue

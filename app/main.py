@@ -943,6 +943,18 @@ async def evidence_screenshot(domain: str, idx: int):
     return FileResponse(str(p), media_type="image/png")
 
 
+@app.get("/evidence/{domain}/screenshot-by-name/{name}")
+async def evidence_screenshot_by_name(domain: str, name: str):
+    """Multi-page evidence için filename-tabanlı erişim (01_root_user-view.png vs.)."""
+    from pathlib import Path
+    if "/" in name or ".." in name or not name.endswith(".png"):
+        raise HTTPException(400, "Geçersiz dosya adı")
+    p = Path(settings.evidence_path) / domain / "screenshots" / name
+    if not p.is_file():
+        raise HTTPException(404, "Screenshot bulunamadı")
+    return FileResponse(str(p), media_type="image/png")
+
+
 @app.get("/evidence/{domain}/hacklinks")
 async def evidence_hacklinks(domain: str):
     data = evidence_reader.get_hacklinks(domain)

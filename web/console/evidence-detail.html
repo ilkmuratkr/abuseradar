@@ -258,20 +258,64 @@ async function loadAll() {
 
   // Findings — rawList/jsList hesaplandıktan sonra üretilir; aşağıda yapılır
 
-  // Captured page screenshots
-  const shotNames = bundle.screenshot_names || [];
-  el("cap-meta").textContent = shotNames.length ? `${shotNames.length} captures · click for full-size` : "no screenshots";
-  if (!shotNames.length) {
-    el("ss-host").innerHTML = '<div class="empty-state">No screenshots in bundle.</div>';
+  // Captured page screenshots — multi-page'de her crawled sayfa kendi grid'i
+  const groups = bundle.page_groups || [];
+  const pageResultsAll = hl.page_results || [];
+  // Her page_group için URL'i bul (page_results sırasına göre)
+  // page_groups format: [{page_key: "01_root", shots: {user-view: "01_root_user-view.png", ...}}, ...]
+
+  if (!groups.length || (groups.length === 1 && groups[0].page_key === "_legacy")) {
+    // Eski single-page format
+    const shotNames = bundle.screenshot_names || [];
+    el("cap-meta").textContent = shotNames.length ? `${shotNames.length} captures · legacy single-page` : "no screenshots";
+    if (!shotNames.length) {
+      el("ss-host").innerHTML = '<div class="empty-state">No screenshots in bundle. Re-crawl this domain.</div>';
+    } else {
+      el("ss-host").innerHTML = shotNames.map((n, i) => `
+        <figure class="rpt-shot">
+          <a href="/api/evidence/${encodeURIComponent(domain)}/screenshot-by-name/${encodeURIComponent(n)}" target="_blank">
+            <img src="/api/evidence/${encodeURIComponent(domain)}/screenshot-by-name/${encodeURIComponent(n)}" alt="${AR.escapeHtml(n)}">
+          </a>
+          <div class="rpt-shot-cap"><span class="mono">${AR.escapeHtml(n)}</span></div>
+        </figure>
+      `).join("");
+    }
   } else {
-    el("ss-host").innerHTML = shotNames.map((n, i) => `
-      <figure class="rpt-shot">
-        <a href="/api/evidence/${encodeURIComponent(domain)}/screenshot/${i}" target="_blank">
-          <img src="/api/evidence/${encodeURIComponent(domain)}/screenshot/${i}" alt="${AR.escapeHtml(n)}">
-        </a>
-        <div class="rpt-shot-cap">${AR.escapeHtml(captionFor(n))} · <span class="mono">${AR.escapeHtml(n)}</span></div>
-      </figure>
-    `).join("");
+    // Multi-page yeni format
+    el("cap-meta").textContent = `${groups.length} pages · ${bundle.screenshots} screenshots · click for full-size`;
+    el("ss-host").innerHTML = groups.map((grp, gi) => {
+      // grp.page_key = "01_root" → page_results[gi-1] varsa URL'i al
+      const matchPage = pageResultsAll[gi];
+      const pageUrl = matchPage ? matchPage.url : grp.page_key;
+      const userView = grp.shots["user-view"];
+      const hidden = grp.shots["hidden-revealed"] || grp.shots["hidden"];
+      // 2 thumbnail yan yana: user view + hidden revealed
+      const cells = [];
+      if (userView) cells.push({ name: userView, label: "User view" });
+      if (hidden) cells.push({ name: hidden, label: "Hidden links revealed", red: true });
+      if (!cells.length) {
+        // Bilinmeyen tipler
+        Object.entries(grp.shots).forEach(([t, n]) => cells.push({ name: n, label: t }));
+      }
+      return `
+        <div style="grid-column:1/-1;border:1px solid var(--border);border-radius:7px;padding:.7rem;background:var(--bg-card);margin-bottom:.6rem">
+          <div style="font-size:.78rem;color:var(--text);font-weight:600;margin-bottom:.5rem">
+            <span class="mono" style="color:var(--text-3);font-size:.7rem;margin-right:.4rem">[${gi + 1}/${groups.length}]</span>
+            <a href="${AR.escapeHtml(pageUrl)}" target="_blank" class="mono" style="color:var(--teal);font-size:.78rem;word-break:break-all">${AR.escapeHtml(pageUrl)}</a>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.5rem">
+            ${cells.map(c => `
+              <figure class="rpt-shot" style="margin:0">
+                <a href="/api/evidence/${encodeURIComponent(domain)}/screenshot-by-name/${encodeURIComponent(c.name)}" target="_blank">
+                  <img src="/api/evidence/${encodeURIComponent(domain)}/screenshot-by-name/${encodeURIComponent(c.name)}" alt="${AR.escapeHtml(c.name)}">
+                </a>
+                <div class="rpt-shot-cap" ${c.red ? 'style="background:rgba(220,68,68,0.08);color:var(--red)"' : ''}>${AR.escapeHtml(c.label)} · <span class="mono">${AR.escapeHtml(c.name)}</span></div>
+              </figure>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }).join("");
   }
 
   // Cloaking
@@ -374,29 +418,23 @@ async function loadAll() {
       const anchorCell = anchor || title
         ? `<div class="mono" style="color:var(--text)">${AR.escapeHtml(AR.fmt.truncate(anchor || "—", 36))}</div>${title && title !== anchor ? `<div style="font-size:.66rem;color:var(--text-4);margin-top:.15rem;font-style:italic" class="mono">title: ${AR.escapeHtml(AR.fmt.truncate(title, 50))}</div>` : ""}`
         : `<span class="mono" style="color:var(--text-4)">—</span>`;
-      // Hangi sayfada bulundu — backend `_page` field'ından
+      // Hangi sayfada bulundu — TAM URL (kullanıcı isteği: parse etme, full URL ver)
       const foundOnRaw = l._page || "";
-      let foundOn = "—";
-      if (foundOnRaw) {
-        try {
-          const u = new URL(foundOnRaw);
-          foundOn = (u.pathname === "/" || !u.pathname) ? "/ (homepage)" : u.pathname + (u.search || "");
-        } catch { foundOn = foundOnRaw; }
-      }
+      const foundOn = foundOnRaw || "—";
       return `
         <tr class="${score >= 50 ? 'hi' : ''}">
           <td style="text-align:right;color:${scoreColor};vertical-align:top" class="strong">${score || "—"}</td>
           <td style="vertical-align:top">${anchorCell}</td>
           <td style="vertical-align:top"><span class="mono">${AR.escapeHtml(AR.fmt.truncate(l.href || "", 60))}</span></td>
           <td style="vertical-align:top"><span style="font-size:.7rem;color:var(--text-4)">${AR.escapeHtml(AR.fmt.truncate(reasons, 40))}</span></td>
-          <td style="vertical-align:top"><span class="mono" style="font-size:.7rem;color:var(--text-3)" title="${AR.escapeHtml(foundOnRaw)}">${AR.escapeHtml(AR.fmt.truncate(foundOn, 28))}</span></td>
+          <td style="vertical-align:top"><a href="${AR.escapeHtml(foundOnRaw)}" target="_blank" class="mono" style="font-size:.7rem;color:var(--teal);word-break:break-all" title="${AR.escapeHtml(foundOnRaw)}">${AR.escapeHtml(AR.fmt.truncate(foundOn, 50))}</a></td>
         </tr>
       `;
     }).join("");
     return `
       ${sourceInfo ? `<div class="rpt-callout red" style="margin-bottom:.5rem">${sourceInfo}</div>` : ""}
       <table class="rpt-tbl">
-        <thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor / title</th><th>URL</th><th style="width:170px">Hiding / reasons</th><th style="width:160px">Found on page</th></tr></thead>
+        <thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor / title</th><th>URL</th><th style="width:160px">Hiding / reasons</th><th style="width:230px">Found on page (URL)</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
       ${items.length > 200 ? `<div style="font-size:.7rem;color:var(--text-4);margin-top:.4rem">Showing first 200 of ${items.length}</div>` : ""}

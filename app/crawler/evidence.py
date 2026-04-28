@@ -119,11 +119,40 @@ REVEAL_HIDDEN_JS = r"""() => {
 }"""
 
 
-async def collect_evidence(page, domain: str, raw_html: str, analysis: dict) -> str:
-    """Bir site için tüm kanıtları topla.
+def _page_slug(page_url: str, fallback: str = "page") -> str:
+    """URL → kısa, dosya-güvenli slug.
+    https://www.ulm.edu.pk/ → 'root'
+    https://www.ulm.edu.pk/dept_botany.php → 'dept_botany_php'
+    """
+    import re
+    from urllib.parse import urlparse
 
-    Returns:
-        evidence_dir yolu
+    try:
+        u = urlparse(page_url)
+        path = (u.path or "/").strip("/")
+        if not path:
+            return "root"
+        # query string için kısa marker
+        q = u.query[:30] if u.query else ""
+        slug = re.sub(r"[^A-Za-z0-9._-]+", "_", path)
+        if q:
+            slug += "_q" + re.sub(r"[^A-Za-z0-9_-]+", "_", q)
+        return slug[:60] or fallback
+    except Exception:
+        return fallback
+
+
+async def collect_evidence(
+    page,
+    domain: str,
+    raw_html: str,
+    analysis: dict,
+    page_url: str | None = None,
+    page_index: int = 1,
+) -> str:
+    """Bir sayfa için kanıtları topla — multi-page'de her sayfa kendi prefix'i ile yazılır.
+
+    Filename pattern:  {NN}_{slug}_{type}.png  (örn: 01_root_user-view.png)
     """
     evidence_dir = Path(settings.evidence_path) / domain
     screenshots_dir = evidence_dir / "screenshots"
@@ -133,44 +162,45 @@ async def collect_evidence(page, domain: str, raw_html: str, analysis: dict) -> 
     for d in [screenshots_dir, dom_dir, analysis_dir]:
         d.mkdir(parents=True, exist_ok=True)
 
+    slug = _page_slug(page_url or "")
+    prefix = f"{page_index:02d}_{slug}"
+
     # 1. Normal kullanıcı görünümü screenshot
     try:
         await page.screenshot(
-            path=str(screenshots_dir / "user-view.png"),
+            path=str(screenshots_dir / f"{prefix}_user-view.png"),
             full_page=True,
             timeout=15000,
         )
-        logger.info(f"[{domain}] User view screenshot alındı")
+        logger.info(f"[{domain}] [{prefix}] User view screenshot alındı")
     except Exception as e:
-        logger.warning(f"[{domain}] User screenshot hatası: {e}")
+        logger.warning(f"[{domain}] [{prefix}] User screenshot hatası: {e}")
 
-    # 2. Gizli linkleri görünür yap + screenshot
+    # 2. Gizli linkleri görünür yap + screenshot (her sayfa için ayrı)
     try:
         revealed = await page.evaluate(REVEAL_HIDDEN_JS)
         if revealed > 0:
             await page.screenshot(
-                path=str(screenshots_dir / "hidden-links-revealed.png"),
+                path=str(screenshots_dir / f"{prefix}_hidden-revealed.png"),
                 full_page=True,
                 timeout=15000,
             )
-            logger.info(f"[{domain}] {revealed} gizli element açığa çıkarıldı")
+            logger.info(f"[{domain}] [{prefix}] {revealed} gizli element açığa çıkarıldı")
     except Exception as e:
-        logger.warning(f"[{domain}] Reveal screenshot hatası: {e}")
+        logger.warning(f"[{domain}] [{prefix}] Reveal screenshot hatası: {e}")
 
     # 3. Raw HTML kaydet
     try:
-        with open(dom_dir / "raw.html", "w", encoding="utf-8") as f:
-            f.write(raw_html)
+        (dom_dir / f"{prefix}_raw.html").write_text(raw_html, encoding="utf-8")
     except Exception as e:
-        logger.warning(f"[{domain}] Raw HTML kaydetme hatası: {e}")
+        logger.warning(f"[{domain}] [{prefix}] Raw HTML kaydetme hatası: {e}")
 
     # 4. Rendered DOM kaydet
     try:
         rendered = await page.content()
-        with open(dom_dir / "rendered.html", "w", encoding="utf-8") as f:
-            f.write(rendered)
+        (dom_dir / f"{prefix}_rendered.html").write_text(rendered, encoding="utf-8")
     except Exception as e:
-        logger.warning(f"[{domain}] Rendered DOM kaydetme hatası: {e}")
+        logger.warning(f"[{domain}] [{prefix}] Rendered DOM kaydetme hatası: {e}")
 
     # 5. Analiz sonuçlarını kaydet
     try:

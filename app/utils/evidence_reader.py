@@ -87,6 +87,23 @@ def _bundle_summary(site_dir: Path, full: bool = False) -> dict:
     screenshots = sorted(ss_dir.glob("*.png")) if ss_dir.is_dir() else []
     doms = sorted(dom_dir.glob("*.html")) if dom_dir.is_dir() else []
 
+    # Multi-page filename pattern: NN_slug_user-view.png, NN_slug_hidden-revealed.png
+    # Group by NN+slug
+    page_groups: dict = {}
+    for p in screenshots:
+        name = p.name
+        # NN_slug_TYPE.png — split parts
+        parts = name.replace(".png", "").split("_")
+        if len(parts) >= 2 and parts[0].isdigit():
+            page_key = "_".join(parts[:-1])  # NN_slug (last part is type)
+            shot_type = parts[-1]
+            page_groups.setdefault(page_key, {"page_key": page_key, "shots": {}})
+            page_groups[page_key]["shots"][shot_type] = name
+        else:
+            # Eski (single-page) format — root grup
+            page_groups.setdefault("_legacy", {"page_key": "_legacy", "shots": {}})
+            page_groups["_legacy"]["shots"][name.replace(".png", "")] = name
+
     captured_at = None
     if screenshots:
         captured_at = max(p.stat().st_mtime for p in screenshots)
@@ -120,6 +137,7 @@ def _bundle_summary(site_dir: Path, full: bool = False) -> dict:
     if full:
         bundle["screenshot_names"] = [p.name for p in screenshots]
         bundle["dom_names"] = [p.name for p in doms]
+        bundle["page_groups"] = sorted(page_groups.values(), key=lambda g: g["page_key"])
         # toplam boyut
         total = sum(
             p.stat().st_size for p in site_dir.rglob("*") if p.is_file()
