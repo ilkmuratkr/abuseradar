@@ -364,6 +364,31 @@ async function loadReport() {
 
   // Hidden links table — kaynaklara göre
   const compromisedDomain = domain.toLowerCase().replace(/^www\./, "");
+  // Major service whitelist — bunlar asla hacklink değildir (false positive engelle)
+  const SAFE_DOMAINS = [
+    "google.com","gmail.com","googleusercontent.com","googleapis.com","gstatic.com",
+    "youtube.com","youtu.be","googleadservices.com","doubleclick.net","blogger.com",
+    "microsoft.com","outlook.com","office.com","live.com","hotmail.com","windows.com",
+    "msn.com","bing.com","azure.com","sharepoint.com","onedrive.com",
+    "apple.com","icloud.com","itunes.com","appstore.com",
+    "amazon.com","amazonaws.com","aws.amazon.com",
+    "facebook.com","fb.com","twitter.com","x.com","instagram.com","whatsapp.com",
+    "linkedin.com","tiktok.com","snapchat.com","pinterest.com","reddit.com","tumblr.com",
+    "telegram.org","discord.com","slack.com","zoom.us","skype.com",
+    "github.com","gitlab.com","bitbucket.org","stackoverflow.com","npmjs.com",
+    "cloudflare.com","jsdelivr.net","cdnjs.com","unpkg.com",
+    "fontawesome.com","mozilla.org","w3.org","w3schools.com",
+    "wikipedia.org","wikimedia.org","wiktionary.org",
+    "yahoo.com","vimeo.com","dailymotion.com","soundcloud.com","spotify.com","twitch.tv",
+    "paypal.com","stripe.com","wordpress.com","wordpress.org","wix.com","squarespace.com",
+    "adobe.com","behance.net","dropbox.com","drive.google.com","mail.google.com"
+  ];
+  const isSafe = (url) => {
+    try {
+      const h = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+      return SAFE_DOMAINS.some(d => h === d || h.endsWith("." + d));
+    } catch { return false; }
+  };
   const isInternal = (url) => {
     try { const h = new URL(url).hostname.toLowerCase().replace(/^www\./, ""); return h === compromisedDomain || h.endsWith("." + compromisedDomain); } catch { return false; }
   };
@@ -375,8 +400,8 @@ async function loadReport() {
 
   const allLinks = [];
   const seen = new Set();
-  for (const x of (hacklinks.raw_hacklinks || [])) if (x.href && !seen.has(x.href) && !isInternal(x.href)) { seen.add(x.href); allLinks.push({...x, _src: "html"}); }
-  for (const x of (hacklinks.js_diff_hacklinks || [])) if (x.href && !seen.has(x.href) && !isInternal(x.href)) { seen.add(x.href); allLinks.push({...x, _src: "js"}); }
+  for (const x of (hacklinks.raw_hacklinks || [])) if (x.href && !seen.has(x.href) && !isInternal(x.href) && !isSafe(x.href)) { seen.add(x.href); allLinks.push({...x, _src: "html"}); }
+  for (const x of (hacklinks.js_diff_hacklinks || [])) if (x.href && !seen.has(x.href) && !isInternal(x.href) && !isSafe(x.href)) { seen.add(x.href); allLinks.push({...x, _src: "js"}); }
   allLinks.forEach(l => l.score = score(l.href, l.text || l.anchor_text, l.score));
   allLinks.sort((a, b) => (b.score || 0) - (a.score || 0));
 
