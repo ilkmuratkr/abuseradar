@@ -396,7 +396,13 @@ async def crawl_site(homepage_url: str, max_pages: int = MAX_PAGES_PER_SITE) -> 
     seen_rendered = set()
 
     for idx, page_url in enumerate(pages, start=1):
-        logger.info(f"[{domain}] Page {idx}/{len(pages)}: {page_url}")
+        # Same-domain rate limit — sayfalar arası bekle (ilk sayfa hariç)
+        if idx > 1:
+            delay = settings.crawl_same_domain_delay or 5
+            logger.info(f"[{domain}] Page {idx}/{len(pages)}: waiting {delay}s (rate-limit) → {page_url}")
+            await asyncio.sleep(delay)
+        else:
+            logger.info(f"[{domain}] Page {idx}/{len(pages)}: {page_url}")
         try:
             r = await crawl_with_fallback(page_url, domain=domain)
         except Exception as e:
