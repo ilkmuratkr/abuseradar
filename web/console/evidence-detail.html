@@ -77,6 +77,10 @@
         </nav>
       </div>
       <div class="topbar-right">
+        <button class="btn btn-primary" id="btn-share">
+          <svg viewBox="0 0 24 24"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/></svg>
+          Share public link
+        </button>
         <button class="btn btn-ghost" id="btn-print">
           <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           Print / PDF
@@ -178,6 +182,51 @@ if (!domain) {
 } else {
   document.getElementById("crumb-domain").textContent = domain;
   document.getElementById("btn-print").addEventListener("click", () => window.print());
+  document.getElementById("btn-share").addEventListener("click", async () => {
+    try {
+      const r = await AR.post(`/reports/${encodeURIComponent(domain)}/share`);
+      const url = r.public_url;
+      // Modal göster
+      let m = document.getElementById("share-modal");
+      if (!m) {
+        m = document.createElement("div");
+        m.id = "share-modal";
+        m.style.cssText = "position:fixed;inset:0;background:rgba(0,16,22,0.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem";
+        document.body.appendChild(m);
+      }
+      m.innerHTML = `
+        <div style="background:var(--bg-card);border:1px solid var(--border-hi);border-radius:10px;width:100%;max-width:560px;padding:1.5rem">
+          <h3 style="margin:0 0 .5rem;font-family:'Bitter',serif">Public link generated</h3>
+          <p style="font-size:.85rem;color:var(--text-3);margin:0 0 1rem">No authentication required. Send this URL in the breach notification email — IT staff will see the report directly.</p>
+          <div style="display:flex;gap:.4rem;margin-bottom:.7rem">
+            <input type="text" id="share-url" readonly value="${AR.escapeHtml(url)}" style="flex:1;padding:.6rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;font-family:var(--font-mono);font-size:.78rem;color:var(--text)">
+            <button class="btn btn-primary" id="share-copy">Copy</button>
+          </div>
+          <div style="font-size:.74rem;color:var(--text-4)">Token expires in 180 days. Anyone with the link can view (no further auth).</div>
+          <div style="display:flex;gap:.5rem;justify-content:flex-end;margin-top:1rem">
+            <button class="btn btn-ghost" id="share-revoke" style="color:var(--red)">Revoke link</button>
+            <button class="btn btn-ghost" id="share-close">Close</button>
+          </div>
+        </div>
+      `;
+      document.getElementById("share-copy").onclick = () => {
+        const inp = document.getElementById("share-url");
+        inp.select();
+        navigator.clipboard.writeText(url).then(() => AR.toast("Copied to clipboard", "success"));
+      };
+      document.getElementById("share-close").onclick = () => m.remove();
+      document.getElementById("share-revoke").onclick = async () => {
+        if (!confirm("Revoke this public link? IT staff will get a 'link revoked' page next time they open it.")) return;
+        try {
+          await AR.del(`/reports/${encodeURIComponent(domain)}/share`);
+          AR.toast("Public link revoked", "success");
+          m.remove();
+        } catch (e) { AR.toast(e.message, "error"); }
+      };
+    } catch (e) {
+      AR.toast(e.message, "error");
+    }
+  });
   document.getElementById("btn-delete").addEventListener("click", async () => {
     if (!confirm(`Delete bundle for ${domain}?\n\nFilesystem files (screenshots, DOM dumps, analysis) will be removed.\nDetected hacklink rows will be cleaned from DB.\nSite verification status will reset to 'pending'.\n\nThis cannot be undone.`)) return;
     try {

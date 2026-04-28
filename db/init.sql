@@ -160,6 +160,20 @@ CREATE TABLE IF NOT EXISTS complaints (
     UNIQUE(target_domain, platform)
 );
 
+-- Public report token'ları (auth'suz paylaşım)
+CREATE TABLE IF NOT EXISTS report_tokens (
+    id SERIAL PRIMARY KEY,
+    token VARCHAR(64) UNIQUE NOT NULL,
+    domain VARCHAR(500) NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    expires_at TIMESTAMPTZ,
+    view_count INTEGER DEFAULT 0,
+    last_viewed_at TIMESTAMPTZ,
+    revoked BOOLEAN DEFAULT FALSE,
+    UNIQUE(domain)
+);
+CREATE INDEX IF NOT EXISTS idx_report_tokens_token ON report_tokens(token);
+
 -- İndeksler
 CREATE INDEX IF NOT EXISTS idx_backlinks_referring_url ON backlinks(referring_url);
 CREATE INDEX IF NOT EXISTS idx_backlinks_target_domain ON backlinks(target_domain);

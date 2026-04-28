@@ -202,6 +202,19 @@ class Complaint(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class ReportToken(Base):
+    __tablename__ = "report_tokens"
+
+    id = Column(Integer, primary_key=True)
+    token = Column(String(64), unique=True, nullable=False)
+    domain = Column(String(500), nullable=False, unique=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    expires_at = Column(DateTime(timezone=True))
+    view_count = Column(Integer, default=0)
+    last_viewed_at = Column(DateTime(timezone=True))
+    revoked = Column(Boolean, default=False)
+
+
 async def init_db():
     """Veritabanı bağlantısını test et."""
     async with engine.begin():

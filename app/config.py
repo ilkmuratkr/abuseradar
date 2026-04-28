@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     email_reply_to_name: str = "AbuseRadar Team"
 
     project_name: str = "AbuseRadar"
+    public_base_url: str = "https://abuseradar.org"
     report_base_url: str = "https://abuseradar.org/report"
     log_level: str = "INFO"
 

@@ -17,6 +17,7 @@ from models.database import (
     CsvFile,
     DetectedHacklink,
     Notification,
+    ReportToken,
     Site,
     async_session,
     init_db,
@@ -940,6 +941,131 @@ async def evidence_screenshot(domain: str, idx: int):
     p = evidence_reader.get_screenshot_path(domain, idx)
     if not p:
         raise HTTPException(404, "Screenshot bulunamadı")
+    return FileResponse(str(p), media_type="image/png")
+
+
+@app.post("/reports/{domain}/share")
+async def share_report(domain: str):
+    """Public token üret/varsa varolanı dön. URL: https://abuseradar.org/r.html?t={token}"""
+    import secrets
+    from datetime import timedelta
+
+    safe = domain.strip().lower()
+    async with async_session() as session:
+        existing_q = await session.execute(
+            select(ReportToken).where(ReportToken.domain == safe)
+        )
+        existing = existing_q.scalar_one_or_none()
+        if existing and not existing.revoked:
+            token = existing.token
+        else:
+            token = secrets.token_urlsafe(24)
+            if existing:
+                existing.token = token
+                existing.revoked = False
+                existing.created_at = datetime.utcnow()
+                existing.expires_at = datetime.utcnow() + timedelta(days=180)
+                existing.view_count = 0
+            else:
+                session.add(ReportToken(
+                    token=token, domain=safe,
+                    expires_at=datetime.utcnow() + timedelta(days=180),
+                ))
+            await session.commit()
+
+    public_url = f"{settings.public_base_url}/r.html?t={token}"
+    return {
+        "domain": safe,
+        "token": token,
+        "public_url": public_url,
+        "expires_in_days": 180,
+    }
+
+
+@app.delete("/reports/{domain}/share")
+async def revoke_report(domain: str):
+    """Public link'i iptal et."""
+    safe = domain.strip().lower()
+    async with async_session() as session:
+        existing_q = await session.execute(
+            select(ReportToken).where(ReportToken.domain == safe)
+        )
+        existing = existing_q.scalar_one_or_none()
+        if not existing:
+            raise HTTPException(404, "No public link to revoke")
+        existing.revoked = True
+        await session.commit()
+    return {"revoked": True, "domain": safe}
+
+
+@app.get("/public/reports/{token}")
+async def public_report(token: str):
+    """AUTH GEREKMEZ. Token doğrulayıp aggregate bundle JSON'ı döner.
+
+    nginx config'inde /api/public/* basic auth'tan exempt edilmiş olmalı.
+    """
+    async with async_session() as session:
+        rt_q = await session.execute(
+            select(ReportToken).where(ReportToken.token == token)
+        )
+        rt = rt_q.scalar_one_or_none()
+        if not rt:
+            raise HTTPException(404, "Invalid or expired link")
+        if rt.revoked:
+            raise HTTPException(403, "Link revoked")
+        if rt.expires_at and rt.expires_at < datetime.utcnow():
+            raise HTTPException(410, "Link expired")
+        # View tracking
+        rt.view_count = (rt.view_count or 0) + 1
+        rt.last_viewed_at = datetime.utcnow()
+        await session.commit()
+        domain = rt.domain
+
+    # Bundle ve hacklinks verisini döndür
+    bundle = evidence_reader.get_bundle(domain)
+    if not bundle:
+        raise HTTPException(404, "Bundle not found for this domain")
+    if bundle.get("captured_at"):
+        bundle["captured_at"] = datetime.fromtimestamp(bundle["captured_at"]).isoformat()
+
+    hacklinks = evidence_reader.get_hacklinks(domain) or {}
+
+    # Hosting info (varsa)
+    hosting_info = None
+    try:
+        from complainant.hosting import get_hosting_info
+        hosting_info = await get_hosting_info(domain)
+    except Exception:
+        hosting_info = None
+
+    return {
+        "domain": domain,
+        "bundle": bundle,
+        "hacklinks": hacklinks,
+        "hosting": hosting_info,
+        "view_count": rt.view_count,
+    }
+
+
+@app.get("/public/reports/{token}/screenshot/{name}")
+async def public_report_screenshot(token: str, name: str):
+    """AUTH GEREKMEZ. Token doğrulayıp screenshot dosyasını döndür."""
+    from pathlib import Path
+    if "/" in name or ".." in name or not name.endswith(".png"):
+        raise HTTPException(400, "Invalid filename")
+    async with async_session() as session:
+        rt_q = await session.execute(
+            select(ReportToken).where(ReportToken.token == token)
+        )
+        rt = rt_q.scalar_one_or_none()
+        if not rt or rt.revoked:
+            raise HTTPException(404, "Invalid link")
+        if rt.expires_at and rt.expires_at < datetime.utcnow():
+            raise HTTPException(410, "Link expired")
+        domain = rt.domain
+    p = Path(settings.evidence_path) / domain / "screenshots" / name
+    if not p.is_file():
+        raise HTTPException(404, "Screenshot not found")
     return FileResponse(str(p), media_type="image/png")
 
 

@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Breach disclosure — AbuseRadar</title>
+  <meta name="theme-color" content="#001016">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='28' fill='%23001F29' stroke='%231ACEC9' stroke-width='2'/><circle cx='32' cy='32' r='3' fill='%23EADA24'/></svg>">
+  <style>
+    :root {
+      --bg: #f5f7f8;
+      --bg-card: #ffffff;
+      --bg-card-2: #f0f3f5;
+      --text: #0a1419;
+      --text-2: #2a3540;
+      --text-3: #5a6772;
+      --text-4: #8a95a0;
+      --border: #d5dde2;
+      --border-hi: #b5c0c8;
+      --teal: #00b8a9;
+      --red: #d83b3b;
+      --orange: #e87d2a;
+      --gold: #b89000;
+      --green: #2e9657;
+      --shadow: 0 1px 3px rgba(0,16,22,0.08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; padding: 0; background: var(--bg);
+      font-family: 'Inter', -apple-system, sans-serif;
+      color: var(--text); line-height: 1.55; font-size: 14px;
+    }
+    a { color: var(--teal); text-decoration: none; }
+    .mono { font-family: 'JetBrains Mono', Consolas, monospace; }
+
+    .page-header {
+      background: linear-gradient(180deg, #001F29 0%, #002a36 100%);
+      color: white; padding: 1.5rem 2rem; border-bottom: 3px solid #1ACEC9;
+    }
+    .page-header-inner { max-width: 980px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+    .brand { display: flex; align-items: center; gap: .6rem; }
+    .brand svg { width: 36px; height: 36px; }
+    .brand-text { font-family: 'Bitter', serif; font-weight: 600; font-size: 1.25rem; color: white; }
+    .brand-text em { color: #1ACEC9; font-style: normal; }
+    .header-tag { font-size: .72rem; color: #b5d5d8; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    .container { max-width: 980px; margin: 0 auto; padding: 2rem; }
+
+    .intro {
+      background: white; border: 1px solid var(--border); border-left: 4px solid var(--orange);
+      border-radius: 8px; padding: 1.4rem 1.6rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+    }
+    .intro h2 { margin: 0 0 .5rem; font-family: 'Bitter', serif; font-size: 1.15rem; color: var(--text); }
+    .intro p { margin: .4rem 0; color: var(--text-2); }
+    .intro .badge {
+      display: inline-block; padding: .15rem .55rem; border-radius: 999px;
+      background: rgba(216,59,59,0.1); color: var(--red); font-size: .72rem;
+      font-weight: 600; text-transform: uppercase; letter-spacing: .8px; margin-right: .4rem;
+    }
+
+    .target-card {
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.4rem 1.6rem; margin-bottom: 1.5rem; box-shadow: var(--shadow);
+    }
+    .target-domain {
+      font-family: 'JetBrains Mono', monospace; font-size: 1.4rem;
+      color: var(--text); font-weight: 600; word-break: break-all;
+    }
+    .target-meta { color: var(--text-3); font-size: .82rem; margin-top: .3rem; }
+
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .7rem; margin: 1rem 0 0; }
+    .stat { padding: .8rem 1rem; background: var(--bg-card-2); border-radius: 6px; }
+    .stat-num { font-family: 'JetBrains Mono', monospace; font-size: 1.6rem; font-weight: 700; color: var(--text); }
+    .stat-num.red { color: var(--red); }
+    .stat-num.orange { color: var(--orange); }
+    .stat-lbl { font-size: .68rem; text-transform: uppercase; color: var(--text-3); margin-top: .15rem; letter-spacing: .8px; }
+
+    h2.section { font-family: 'Bitter', serif; font-size: 1.1rem; color: var(--text);
+      margin: 1.6rem 0 .7rem; padding-top: 1.2rem; border-top: 1px solid var(--border); }
+    .section-meta { font-family: 'Inter', sans-serif; font-weight: 400; font-size: .76rem; color: var(--text-3); margin-left: .5rem; }
+
+    .panel { background: white; border: 1px solid var(--border); border-radius: 8px; padding: 0; overflow: hidden; box-shadow: var(--shadow); }
+    .panel-pad { padding: 1rem 1.3rem; }
+
+    .shot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .55rem; }
+    .shot { border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: var(--bg-card-2); }
+    .shot img { width: 100%; height: 220px; object-fit: cover; object-position: top center; display: block; cursor: zoom-in; }
+    .shot-cap { padding: .4rem .65rem; font-size: .7rem; color: var(--text-3); border-top: 1px solid var(--border); }
+    .shot-cap.red { background: rgba(216,59,59,0.06); color: var(--red); }
+
+    .hl-tbl { width: 100%; border-collapse: collapse; font-size: .82rem; }
+    .hl-tbl th, .hl-tbl td { padding: .45rem .65rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .hl-tbl th { background: var(--bg-card-2); color: var(--text-3); font-weight: 600; text-transform: uppercase; font-size: .65rem; letter-spacing: .8px; }
+    .hl-tbl tr.hi td { background: rgba(216,59,59,0.04); }
+    .hl-tbl .mono { font-size: .72rem; }
+
+    .callout { padding: .7rem 1rem; border-radius: 6px; margin: .4rem 0; font-size: .85rem; }
+    .callout.red { background: rgba(216,59,59,0.08); border-left: 3px solid var(--red); color: var(--text); }
+    .callout.green { background: rgba(46,150,87,0.08); border-left: 3px solid var(--green); color: var(--text); }
+    .callout.orange { background: rgba(232,125,42,0.08); border-left: 3px solid var(--orange); color: var(--text); }
+
+    .play { margin: .5rem 0 .5rem 1.4rem; padding: 0; }
+    .play li { margin-bottom: .55rem; line-height: 1.6; }
+
+    .footer-disc {
+      background: white; border: 1px solid var(--border); border-radius: 8px;
+      padding: 1.4rem 1.6rem; margin-top: 2rem; box-shadow: var(--shadow);
+      font-size: .85rem; color: var(--text-2);
+    }
+    .footer-disc strong { color: var(--text); }
+    .contact-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px,1fr)); gap: .8rem; margin-top: .8rem; }
+    .contact-item { padding: .6rem .8rem; background: var(--bg-card-2); border-radius: 6px; }
+    .contact-item .label { font-size: .68rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .8px; }
+    .contact-item .val { font-family: 'JetBrains Mono', monospace; font-size: .85rem; color: var(--text); margin-top: .15rem; }
+
+    .badge { display: inline-block; padding: .12rem .5rem; border-radius: 4px; font-size: .68rem; font-weight: 600; text-transform: uppercase; letter-spacing: .5px; }
+    .badge.red { background: rgba(216,59,59,0.12); color: var(--red); }
+    .badge.orange { background: rgba(232,125,42,0.12); color: var(--orange); }
+    .badge.green { background: rgba(46,150,87,0.12); color: var(--green); }
+    .badge.gold { background: rgba(184,144,0,0.12); color: var(--gold); }
+
+    .err { padding: 2rem; text-align: center; color: var(--red); font-family: 'JetBrains Mono', monospace; }
+
+    @media print {
+      body { background: white; }
+      .page-header { background: white !important; color: var(--text) !important; border-bottom: 2px solid #ccc; padding: 1rem 0; }
+      .brand-text, .brand svg circle { color: var(--text) !important; }
+      .panel, .target-card, .intro, .footer-disc { box-shadow: none; }
+      a { color: inherit; text-decoration: none; }
+      .shot img { height: 130px; }
+      .stats, .shot-grid, .hl-tbl { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="page-header-inner">
+    <a href="/" class="brand">
+      <svg viewBox="0 0 64 64" fill="none">
+        <circle cx="32" cy="32" r="28" stroke="#1ACEC9" stroke-width="2" fill="rgba(26,206,201,0.05)"/>
+        <circle cx="32" cy="32" r="9" stroke="#1ACEC9" stroke-opacity=".75" stroke-width="2" fill="none"/>
+        <circle cx="32" cy="32" r="3" fill="#EADA24"/>
+        <line x1="32" y1="32" x2="54" y2="12" stroke="#1ACEC9" stroke-width="2"/>
+      </svg>
+      <span class="brand-text">Abuse<em>Radar</em></span>
+    </a>
+    <span class="header-tag">Coordinated breach disclosure</span>
+  </div>
+</header>
+
+<main class="container" id="main">
+  <div class="err" id="err" style="display:none"></div>
+
+  <div id="content" style="display:none">
+    <!-- Intro / Why are you reading this -->
+    <section class="intro">
+      <h2><span class="badge">Confidential</span> Why have you received this report?</h2>
+      <p>An automated security audit by <strong>AbuseRadar</strong> — an independent breach intelligence project — identified that <strong id="i-domain">—</strong> is currently serving hidden gambling/spam links. These links are invisible to your regular visitors but visible to search engines, used to launder ranking signal toward illicit landing pages.</p>
+      <p>This report is shared with you so your team can <strong>verify the finding, remove the injection, and confirm closure</strong>. AbuseRadar will re-render the page within 12 hours of acknowledgement. If you believe this is a false positive, reply to <span class="mono">team@abuseradar.org</span>.</p>
+    </section>
+
+    <!-- Target -->
+    <div class="target-card">
+      <div class="target-domain" id="t-domain">—</div>
+      <div class="target-meta" id="t-meta">—</div>
+      <div class="stats">
+        <div class="stat"><div class="stat-num red" id="s-total">—</div><div class="stat-lbl">Hidden links</div></div>
+        <div class="stat"><div class="stat-num orange" id="s-html">—</div><div class="stat-lbl">HTML injection</div></div>
+        <div class="stat"><div class="stat-num orange" id="s-js">—</div><div class="stat-lbl">JS injection</div></div>
+        <div class="stat"><div class="stat-num" id="s-pages">—</div><div class="stat-lbl">Pages crawled</div></div>
+      </div>
+    </div>
+
+    <!-- Findings -->
+    <h2 class="section">1. What we found</h2>
+    <div class="panel">
+      <div class="panel-pad">
+        <ul class="play" id="findings-list"><li>Loading…</li></ul>
+      </div>
+    </div>
+
+    <!-- Captured pages -->
+    <h2 class="section">2. Captured evidence <span class="section-meta" id="cap-meta"></span></h2>
+    <div id="ss-host"><div class="callout orange">Loading captures…</div></div>
+
+    <!-- Hidden links table -->
+    <h2 class="section">3. Hidden links <span class="section-meta" id="hl-meta"></span></h2>
+    <div class="panel">
+      <div id="hl-body" class="panel-pad">Loading…</div>
+    </div>
+
+    <!-- Injection scripts -->
+    <h2 class="section">4. Injection source</h2>
+    <div id="scripts-body">Loading…</div>
+
+    <!-- Remediation -->
+    <h2 class="section">5. How to fix this</h2>
+    <div class="panel">
+      <div class="panel-pad">
+        <ol class="play">
+          <li><strong>Locate the injection</strong> — search your site's footer / header / sidebar templates for the absolutely-positioned hidden link cluster (typical CSS: <span class="mono">position:absolute;left:-9999px</span>, <span class="mono">opacity:0;height:0</span>, or <span class="mono">display:none</span>). The DOM dumps in this report show the exact location.</li>
+          <li><strong>Audit recently modified files</strong> — look for backdoor PHP web-shells under <span class="mono">/wp-content/</span>, <span class="mono">/admin/</span> or template directories. Disable any out-of-date CMS plugins.</li>
+          <li><strong>Rotate credentials</strong> — change all CMS administrator passwords, FTP/SSH keys. If possible, redeploy from a known-clean backup.</li>
+          <li><strong>Confirm closure</strong> — reply to <span class="mono">team@abuseradar.org</span>. We re-render the page within 12 hours and confirm the fix in this report.</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- Hosting & registrar -->
+    <h2 class="section">6. Hosting &amp; infrastructure <span class="section-meta">automatic WHOIS lookup</span></h2>
+    <div id="hosting-body">Loading…</div>
+
+    <!-- Footer / disclosure -->
+    <div class="footer-disc">
+      <h3 style="margin:0 0 .5rem;font-family:'Bitter',serif;font-size:1.05rem">About this disclosure</h3>
+      <p>AbuseRadar is an independent, non-commercial breach intelligence project. We do not seek payment, do not run ads, and do not publish targeted institutions' names without coordinated remediation. This report is shared with the technical contact for your domain only — it has not been published anywhere public.</p>
+      <p style="margin-top:.6rem"><strong>Verification:</strong> This report is signed and reproducible against the bundle ID below. Methodology details at <a href="https://abuseradar.org/research.html">abuseradar.org/research</a>.</p>
+      <div class="contact-grid">
+        <div class="contact-item"><div class="label">Reply / questions</div><div class="val">team@abuseradar.org</div></div>
+        <div class="contact-item"><div class="label">Abuse / takedown</div><div class="val">abuse@abuseradar.org</div></div>
+        <div class="contact-item"><div class="label">Bundle ID</div><div class="val" id="f-bundle">—</div></div>
+        <div class="contact-item"><div class="label">Captured</div><div class="val" id="f-captured">—</div></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+const params = new URLSearchParams(location.search);
+const token = params.get("t");
+
+function el(id) { return document.getElementById(id); }
+function escapeHtml(s) {
+  if (s === null || s === undefined) return "";
+  return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+function truncate(s, n) {
+  if (!s) return "";
+  return s.length > n ? s.slice(0, n - 1) + "…" : s;
+}
+function fmtDate(iso) {
+  if (!iso) return "—";
+  try {
+    const d = new Date(iso);
+    return d.toLocaleString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  } catch { return iso; }
+}
+
+if (!token) {
+  el("err").style.display = "block";
+  el("err").textContent = "Missing report token. Use the link from your notification email.";
+} else {
+  loadReport();
+}
+
+async function loadReport() {
+  let data;
+  try {
+    const r = await fetch(`/api/public/reports/${encodeURIComponent(token)}`);
+    if (!r.ok) {
+      const txt = await r.text();
+      throw new Error(r.status === 404 ? "Report not found or link expired." :
+                      r.status === 403 ? "Link revoked by AbuseRadar." :
+                      r.status === 410 ? "Link expired (180 days)." : `Error ${r.status}`);
+    }
+    data = await r.json();
+  } catch (e) {
+    el("err").style.display = "block";
+    el("err").textContent = e.message;
+    return;
+  }
+
+  el("content").style.display = "block";
+  const { domain, bundle, hacklinks, hosting } = data;
+
+  // Header
+  el("i-domain").textContent = domain;
+  el("t-domain").textContent = domain;
+
+  const raw = (hacklinks.raw_hacklinks || []).filter(l => l.href).length;
+  const jsdiff = (hacklinks.js_diff_hacklinks || []).filter(l => l.href).length;
+  const total = raw + jsdiff;
+  const pages = hacklinks.pages_crawled || 1;
+  const captured = bundle.captured_at;
+
+  el("t-meta").textContent = `Captured ${fmtDate(captured)} · ${pages} page${pages===1?"":"s"} examined · severity: ${total>50?"Critical":total>10?"High":total>0?"Medium":"Informational"}`;
+  el("s-total").textContent = total;
+  el("s-html").textContent = raw;
+  el("s-js").textContent = jsdiff;
+  el("s-pages").textContent = pages;
+  el("f-bundle").textContent = bundle.bundle_id;
+  el("f-captured").textContent = fmtDate(captured);
+  el("cap-meta").textContent = `${bundle.screenshots} captures from ${pages} page${pages===1?"":"s"}`;
+
+  // Findings
+  const findings = [];
+  if (raw) findings.push(`<strong>${raw} hidden link${raw===1?"":"s"}</strong> embedded directly in the server HTML response → <strong>template / theme / plugin compromise</strong>.`);
+  if (jsdiff) findings.push(`<strong>${jsdiff} additional link${jsdiff===1?"":"s"}</strong> injected by JavaScript after page load → <strong>JS injection</strong> (malicious script loaded externally).`);
+  const scripts = hacklinks.injection_scripts || [];
+  if (scripts.length) {
+    const c2List = scripts.flatMap(s => s.decoded_c2_urls || []);
+    findings.push(`<strong>${scripts.length} injection script${scripts.length===1?"":"s"}</strong> identified${c2List.length ? `, decoded C2 endpoint${c2List.length===1?"":"s"}: ${c2List.slice(0,3).map(u=>'<span class="mono" style="color:var(--red)">'+escapeHtml(u)+'</span>').join(', ')}` : ""}.`);
+  }
+  if (hacklinks.cloaking_detected) findings.push(`<strong>Cloaking detected</strong> — different content served to search-engine crawlers vs. regular browsers.`);
+  if (!findings.length) findings.push("No injection signals observed in this capture.");
+  el("findings-list").innerHTML = findings.map(f => `<li>${f}</li>`).join("");
+
+  // Captured pages — multi-page grid
+  const groups = bundle.page_groups || [];
+  const pageResults = hacklinks.page_results || [];
+  if (!groups.length || (groups.length === 1 && groups[0].page_key === "_legacy")) {
+    const shotNames = bundle.screenshot_names || [];
+    if (!shotNames.length) {
+      el("ss-host").innerHTML = '<div class="callout orange">No captures available.</div>';
+    } else {
+      el("ss-host").innerHTML = `<div class="shot-grid">` + shotNames.map(n => `
+        <figure class="shot" style="margin:0">
+          <a href="/api/public/reports/${encodeURIComponent(token)}/screenshot/${encodeURIComponent(n)}" target="_blank">
+            <img src="/api/public/reports/${encodeURIComponent(token)}/screenshot/${encodeURIComponent(n)}" alt="">
+          </a>
+          <div class="shot-cap"><span class="mono">${escapeHtml(n)}</span></div>
+        </figure>
+      `).join("") + `</div>`;
+    }
+  } else {
+    el("ss-host").innerHTML = groups.map((grp, gi) => {
+      const matchPage = pageResults[gi];
+      const pageUrl = matchPage ? matchPage.url : grp.page_key;
+      const userView = grp.shots["user-view"];
+      const hidden = grp.shots["hidden-revealed"] || grp.shots["hidden"];
+      const cells = [];
+      if (userView) cells.push({ name: userView, label: "Live page (user view)" });
+      if (hidden) cells.push({ name: hidden, label: "Hidden links revealed", red: true });
+      return `
+        <div style="border:1px solid var(--border);border-radius:8px;padding:.85rem;background:white;margin-bottom:.7rem;box-shadow:var(--shadow)">
+          <div style="font-size:.82rem;margin-bottom:.5rem"><span class="mono" style="color:var(--text-3);font-size:.72rem;margin-right:.4rem">[${gi+1}/${groups.length}]</span>
+            <a href="${escapeHtml(pageUrl)}" target="_blank" class="mono" style="word-break:break-all">${escapeHtml(pageUrl)}</a>
+          </div>
+          <div class="shot-grid">${cells.map(c => `
+            <figure class="shot" style="margin:0">
+              <a href="/api/public/reports/${encodeURIComponent(token)}/screenshot/${encodeURIComponent(c.name)}" target="_blank">
+                <img src="/api/public/reports/${encodeURIComponent(token)}/screenshot/${encodeURIComponent(c.name)}" alt="">
+              </a>
+              <div class="shot-cap${c.red ? ' red' : ''}">${escapeHtml(c.label)}</div>
+            </figure>
+          `).join("")}</div>
+        </div>
+      `;
+    }).join("");
+  }
+
+  // Hidden links table — kaynaklara göre
+  const compromisedDomain = domain.toLowerCase().replace(/^www\./, "");
+  const isInternal = (url) => {
+    try { const h = new URL(url).hostname.toLowerCase().replace(/^www\./, ""); return h === compromisedDomain || h.endsWith("." + compromisedDomain); } catch { return false; }
+  };
+  const SPAM = /casino|bahis|escort|porn|bonus|sex|bet[a-z]*\.|deneme|gambl|slot|onwin|grandpasha|backlinks|hacklink|adult|xxx/i;
+  const score = (url, txt, given) => {
+    if (given && given > 0) return given;
+    return SPAM.test((txt||"") + " " + (url||"")) ? 100 : 50;
+  };
+
+  const allLinks = [];
+  const seen = new Set();
+  for (const x of (hacklinks.raw_hacklinks || [])) if (x.href && !seen.has(x.href) && !isInternal(x.href)) { seen.add(x.href); allLinks.push({...x, _src: "html"}); }
+  for (const x of (hacklinks.js_diff_hacklinks || [])) if (x.href && !seen.has(x.href) && !isInternal(x.href)) { seen.add(x.href); allLinks.push({...x, _src: "js"}); }
+  allLinks.forEach(l => l.score = score(l.href, l.text || l.anchor_text, l.score));
+  allLinks.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  if (!allLinks.length) {
+    el("hl-body").innerHTML = '<div class="callout green">No external hidden links extracted in this capture.</div>';
+    el("hl-meta").textContent = "0 unique URLs";
+  } else {
+    const rows = allLinks.slice(0, 200).map(l => {
+      const sc = l.score || 0;
+      const reasons = (l.reasons || l.detection_reasons || []).join(", ") || (l.hiding_method || l.method || "—");
+      const anchor = (l.text || l.anchor_text || "").trim();
+      const title = (l.title || "").trim();
+      const anchorCell = anchor || title
+        ? `<div class="mono">${escapeHtml(truncate(anchor || "—", 36))}</div>${title && title !== anchor ? `<div style="font-size:.66rem;color:var(--text-4);margin-top:.15rem;font-style:italic" class="mono">title: ${escapeHtml(truncate(title, 50))}</div>` : ""}`
+        : `<span class="mono" style="color:var(--text-4)">—</span>`;
+      const foundOn = l._page || "";
+      const scoreColor = sc >= 80 ? "var(--red)" : sc >= 40 ? "var(--orange)" : "var(--text-3)";
+      return `
+        <tr class="${sc >= 50 ? 'hi' : ''}">
+          <td style="text-align:right;color:${scoreColor};font-weight:700">${sc || "—"}</td>
+          <td>${anchorCell}</td>
+          <td><span class="mono">${escapeHtml(truncate(l.href || "", 60))}</span></td>
+          <td><span style="font-size:.7rem;color:var(--text-4)">${escapeHtml(truncate(reasons, 40))}</span></td>
+          <td><a href="${escapeHtml(foundOn)}" target="_blank" class="mono" style="font-size:.7rem;word-break:break-all">${escapeHtml(truncate(foundOn || "—", 40))}</a></td>
+        </tr>
+      `;
+    }).join("");
+    el("hl-body").innerHTML = `<table class="hl-tbl"><thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor / title</th><th>URL</th><th style="width:160px">Hiding</th><th style="width:200px">Found on page</th></tr></thead><tbody>${rows}</tbody></table>`;
+    el("hl-meta").textContent = `${allLinks.length} unique external URLs ${allLinks.length > 200 ? "(showing first 200)" : ""}`;
+  }
+
+  // Scripts
+  if (!scripts.length) {
+    el("scripts-body").innerHTML = '<div class="callout green">No external injection scripts identified.</div>';
+  } else {
+    el("scripts-body").innerHTML = scripts.map(s => {
+      const c2 = (s.decoded_c2_urls || []).slice(0, 8);
+      const pageList = (s.pages || []).slice(0, 6);
+      const pageCount = (s.pages || []).length;
+      return `
+        <div class="callout red" style="margin-bottom:.5rem">
+          <div><strong>Script source:</strong> <span class="mono">${escapeHtml(s.src || s.url || "(inline)")}</span></div>
+          ${pageCount ? `<div style="margin-top:.3rem;font-size:.78rem;color:var(--text-3)"><strong>Loaded on ${pageCount} page${pageCount===1?"":"s"}:</strong> ${pageList.map(p => '<span class="mono" style="font-size:.7rem;display:inline-block;margin-right:.5rem">' + escapeHtml(p) + '</span>').join("")}</div>` : ""}
+          ${c2.length ? `<div style="margin-top:.3rem"><strong>Decoded C2:</strong> ${c2.map(u => '<span class="mono" style="color:var(--red);display:block">' + escapeHtml(u) + '</span>').join("")}</div>` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+  // Hosting
+  if (!hosting || hosting.error) {
+    el("hosting-body").innerHTML = '<div class="callout orange">Hosting lookup unavailable.</div>';
+  } else {
+    el("hosting-body").innerHTML = `
+      <div class="panel"><div class="panel-pad">
+        <table class="hl-tbl">
+          <tbody>
+            <tr><th style="width:32%">IP address</th><td class="mono">${escapeHtml(hosting.ip || "—")}</td></tr>
+            <tr><th>ASN</th><td class="mono">${escapeHtml(hosting.asn || "—")}</td></tr>
+            <tr><th>Hosting provider</th><td>${escapeHtml(hosting.hosting_provider || hosting.provider || "—")}</td></tr>
+            <tr><th>Cloudflare-fronted</th><td>${hosting.cloudflare_protected ? "Yes" : "No"}</td></tr>
+            <tr><th>Registrar</th><td>${escapeHtml(hosting.registrar || "—")}</td></tr>
+          </tbody>
+        </table>
+      </div></div>
+    `;
+  }
+}
+</script>
+</body>
+</html>
