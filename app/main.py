@@ -1,7 +1,5 @@
 """AbuseRadar — FastAPI Ana Uygulama."""
 
-import os
-import subprocess
 from contextlib import asynccontextmanager
 from datetime import datetime
 from pathlib import Path
@@ -826,21 +824,19 @@ async def evidence_dom_content(domain: str, name: str):
 
 @app.get("/vpn/{name}/status")
 async def vpn_status(name: str):
-    """VPN egress IP — name: tr veya us."""
+    """VPN egress IP — name: tr veya us. Doğrudan VPN container'ının
+    SOCKS proxy'sine bağlanıp ipinfo.io çağırır (docker CLI gerektirmez)."""
     if name not in ("tr", "us"):
         raise HTTPException(400, "name: tr veya us")
     container = f"vpn-{name}"
+    proxy_url = f"socks5h://{container}:1080"
     try:
-        result = subprocess.run(
-            ["docker", "exec", container, "curl", "-s", "--max-time", "5", "https://ipinfo.io/json"],
-            capture_output=True, text=True, timeout=10,
-        )
-        if result.returncode != 0 or not result.stdout:
-            return {"container": container, "status": "unreachable", "stderr": result.stderr}
-        import json
-        return {"container": container, "status": "ok", **json.loads(result.stdout)}
-    except FileNotFoundError:
-        return {"container": container, "status": "docker-cli-missing"}
+        import httpx
+        async with httpx.AsyncClient(proxy=proxy_url, timeout=8.0) as client:
+            r = await client.get("https://ipinfo.io/json")
+        if r.status_code != 200:
+            return {"container": container, "status": "unreachable", "http": r.status_code}
+        return {"container": container, "status": "ok", **r.json()}
     except Exception as e:
         return {"container": container, "status": "error", "error": str(e)}
 
