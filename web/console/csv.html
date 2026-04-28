@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSV ingest — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="csv"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">CSV ingest</span></nav>
+      </div>
+      <div class="topbar-right">
+        <button class="btn btn-ghost" id="btn-classify"><svg viewBox="0 0 24 24"><polyline points="20,6 9,17 4,12"/></svg> Re-classify all</button>
+        <button class="btn btn-primary" id="btn-process"><svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg> Process inbox</button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>CSV ingest</h1>
+          <p>Upload Ahrefs/Majestic backlink exports. Pipeline dedupes, scores and queues for verification on the next run.</p>
+        </div>
+      </div>
+
+      <div class="grid-2-1 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>Upload CSV</h3></div>
+          <div class="panel-body">
+            <p style="color:var(--text-3);font-size:.85rem;margin-bottom:1rem">Drop a backlink CSV. UTF-8, auto-detected delimiter. Files are deduplicated by content hash.</p>
+            <div id="dropzone" style="border:2px dashed var(--border-strong);border-radius:8px;padding:1.6rem 1rem;text-align:center;color:var(--text-3);font-size:.85rem;cursor:pointer;transition:border-color .15s">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:28px;height:28px;margin:0 auto .55rem;display:block;color:var(--text-4)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="color:var(--text-2);font-weight:500">Drop CSV here or click to browse</div>
+              <div style="margin-top:.4rem;font-size:.74rem;color:var(--text-4)">UTF-8 · auto-detected delimiter</div>
+              <input type="file" id="file-input" accept=".csv" multiple style="display:none">
+            </div>
+            <div id="upload-result" style="margin-top:1rem"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>Pipeline shortcuts</h3></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:.5rem">
+            <button class="btn btn-ghost" id="btn-process-2" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
+              Process inbox now
+            </button>
+            <button class="btn btn-ghost" id="btn-classify-2" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/></svg>
+              Re-classify ambiguous backlinks
+            </button>
+            <a href="pipeline.html" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+              Run full pipeline
+            </a>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel row-gap">
+        <div class="panel-head">
+          <h3>Processed CSVs</h3>
+          <span class="meta" id="csv-count">—</span>
+        </div>
+        <div id="csv-table-host"><div class="loading-spinner">Loading…</div></div>
+      </section>
+
+    </div>
+  </main>
+</div>
+
+<script src="api.js"></script>
+<script src="console.js"></script>
+<script>
+async function loadCsvList() {
+  try {
+    const r = await AR.get("/csv-files?limit=100");
+    AR.setText("csv-count", `${r.count} files`);
+    const host = document.getElementById("csv-table-host");
+    if (!r.files.length) {
+      host.innerHTML = '<div class="empty-state">No CSV files yet. Upload one above.</div>';
+      return;
+    }
+    const rows = r.files.map(f => `
+      <tr>
+        <td class="mono">${AR.escapeHtml(f.filename)}</td>
+        <td>${AR.escapeHtml(f.target_domain || "—")}</td>
+        <td class="right">${AR.fmt.num(f.total_rows)}</td>
+        <td class="right" style="color:var(--green)">${AR.fmt.num(f.new_rows)}</td>
+        <td class="right" style="color:var(--text-4)">${AR.fmt.num(f.skipped_rows)}</td>
+        <td>${AR.statusBadge(f.status)}</td>
+        <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(f.completed_at || f.created_at)}</span></td>
+      </tr>
+    `).join("");
+    host.innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>File</th><th>Target</th><th class="right">Rows</th><th class="right">New</th><th class="right">Skipped</th><th>Status</th><th>When</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    AR.showError("csv-table-host", e.message);
+  }
+}
+
+async function processInbox() {
+  AR.toast("Processing inbox…");
+  try {
+    const r = await AR.post("/csv/process");
+    AR.toast(`${r.processed} CSV processed`, "success");
+    await loadCsvList();
+  } catch (e) {
+    AR.toast(e.message, "error");
+  }
+}
+
+async function reclassify() {
+  AR.toast("Re-classifying…");
+  try {
+    const r = await AR.post("/classify");
+    AR.toast(`${r.classified} backlinks re-classified`, "success");
+  } catch (e) {
+    AR.toast(e.message, "error");
+  }
+}
+
+async function uploadFiles(fileList) {
+  const result = document.getElementById("upload-result");
+  result.innerHTML = "";
+  for (const file of fileList) {
+    const fd = new FormData();
+    fd.append("file", file);
+    try {
+      const r = await AR.post("/csv/upload", fd);
+      result.innerHTML += `<div class="badge green" style="display:block;margin-bottom:.25rem">✓ ${AR.escapeHtml(r.filename)} — ${AR.fmt.bytes(r.size)}</div>`;
+    } catch (e) {
+      result.innerHTML += `<div class="badge red" style="display:block;margin-bottom:.25rem">✗ ${AR.escapeHtml(file.name)}: ${AR.escapeHtml(e.message)}</div>`;
+    }
+  }
+  AR.toast("Click 'Process inbox' to import them", "info");
+}
+
+// Wire up dropzone
+const dz = document.getElementById("dropzone");
+const fileInput = document.getElementById("file-input");
+dz.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => uploadFiles(fileInput.files));
+dz.addEventListener("dragover", (e) => { e.preventDefault(); dz.style.borderColor = "var(--teal)"; });
+dz.addEventListener("dragleave", () => { dz.style.borderColor = ""; });
+dz.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dz.style.borderColor = "";
+  uploadFiles(e.dataTransfer.files);
+});
+
+document.getElementById("btn-process").addEventListener("click", processInbox);
+document.getElementById("btn-process-2").addEventListener("click", processInbox);
+document.getElementById("btn-classify").addEventListener("click", reclassify);
+document.getElementById("btn-classify-2").addEventListener("click", reclassify);
+
+loadCsvList();
+</script>
+</body>
+</html>

@@ -9,7 +9,6 @@ Independent breach intelligence for the compromised institutional web. AbuseRada
 ```
 seospamwatch/
 ├── app/                        FastAPI backend + crawler + classifier + notifier + complainant
-├── dashboard/                  Streamlit operations dashboard (legacy admin)
 ├── web/                        Marketing site (abuseradar.org) + new HTML/JS console
 │   ├── index.html              Landing page (5 languages)
 │   ├── research.html           Research / publications
@@ -53,9 +52,8 @@ make vpn-check                   # confirm both VPN egresses work
 
 # 5. Open
 # Marketing site:  cd web && python3 -m http.server 8765   →  http://localhost:8765
-# Console:         http://localhost:8765/console/
+# Console:         http://localhost:8765/console/   (production'da basic auth)
 # FastAPI docs:    http://localhost:7777/docs
-# Streamlit:       http://localhost:7778
 ```
 
 The website is fully static — no build step. You can serve `web/` with any static server (`python3 -m http.server`, `npx serve`, nginx, Cloudflare Pages, GitHub Pages).
@@ -119,7 +117,7 @@ Eight Docker services on an `internal` bridge network:
 - **redis** — Redis 7
 - **app** — FastAPI backend on `:8000` (mapped to host `:7777` in dev, `127.0.0.1:7777` in prod). Exits via VPN-US.
 - **crawler** — Playwright + Chromium worker. Renders suspect pages via VPN-TR with cloaking-aware probes.
-- **dashboard** — Streamlit on `:8501` (host `:7778` / `127.0.0.1:7778` in prod). Legacy admin — being replaced by the static HTML/JS console under `web/console/`.
+- **web** — nginx static container serving the marketing site + admin console (`/console/`). nginx host layer adds basic auth for `/console/` and `/api/`.
 - **openclaw** — autonomous AI agent on `:18789`, files abuse complaints with hosting providers, registrars, Cloudflare Safe Browsing, etc. Exits via VPN-US.
 
 The web console at `web/console/` is a static SPA-ish multi-page app (no build step) that talks to the FastAPI backend over `/api/*` (in production, nginx reverse-proxies that path to `app:8000`).
@@ -128,7 +126,7 @@ The web console at `web/console/` is a static SPA-ish multi-page app (no build s
 
 - `.env`, `vpn/**/wg0.conf`, `data/evidence/`, `data/csv/processing/` are all **gitignored**. Never commit secrets.
 - Production: only `:80` and `:443` (nginx) face the public internet. All Docker ports bind to `127.0.0.1` only.
-- Streamlit dashboard has no built-in auth — protect `/admin/` with nginx basic-auth or remove that location block entirely.
+- The admin console at `/console/` and the API at `/api/` are protected by nginx basic auth (`/etc/nginx/.abuseradar.htpasswd`). Public marketing pages remain open.
 - Postgres password is required (no insecure default) — `POSTGRES_PASSWORD` must be set in `.env`.
 
 ## License

@@ -20,7 +20,7 @@
         <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Complaints</span></nav>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-primary">File new complaint</button>
+        <a href="c2.html" class="btn btn-primary">File new complaint →</a>
       </div>
     </header>
 
@@ -28,34 +28,126 @@
       <div class="page-head">
         <div>
           <h1>Abuse complaints</h1>
-          <p>Outbound complaints to hosting providers, registrars, Cloudflare, Safe Browsing and CERT desks. OpenClaw automates filing; humans review escalations.</p>
+          <p>Outbound complaints to hosting providers, registrars, Cloudflare, Safe Browsing and CERT desks. OpenClaw automates filing.</p>
         </div>
       </div>
 
       <div class="kpis">
-        <div class="kpi"><div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="14 2 14 8 20 8"/><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg></span>Open</div><div class="kpi-value" data-target="58">58</div><div class="kpi-trend">across 6 desks</div></div>
-        <div class="kpi green"><div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="22,6 12,16 6,10"/></svg></span>Closed (30d)</div><div class="kpi-value" data-target="124">124</div><div class="kpi-trend">avg 4d 11h</div></div>
-        <div class="kpi orange"><div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></span>Awaiting reply</div><div class="kpi-value" data-target="34">34</div><div class="kpi-trend">SLA risk: 4</div></div>
-        <div class="kpi red"><div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg></span>Escalated</div><div class="kpi-value" data-target="7">7</div><div class="kpi-trend">manual review</div></div>
+        <div class="kpi"><div class="kpi-label">Total</div><div class="kpi-value" data-kpi="complaints_total" data-dynamic="1">—</div><div class="kpi-trend">all platforms</div></div>
+        <div class="kpi orange"><div class="kpi-label">Pending / submitted</div><div class="kpi-value" data-kpi="complaints_pending" data-dynamic="1">—</div><div class="kpi-trend">awaiting reply</div></div>
+        <div class="kpi green"><div class="kpi-label">Resolved</div><div class="kpi-value" data-kpi="complaints_resolved" data-dynamic="1">—</div><div class="kpi-trend">closed</div></div>
+        <div class="kpi gold"><div class="kpi-label">Avg followups</div><div class="kpi-value" id="kpi-avg-followups">—</div><div class="kpi-trend">per case</div></div>
       </div>
 
       <section class="panel">
-        <div class="panel-head"><h3>Active complaints</h3><span class="meta">last update 12 min ago</span></div>
-        <table class="tbl">
-          <thead><tr><th>Case</th><th>Target</th><th>Desk</th><th>Filed</th><th>SLA</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            <tr><td class="mono">AR-CL-188</td><td><span class="strong">scriptapi.dev</span></td><td>AWS abuse</td><td>2d ago</td><td><span class="badge green">on track</span></td><td><span class="badge orange">Awaiting</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">AR-CL-187</td><td><span class="strong">hacklinkbacklink.com</span></td><td>netcup abuse</td><td>3d ago</td><td><span class="badge orange">at risk</span></td><td><span class="badge orange">Awaiting</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">AR-CL-186</td><td><span class="strong">cobet-redir.live</span></td><td>Cloudflare abuse</td><td>1d ago</td><td><span class="badge green">on track</span></td><td><span class="badge teal">Acknowledged</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">AR-CL-185</td><td><span class="strong">pharma-rdr-12.top</span></td><td>OVH abuse</td><td>4d ago</td><td><span class="badge red">overdue</span></td><td><span class="badge red">Escalated</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">AR-CL-184</td><td><span class="strong">multifarm.click</span></td><td>Hostinger abuse</td><td>5d ago</td><td><span class="badge green">on track</span></td><td><span class="badge green">Closed</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-          </tbody>
-        </table>
+        <div class="panel-body" style="display:flex;gap:.7rem;flex-wrap:wrap">
+          <select id="f-platform" style="padding:.5rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
+            <option value="all">All platforms</option>
+            <option value="cloudflare">Cloudflare</option>
+            <option value="google_spam">Google spam report</option>
+            <option value="google_safebrowsing">Google Safe Browsing</option>
+            <option value="icann">ICANN</option>
+            <option value="registrar">Registrar</option>
+            <option value="hosting">Hosting</option>
+          </select>
+          <select id="f-status" style="padding:.5rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
+            <option value="all">All statuses</option>
+            <option value="pending">Pending</option>
+            <option value="submitted">Submitted</option>
+            <option value="resolved">Resolved</option>
+            <option value="reopened">Reopened</option>
+          </select>
+        </div>
       </section>
+
+      <div class="grid-2-1 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>Complaints</h3><span class="meta" id="comp-count">—</span></div>
+          <div id="comp-host"><div class="loading-spinner">Loading…</div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>By status</h3></div>
+          <div class="panel-body">
+            <div id="status-chart" class="chart-bars"><div class="loading-spinner">…</div></div>
+          </div>
+        </section>
+      </div>
+
     </div>
   </main>
 </div>
 
+<script src="api.js"></script>
 <script src="console.js"></script>
+<script>
+async function load() {
+  AR.showLoading("comp-host");
+  try {
+    const stats = await AR.get("/stats");
+    AR.fillKpis(stats);
+
+    const platform = document.getElementById("f-platform").value;
+    const status = document.getElementById("f-status").value;
+    const params = new URLSearchParams({ platform, status, limit: 200 });
+    const r = await AR.get(`/complaints?${params}`);
+
+    AR.setText("comp-count", `${AR.fmt.num(r.count)} cases`);
+
+    // KPI: avg followups
+    if (r.complaints.length) {
+      const avg = r.complaints.reduce((s, c) => s + (c.followup_count || 0), 0) / r.complaints.length;
+      document.getElementById("kpi-avg-followups").textContent = avg.toFixed(1);
+    }
+
+    if (!r.complaints.length) {
+      AR.showEmpty("comp-host", "No complaints filed yet.");
+    } else {
+      const rows = r.complaints.map(c => `
+        <tr>
+          <td class="mono" style="font-size:.78rem">AR-CL-${c.id}</td>
+          <td><span class="strong">${AR.escapeHtml(c.target_domain)}</span></td>
+          <td><span class="mono" style="font-size:.74rem">${AR.escapeHtml(c.platform)}</span></td>
+          <td>${AR.statusBadge(c.status)}</td>
+          <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(c.submitted_at || c.created_at)}</span></td>
+          <td class="right">${c.followup_count}/${c.max_followups}</td>
+          <td>${c.resolved_at ? AR.fmt.relative(c.resolved_at) : "—"}</td>
+        </tr>
+      `).join("");
+      document.getElementById("comp-host").innerHTML = `
+        <table class="tbl">
+          <thead><tr><th>Case</th><th>Target</th><th>Platform</th><th>Status</th><th>Filed</th><th class="right">Followups</th><th>Resolved</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+
+    // Status chart
+    const sb = r.status_breakdown || [];
+    if (!sb.length) {
+      document.getElementById("status-chart").innerHTML = '<div class="empty-state">No data.</div>';
+    } else {
+      const max = Math.max(1, ...sb.map(s => s.count));
+      document.getElementById("status-chart").innerHTML = sb.map(s => {
+        const pct = Math.round((s.count / max) * 100);
+        const cls = s.status === "resolved" ? "" : s.status === "submitted" ? "orange" : s.status === "reopened" ? "red" : "";
+        return `
+          <div class="chart-bar-row">
+            <span class="chart-bar-label">${AR.escapeHtml(s.status)}</span>
+            <span class="chart-bar-track"><span class="chart-bar-fill ${cls}" style="width:${pct}%"></span></span>
+            <span class="chart-bar-value">${AR.fmt.num(s.count)}</span>
+          </div>
+        `;
+      }).join("");
+    }
+  } catch (e) {
+    AR.showError("comp-host", e.message);
+  }
+}
+
+document.getElementById("f-platform").addEventListener("change", load);
+document.getElementById("f-status").addEventListener("change", load);
+load();
+</script>
 </body>
 </html>

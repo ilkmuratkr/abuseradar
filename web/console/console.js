@@ -21,19 +21,30 @@
         <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
         Overview
       </a>
+      <a href="csv.html" data-key="csv">
+        <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        CSV ingest
+      </a>
       <a href="pipeline.html" data-key="pipeline">
         <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
         Pipeline
         <span class="badge" style="background:var(--green-soft);color:var(--green)">Live</span>
       </a>
+      <a href="backlinks.html" data-key="backlinks">
+        <svg viewBox="0 0 24 24"><line x1="10" y1="14" x2="21" y2="3"/><path d="M21 3v6h-6"/><path d="M3 21l9-9"/></svg>
+        Backlinks
+      </a>
       <a href="victims.html" data-key="victims">
         <svg viewBox="0 0 24 24"><path d="M12 2L4 6v6c0 5 3.5 8.5 8 10 4.5-1.5 8-5 8-10V6l-8-4z"/></svg>
         Compromised
-        <span class="badge">82</span>
       </a>
       <a href="attackers.html" data-key="attackers">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
         Attackers
+      </a>
+      <a href="c2.html" data-key="c2">
+        <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        C2 servers
       </a>
     </nav>
 
@@ -116,21 +127,15 @@
       railToggle.addEventListener("click", () => rail.classList.toggle("open"));
     }
 
-    // Animate KPI numbers
+    // Animate KPI numbers (legacy: data-target hardcoded sayfalar için)
+    // Yeni sayfalar AR.fillKpis() ile dinamik dolduruyor — bu sadece fallback.
     document.querySelectorAll(".kpi-value[data-target]").forEach(el => {
+      if (el.dataset.dynamic === "1") return; // dinamik dolan KPI'ları es geç
       const target = parseInt(el.dataset.target, 10);
       if (isNaN(target)) return;
-      const dur = 700;
-      const start = performance.now();
-      const fmt = (n) => n.toLocaleString("en-US");
-      function tick(now){
-        const p = Math.min(1, (now - start) / dur);
-        const eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = fmt(Math.floor(target * eased));
-        if (p < 1) requestAnimationFrame(tick);
-        else el.textContent = fmt(target);
-      }
-      requestAnimationFrame(tick);
+      window.AR && window.AR.animateKpi
+        ? window.AR.animateKpi(el, target)
+        : (el.textContent = target.toLocaleString("en-US"));
     });
 
     // Animate chart bars (set width from data-pct)

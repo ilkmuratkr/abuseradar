@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Breach briefing — saude.gov.ar — AbuseRadar</title>
+  <title>Briefing — AbuseRadar</title>
   <meta name="theme-color" content="#001016">
   <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="console.css">
@@ -20,9 +20,11 @@
         <nav class="crumbs">
           <a href="index.html">Console</a>
           <span class="sep">/</span>
-          <a href="evidence-detail.html">EV-2026-04-25-184</a>
+          <a href="evidence.html">Evidence</a>
           <span class="sep">/</span>
-          <span class="current">Briefing report</span>
+          <a href="evidence-detail.html" id="back-link">—</a>
+          <span class="sep">/</span>
+          <span class="current">Briefing</span>
         </nav>
       </div>
       <div class="topbar-right">
@@ -30,31 +32,25 @@
           <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           Print / PDF
         </button>
-        <button class="btn btn-ghost">Share secure link</button>
-        <button class="btn btn-primary">Send to recipient</button>
       </div>
     </header>
 
     <div class="report-cta-bar">
-      <span class="meta">Document <strong class="mono">AR-RPT-2026-184</strong> · generated 25 Apr 2026 · classification <strong>Confidential / Recipient-only</strong></span>
-      <span class="meta">Page 1 of 1 · 7 minutes read</span>
+      <span class="meta">Document <strong class="mono" id="doc-id">—</strong> · generated <span id="doc-date">—</span> · classification <strong>Confidential / Recipient-only</strong></span>
     </div>
 
     <div class="content">
 
-      <article class="report-doc">
-
+      <article class="report-doc" id="doc-host">
         <header class="report-cover">
           <div class="report-cover-tag">Breach briefing · Confidential</div>
-          <h1>Government health portal compromise: hidden gambling SEO injection on saude.gov.ar</h1>
-          <p style="font-size:.95rem;color:var(--text-2);max-width:60ch;line-height:1.65;margin-bottom:.5rem">
-            A critical-severity breach affecting the public health ministry portal of Argentina, with 84 hidden affiliate links injected through an outdated content-management plugin. Operator stack attributed to cluster #07 with 91% confidence. This briefing contains the full evidence package, attribution graph and an actionable remediation playbook.
-          </p>
+          <h1 id="doc-title">—</h1>
+          <p style="font-size:.95rem;color:var(--text-2);max-width:60ch;line-height:1.65;margin-bottom:.5rem" id="doc-summary">Loading bundle…</p>
           <dl class="report-meta">
-            <div><dt>Target</dt><dd>saude.gov.ar</dd></div>
-            <div><dt>Severity</dt><dd>Critical</dd></div>
-            <div><dt>Bundle</dt><dd>EV-2026-04-25-184</dd></div>
-            <div><dt>Issued to</dt><dd>cert@gob.ar</dd></div>
+            <div><dt>Target</dt><dd id="doc-target">—</dd></div>
+            <div><dt>Severity</dt><dd id="doc-severity">—</dd></div>
+            <div><dt>Bundle</dt><dd id="doc-bundle">—</dd></div>
+            <div><dt>Hidden links</dt><dd id="doc-count">—</dd></div>
           </dl>
         </header>
 
@@ -62,94 +58,53 @@
 
           <section>
             <h2>1. Executive summary</h2>
-            <p>On 25 April 2026, AbuseRadar detected and verified a content-injection compromise on <strong>saude.gov.ar</strong>, the public-facing portal of the Ministerio de Salud Argentina. The compromise had been live for an estimated 47 days before our automated pipeline surfaced it. Eighty-four hidden hyperlinks, cloaked from human visitors but visible to search-engine crawlers, were injected into the site footer to launder ranking signal toward an unlicensed gambling affiliate stack.</p>
-            <p>The compromise is <strong>not</strong> a transient cross-site scripting vector — it is a persistent CMS-level injection in the site's installed footer plugin. The TLS certificate and DNS records of the target are unaffected; the host server is the compromised vector. We attribute the operator with 91% confidence to cluster <span class="mono">#07</span> (alias <em>hacklinkbacklink</em>), which AbuseRadar has tracked across 318 institutional victims since November 2025.</p>
-            <div class="pullquote">
-              The host has been silently leaking ranking value to an unlicensed-gambling affiliate for at least 47 days. Public visitors do not see it. Search engines do.
-            </div>
+            <p id="exec-summary">Loading…</p>
           </section>
 
           <section>
             <h2>2. Findings</h2>
-            <ul>
-              <li><strong>84 hidden anchor tags</strong> injected into the footer container, wrapped in a CSS clip that pushes them off-screen (<span class="mono">position:absolute; left:-9999px; visibility:hidden</span>).</li>
-              <li><strong>Cloaking confirmed.</strong> The injected block is rendered to user-agents matching search-engine bots, and stripped from responses to common consumer browser fingerprints. AbuseRadar's residential-VPN crawler defeated the cloak.</li>
-              <li><strong>Three cross-domain redirect chains</strong> observed during page load, all terminating at the cluster #07 redirector pool hosted on AS197540 (netcup).</li>
-              <li><strong>Persistence vector:</strong> the WordPress footer plugin <em>FooterAds Lite</em> v2.4.1 — known to be exploitable via CVE-2025-71820 — is installed and out of date by 11 release cycles.</li>
-              <li><strong>No data exfiltration evidence.</strong> The injection targets ranking laundering only; no exfil endpoints observed in the HAR trace.</li>
-            </ul>
-
-            <figure>
-              <img src="../img/generated/evidence-page-shot.png" alt="Compromised page screenshot">
-              <figcaption>Figure 1 — saude.gov.ar live render at 25 Apr 2026 11:54:23 UTC. Hidden footer cluster visible in the lower-right region.</figcaption>
-            </figure>
+            <ul id="findings-list"><li>Loading…</li></ul>
           </section>
 
           <section>
-            <h2>3. Operator attribution</h2>
-            <p>The injected anchor pattern, redirector chain, and timing fingerprints match <strong>operator cluster #07</strong> with 0.91 confidence under our multi-signal scoring. Cluster #07 is one of the eighteen active operator stacks AbuseRadar tracks; it has compromised at least <strong>318 institutional sites</strong> across higher-education and government sectors in Latin America, Turkey and Southeast Asia since first attribution in November 2025.</p>
-
-            <h3>Infrastructure footprint</h3>
-            <ul>
-              <li>Primary C2: <span class="mono">hacklinkbacklink.com</span> (active)</li>
-              <li>Redirector pool: 47 short-TTL domains rotated weekly, all on AS197540 (netcup) and AS24940 (Hetzner)</li>
-              <li>Template-server: <span class="mono">scriptdrop[.]live</span> (active, 12d uptime)</li>
-              <li>Affiliate end-points: 8 unlicensed gambling brands (catalogued separately)</li>
-            </ul>
-
-            <figure>
-              <img src="../img/generated/threat-network.png" alt="Operator attribution graph">
-              <figcaption>Figure 2 — Operator cluster #07 attribution graph. Central command nodes (gold) connected to victim institutions (cyan) through the redirector pool.</figcaption>
-            </figure>
+            <h2>3. Captured page</h2>
+            <div id="screenshot-host"><div class="loading-spinner">Loading…</div></div>
           </section>
 
           <section>
-            <h2>4. Remediation playbook</h2>
-            <p>The institution's IT team can close this compromise in three steps. AbuseRadar will re-verify on completion.</p>
-            <h3>Step 1 — Remove the injected footer block</h3>
+            <h2>4. Detected hacklinks (sample)</h2>
+            <div id="hacklinks-host"><div class="loading-spinner">Loading…</div></div>
+          </section>
+
+          <section>
+            <h2>5. Remediation playbook</h2>
+            <h3>Step 1 — Remove the injected block</h3>
             <ul>
-              <li>Locate the footer template at <span class="mono">/wp-content/themes/&lt;theme&gt;/footer.php</span> and inspect the <span class="mono">.site-footer</span> container.</li>
-              <li>Delete the absolutely-positioned <span class="mono">div</span> on lines 412–419 (full DOM excerpt in the bundle).</li>
-              <li>Clear the page cache and Cloudflare cache.</li>
+              <li>Locate the footer / sidebar / template files referenced in the DOM excerpt.</li>
+              <li>Delete the absolutely-positioned hidden link cluster (typical CSS: <span class="mono">position:absolute;left:-9999px</span>).</li>
+              <li>Clear any page / CDN cache.</li>
             </ul>
             <h3>Step 2 — Patch the persistence vector</h3>
             <ul>
-              <li>Disable and uninstall <em>FooterAds Lite</em>. Audit other plugins for outdated CVEs.</li>
-              <li>Rotate all WordPress administrator credentials.</li>
-              <li>Audit recent file modifications under <span class="mono">/wp-content/</span> for back-door PHP web-shells.</li>
+              <li>Audit recently modified PHP / template files for back-door web-shells.</li>
+              <li>Disable any out-of-date CMS plugins; rotate admin credentials.</li>
             </ul>
             <h3>Step 3 — Notify and request re-verification</h3>
             <ul>
-              <li>Reply to the original notification email (case <span class="mono">AR-7K-2026-1184</span>).</li>
-              <li>AbuseRadar will re-render the page within 12 hours and update CERT-AR with the closure.</li>
+              <li>Reply to the AbuseRadar notification email so we can re-render and confirm closure.</li>
+              <li>AbuseRadar re-verifies within 12 hours of acknowledgement.</li>
             </ul>
           </section>
 
           <section>
-            <h2>5. Coordinated disruption already under way</h2>
-            <p>Independent of the institution's own remediation, AbuseRadar has filed parallel abuse complaints to disrupt the broader operator infrastructure feeding this and related compromises:</p>
-            <ul>
-              <li><strong>netcup abuse desk</strong> — 47-domain redirector pool · case <span class="mono">AR-CL-187</span> · awaiting reply</li>
-              <li><strong>Cloudflare abuse</strong> — primary C2 domain · case <span class="mono">AR-CL-186</span> · acknowledged</li>
-              <li><strong>Google Safe Browsing</strong> — affiliate end-points · public submission, batch 2026-W17</li>
-              <li><strong>CERT-AR</strong> — this briefing dispatched as the institutional notification of record</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2>6. Appendix — integrity &amp; reproducibility</h2>
-            <dl class="kv" style="font-size:.86rem">
-              <dt>Bundle ID</dt><dd><span class="mono">EV-2026-04-25-184</span></dd>
-              <dt>Capture run</dt><dd><span class="mono">AR-PL-2421</span></dd>
-              <dt>SHA-256</dt><dd><span class="mono" style="font-size:.74rem">8a4f2d7c1e9b3a5f8c6d2e4f1a8b7c0d3e9f4a2b5c8d1e7f0a3b6c9d2e5f8a4f c102</span></dd>
-              <dt>Capture key</dt><dd><span class="mono">pk_07_a8c9</span> (rotated quarterly)</dd>
-              <dt>Crawler IP</dt><dd>149.102.229.145 · Istanbul · residential ASN 9009</dd>
-              <dt>Methodology</dt><dd>AbuseRadar Methodology v1.4 — <a href="../research.html" style="color:var(--teal)">research.abuseradar.org</a></dd>
-              <dt>Re-verification</dt><dd>scheduled within 12 h of recipient acknowledgement</dd>
+            <h2>6. Appendix — integrity</h2>
+            <dl class="kv" id="appendix-list">
+              <dt>Bundle ID</dt><dd id="ap-bundle"><span class="mono">—</span></dd>
+              <dt>Captured</dt><dd id="ap-captured">—</dd>
+              <dt>Screenshots</dt><dd id="ap-shots">—</dd>
+              <dt>DOM dumps</dt><dd id="ap-doms">—</dd>
+              <dt>Methodology</dt><dd>AbuseRadar v1.4 — <a href="../research.html" style="color:var(--teal)">research.abuseradar.org</a></dd>
             </dl>
-            <p style="margin-top:1.4rem;padding:1rem 1.2rem;background:var(--bg-card-2);border-radius:8px;font-size:.82rem;color:var(--text-3);line-height:1.65">
-              This briefing was generated automatically from cryptographically signed evidence. The full bundle (<span class="mono">EV-2026-04-25-184.zip</span>) is available on request and is bit-for-bit reproducible against the SHA-256 above. AbuseRadar will not publish the targeted institution's name in any public report without coordinated remediation. — AbuseRadar Operations · Istanbul.
-            </p>
           </section>
 
         </div>
@@ -159,6 +114,107 @@
   </main>
 </div>
 
+<script src="api.js"></script>
 <script src="console.js"></script>
+<script>
+const params = new URLSearchParams(location.search);
+const domain = params.get("domain");
+
+if (!domain) {
+  document.getElementById("doc-host").innerHTML = '<div class="error-banner">Missing ?domain= parameter. Open a bundle from <a href="evidence.html">the evidence vault</a>.</div>';
+} else {
+  document.getElementById("back-link").href = `evidence-detail.html?domain=${encodeURIComponent(domain)}`;
+  document.getElementById("back-link").textContent = domain;
+  loadReport();
+}
+
+async function loadReport() {
+  try {
+    const b = await AR.get(`/evidence/${encodeURIComponent(domain)}`);
+    const today = new Date();
+
+    document.getElementById("doc-id").textContent = `AR-RPT-${today.getFullYear()}-${b.bundle_id.split("-").pop() || "001"}`;
+    document.getElementById("doc-date").textContent = today.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+    document.getElementById("doc-title").textContent = `Compromise on ${domain}`;
+    document.getElementById("doc-summary").textContent =
+      `${b.hacklink_count} hidden link${b.hacklink_count === 1 ? "" : "s"} were detected on ${domain} during automated verification. ` +
+      `This briefing contains the full evidence package and an actionable remediation playbook.`;
+    document.getElementById("doc-target").textContent = domain;
+    const sev = b.hacklink_count > 50 ? "Critical" : b.hacklink_count > 10 ? "High" : b.hacklink_count > 0 ? "Medium" : "Informational";
+    document.getElementById("doc-severity").textContent = sev;
+    document.getElementById("doc-bundle").textContent = b.bundle_id;
+    document.getElementById("doc-count").textContent = b.hacklink_count;
+
+    document.getElementById("ap-bundle").innerHTML = `<span class="mono">${AR.escapeHtml(b.bundle_id)}</span>`;
+    document.getElementById("ap-captured").textContent = AR.fmt.date(b.captured_at);
+    document.getElementById("ap-shots").textContent = b.screenshots;
+    document.getElementById("ap-doms").textContent = b.dom_files;
+
+    document.getElementById("exec-summary").textContent =
+      `On ${AR.fmt.date(b.captured_at)}, AbuseRadar's pipeline verified a content-injection compromise on ${domain}. ` +
+      `${b.hacklink_count} hidden hyperlinks were detected via a residential-VPN render. ` +
+      `The TLS certificate of ${domain} is unaffected; the host server itself is the compromised vector. ` +
+      `Bundle artefacts (${b.screenshots} screenshots, ${b.dom_files} DOM dumps) are stored under ${b.bundle_id}.`;
+
+    // Screenshot
+    if (b.screenshots > 0) {
+      document.getElementById("screenshot-host").innerHTML = `
+        <figure>
+          <img src="/api/evidence/${encodeURIComponent(domain)}/screenshot/0" alt="Compromised page" style="width:100%;border-radius:8px;border:1px solid var(--border)">
+          <figcaption>Figure 1 — Live render of ${AR.escapeHtml(domain)} captured by VPN-TR crawler.</figcaption>
+        </figure>
+      `;
+    } else {
+      document.getElementById("screenshot-host").innerHTML = '<div class="empty-state">No screenshots in bundle.</div>';
+    }
+  } catch (e) {
+    AR.toast("Bundle: " + e.message, "error");
+  }
+
+  // Hacklinks + findings
+  try {
+    const data = await AR.get(`/evidence/${encodeURIComponent(domain)}/hacklinks`);
+    const rendered = data.rendered_hacklinks || [];
+    const jsdiff = data.js_diff_hacklinks || [];
+    const scripts = data.injection_scripts || [];
+
+    const findings = [];
+    if (rendered.length) findings.push(`<strong>${rendered.length} hidden anchor tags</strong> rendered into the page DOM with off-screen / hidden CSS.`);
+    if (jsdiff.length) findings.push(`<strong>${jsdiff.length} additional links</strong> dynamically injected via JavaScript after page load.`);
+    if (scripts.length) {
+      findings.push(`<strong>${scripts.length} injection script${scripts.length === 1 ? "" : "s"}</strong> identified.`);
+      const c2s = scripts.flatMap(s => s.decoded_c2_urls || []);
+      if (c2s.length) findings.push(`<strong>C2 endpoints decoded:</strong> <span class="mono" style="font-size:.78rem;color:var(--red)">${c2s.slice(0, 3).map(u => AR.escapeHtml(u)).join(", ")}</span>`);
+    }
+    findings.push(`<strong>Persistence vector:</strong> CMS-level injection (template / plugin file). Not a transient XSS.`);
+    findings.push(`<strong>No data exfiltration</strong> evidence in the captured network trace — this is ranking laundering only.`);
+
+    document.getElementById("findings-list").innerHTML = findings.map(f => `<li>${f}</li>`).join("");
+
+    // Hacklinks tablo
+    if (!rendered.length && !jsdiff.length) {
+      document.getElementById("hacklinks-host").innerHTML = '<div class="empty-state">No hacklinks in this bundle.</div>';
+    } else {
+      const sample = [...rendered.slice(0, 10), ...jsdiff.slice(0, 5)];
+      const rows = sample.map(h => `
+        <tr>
+          <td class="right strong" style="color:var(--orange)">${h.score || 0}</td>
+          <td><span class="mono" style="font-size:.74rem">${AR.escapeHtml(AR.fmt.truncate(h.text || "—", 50))}</span></td>
+          <td><span class="mono" style="font-size:.72rem;color:var(--text-3)">${AR.escapeHtml(AR.fmt.truncate(h.href || "", 70))}</span></td>
+        </tr>
+      `).join("");
+      document.getElementById("hacklinks-host").innerHTML = `
+        <table class="tbl">
+          <thead><tr><th class="right">Score</th><th>Anchor</th><th>URL</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    }
+  } catch (e) {
+    document.getElementById("findings-list").innerHTML = '<li>No detailed analysis available for this bundle.</li>';
+    document.getElementById("hacklinks-host").innerHTML = '<div class="empty-state">No hacklinks analysis.</div>';
+  }
+}
+</script>
 </body>
 </html>

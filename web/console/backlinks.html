@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Backlinks — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="backlinks"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Backlinks</span></nav>
+      </div>
+      <div class="topbar-right">
+        <div class="search">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
+          <input type="text" placeholder="Filter URL, anchor…" id="text-filter">
+          <kbd>⌘K</kbd>
+        </div>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Backlink analysis</h1>
+          <p>Raw backlink intake from CSV exports, scored and categorised. Filter by category, spam score and pagination.</p>
+        </div>
+        <div class="page-head-actions">
+          <span class="meta" id="bl-total">—</span>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-body" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.7rem;align-items:end">
+          <label style="display:flex;flex-direction:column;gap:.3rem;font-size:.78rem;color:var(--text-3)">
+            Category
+            <select id="f-category" style="padding:.55rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:.85rem">
+              <option value="all">All</option>
+              <option value="MAGDUR">MAGDUR (victim)</option>
+              <option value="SALDIRGAN">SALDIRGAN (attacker)</option>
+              <option value="ARAC">ARAC (tool)</option>
+              <option value="BELIRSIZ">BELIRSIZ (unclassified)</option>
+            </select>
+          </label>
+          <label style="display:flex;flex-direction:column;gap:.3rem;font-size:.78rem;color:var(--text-3)">
+            Min spam score: <span id="f-score-val" class="mono">0</span>
+            <input type="range" id="f-score" min="0" max="100" value="0" step="5">
+          </label>
+          <label style="display:flex;flex-direction:column;gap:.3rem;font-size:.78rem;color:var(--text-3)">
+            Limit
+            <select id="f-limit" style="padding:.55rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:.85rem">
+              <option value="50">50</option>
+              <option value="100" selected>100</option>
+              <option value="200">200</option>
+              <option value="500">500</option>
+            </select>
+          </label>
+          <button class="btn btn-primary" id="btn-apply">Apply</button>
+        </div>
+      </section>
+
+      <div class="grid-2-1 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>Backlinks</h3><span class="meta" id="bl-count">—</span></div>
+          <div id="bl-table-host"><div class="loading-spinner">Loading…</div></div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>Detail breakdown</h3><span class="meta">filtered set</span></div>
+          <div class="panel-body">
+            <div id="bl-detail-chart" class="chart-bars"><div class="loading-spinner">…</div></div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="api.js"></script>
+<script src="console.js"></script>
+<script>
+const state = { category: "all", min_score: 0, limit: 100, offset: 0 };
+
+async function loadBacklinks() {
+  AR.showLoading("bl-table-host");
+  AR.setText("bl-count", "loading…");
+  try {
+    const params = new URLSearchParams({
+      category: state.category,
+      min_spam_score: state.min_score,
+      limit: state.limit,
+      offset: state.offset,
+    });
+    const r = await AR.get(`/backlinks?${params}`);
+    AR.setText("bl-count", `${r.count} of ${AR.fmt.num(r.total)}`);
+    AR.setText("bl-total", `${AR.fmt.num(r.total)} total in scope`);
+
+    if (!r.backlinks.length) {
+      AR.showEmpty("bl-table-host", "No backlinks match the filter.");
+      return;
+    }
+
+    const txtFilter = (document.getElementById("text-filter").value || "").toLowerCase();
+    const filtered = txtFilter
+      ? r.backlinks.filter(b =>
+          (b.referring_url || "").toLowerCase().includes(txtFilter) ||
+          (b.anchor_text || "").toLowerCase().includes(txtFilter)
+        )
+      : r.backlinks;
+
+    const rows = filtered.map(b => `
+      <tr>
+        <td>
+          <div class="strong" style="font-size:.82rem">${AR.escapeHtml(AR.fmt.truncate(b.referring_url || "", 60))}</div>
+          <div style="font-size:.7rem;color:var(--text-4)">${AR.escapeHtml(AR.fmt.truncate(b.referring_title || "", 80))}</div>
+        </td>
+        <td><span class="mono" style="font-size:.78rem">${AR.escapeHtml(AR.fmt.truncate(b.anchor_text || "—", 40))}</span></td>
+        <td>${AR.escapeHtml(b.target_domain || "—")}</td>
+        <td class="right strong" style="color:var(--orange)">${b.spam_score}</td>
+        <td>${AR.statusBadge(b.category)}</td>
+        <td><span class="mono" style="font-size:.74rem;color:var(--text-3)">${AR.escapeHtml(b.category_detail || "—")}</span></td>
+        <td class="right">${b.domain_rating ?? "—"}</td>
+        <td><span style="font-size:.74rem;color:var(--text-4)">${AR.fmt.relative(b.last_seen)}</span></td>
+      </tr>
+    `).join("");
+
+    document.getElementById("bl-table-host").innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>Referring URL</th><th>Anchor</th><th>Target</th><th class="right">Spam</th><th>Cat</th><th>Detail</th><th class="right">DR</th><th>Last seen</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    // Detail chart
+    const detailHost = document.getElementById("bl-detail-chart");
+    if (!r.detail_breakdown.length) {
+      detailHost.innerHTML = '<div class="empty-state">No detail data.</div>';
+    } else {
+      const max = Math.max(...r.detail_breakdown.map(d => d.count));
+      detailHost.innerHTML = r.detail_breakdown.slice(0, 12).map(d => {
+        const pct = Math.round((d.count / max) * 100);
+        return `
+          <div class="chart-bar-row">
+            <span class="chart-bar-label" style="font-size:.74rem">${AR.escapeHtml(d.detail)}</span>
+            <span class="chart-bar-track"><span class="chart-bar-fill orange" style="width:${pct}%"></span></span>
+            <span class="chart-bar-value">${AR.fmt.num(d.count)}</span>
+          </div>
+        `;
+      }).join("");
+    }
+  } catch (e) {
+    AR.showError("bl-table-host", e.message);
+  }
+}
+
+document.getElementById("f-category").addEventListener("change", e => state.category = e.target.value);
+document.getElementById("f-score").addEventListener("input", e => {
+  state.min_score = parseInt(e.target.value, 10);
+  document.getElementById("f-score-val").textContent = state.min_score;
+});
+document.getElementById("f-limit").addEventListener("change", e => state.limit = parseInt(e.target.value, 10));
+document.getElementById("btn-apply").addEventListener("click", loadBacklinks);
+document.getElementById("text-filter").addEventListener("input", () => {
+  // Sadece görünür satırları filtrele (yeni request gönderme)
+  loadBacklinks();
+});
+
+loadBacklinks();
+</script>
+</body>
+</html>

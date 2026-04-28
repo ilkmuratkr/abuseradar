@@ -20,7 +20,7 @@
         <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Evidence</span></nav>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-ghost">Export bundle</button>
+        <button class="btn btn-ghost" id="btn-refresh">Refresh</button>
       </div>
     </header>
 
@@ -28,27 +28,62 @@
       <div class="page-head">
         <div>
           <h1>Evidence vault</h1>
-          <p>DOM snapshots, screenshots, HAR traces and certificate chains. Cryptographically integrity-stamped at capture, audit-ready for CERT and registrar submission.</p>
+          <p>DOM snapshots, screenshots and hacklink analysis captured by the crawler. Filesystem-backed at <span class="mono">/data/evidence/</span>.</p>
+        </div>
+        <div class="page-head-actions">
+          <span class="meta" id="bundle-summary">—</span>
         </div>
       </div>
 
       <section class="panel">
-        <div class="panel-head"><h3>Recent captures</h3><span class="meta">2,418 bundles · 11.2 GB total</span></div>
-        <table class="tbl">
-          <thead><tr><th>Bundle ID</th><th>Domain</th><th>Captured</th><th>Artefacts</th><th>Hash</th><th></th></tr></thead>
-          <tbody>
-            <tr><td class="mono">EV-2026-04-25-184</td><td><span class="strong">saude.gov.ar</span></td><td>11:54</td><td>DOM · 4 screenshots · HAR · certs</td><td class="mono" style="color:var(--text-4);font-size:.74rem">8a4f…c102</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">EV-2026-04-25-183</td><td><span class="strong">faculty.ankara.edu.tr</span></td><td>13:08</td><td>DOM · 3 screenshots · HAR</td><td class="mono" style="color:var(--text-4);font-size:.74rem">f221…4a90</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">EV-2026-04-25-182</td><td><span class="strong">saogoncalo.rj.gov.br</span></td><td>14:22</td><td>DOM · 6 screenshots · HAR · certs</td><td class="mono" style="color:var(--text-4);font-size:.74rem">3c58…b8e1</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">EV-2026-04-25-181</td><td><span class="strong">portal.unipa.edu.br</span></td><td>09:31</td><td>DOM · 2 screenshots · HAR</td><td class="mono" style="color:var(--text-4);font-size:.74rem">7e09…1f33</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-            <tr><td class="mono">EV-2026-04-25-180</td><td><span class="strong">cdc.gov.in</span></td><td>08:14</td><td>DOM · 5 screenshots · HAR · certs</td><td class="mono" style="color:var(--text-4);font-size:.74rem">b9d2…7c40</td><td class="right"><a href="evidence-detail.html" class="btn-link">Open →</a></td></tr>
-          </tbody>
-        </table>
+        <div class="panel-head"><h3>Captured bundles</h3></div>
+        <div id="ev-host"><div class="loading-spinner">Loading…</div></div>
       </section>
     </div>
   </main>
 </div>
 
+<script src="api.js"></script>
 <script src="console.js"></script>
+<script>
+async function load() {
+  AR.showLoading("ev-host");
+  try {
+    const r = await AR.get("/evidence");
+    const totalHl = r.bundles.reduce((s, b) => s + (b.hacklink_count || 0), 0);
+    AR.setText("bundle-summary", `${r.count} bundles · ${totalHl} hacklinks total`);
+
+    if (!r.bundles.length) {
+      AR.showEmpty("ev-host", "No evidence bundles yet. Run the crawler first.");
+      return;
+    }
+
+    const rows = r.bundles.map(b => `
+      <tr>
+        <td class="mono" style="font-size:.78rem">${AR.escapeHtml(b.bundle_id)}</td>
+        <td><span class="strong">${AR.escapeHtml(b.domain)}</span></td>
+        <td class="right">${b.screenshots}</td>
+        <td class="right">${b.dom_files}</td>
+        <td class="right strong" style="color:var(--orange)">${b.hacklink_count}</td>
+        <td>${b.has_analysis ? AR.badge("Analysed", "green") : AR.badge("DOM only", "muted")}</td>
+        <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(b.captured_at)}</span></td>
+        <td class="right"><a href="evidence-detail.html?domain=${encodeURIComponent(b.domain)}" class="btn-link">Open →</a></td>
+      </tr>
+    `).join("");
+
+    document.getElementById("ev-host").innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>Bundle</th><th>Domain</th><th class="right">Shots</th><th class="right">DOM</th><th class="right">Hacklinks</th><th>State</th><th>Captured</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    AR.showError("ev-host", e.message);
+  }
+}
+
+document.getElementById("btn-refresh").addEventListener("click", load);
+load();
+</script>
 </body>
 </html>

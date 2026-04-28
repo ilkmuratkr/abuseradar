@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>C2 servers — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="c2"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">C2 servers</span></nav>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>C2 infrastructure</h1>
+          <p>Command &amp; control panels and script hosts that drive the injection campaigns. Disrupt these to unhook hundreds of victims at once.</p>
+        </div>
+        <div class="page-head-actions">
+          <span class="meta" id="c2-count">—</span>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h3>Tracked C2 domains</h3></div>
+        <div id="c2-table-host"><div class="loading-spinner">Loading…</div></div>
+      </section>
+
+      <div class="grid-2 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>Add new C2</h3></div>
+          <div class="panel-body">
+            <p style="color:var(--text-3);font-size:.85rem;margin-bottom:1rem">Manually register a C2 panel or script host you've identified during analysis.</p>
+            <div class="form-row">
+              <label>Domain
+                <input type="text" id="new-domain" placeholder="hacklinkbacklink.com">
+              </label>
+              <label>Role
+                <select id="new-role">
+                  <option value="primary_c2_panel">Primary C2 panel</option>
+                  <option value="fallback_c2_panel">Fallback C2 panel</option>
+                  <option value="script_host">Script host</option>
+                  <option value="pbn_hub">PBN hub</option>
+                </select>
+              </label>
+              <label>Status
+                <select id="new-status">
+                  <option value="active">Active</option>
+                  <option value="suspended">Suspended</option>
+                  <option value="blocked">Blocked</option>
+                  <option value="down">Down</option>
+                </select>
+              </label>
+              <button class="btn btn-primary" id="btn-add">+ Add C2</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>File abuse complaint</h3></div>
+          <div class="panel-body">
+            <p style="color:var(--text-3);font-size:.85rem;margin-bottom:1rem">OpenClaw fills out abuse forms. Pick a target and a desk:</p>
+            <div class="form-row">
+              <label>Target C2
+                <select id="comp-target"></select>
+              </label>
+              <label>Desk
+                <select id="comp-desk">
+                  <option value="cloudflare">Cloudflare</option>
+                  <option value="all">All desks (CF + Google + ICANN)</option>
+                  <option value="hosting">Hosting provider</option>
+                </select>
+              </label>
+              <button class="btn btn-primary" id="btn-complain">File complaint</button>
+            </div>
+            <div id="comp-result" style="margin-top:1rem"></div>
+          </div>
+        </section>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script src="api.js"></script>
+<script src="console.js"></script>
+<script>
+async function loadC2() {
+  try {
+    const r = await AR.get("/c2");
+    AR.setText("c2-count", `${r.count} domains`);
+    const host = document.getElementById("c2-table-host");
+    const targetSelect = document.getElementById("comp-target");
+
+    if (!r.c2_domains.length) {
+      host.innerHTML = '<div class="empty-state">No C2 domains registered yet.</div>';
+      targetSelect.innerHTML = '<option value="">No targets</option>';
+      return;
+    }
+
+    const rows = r.c2_domains.map(c => `
+      <tr>
+        <td><span class="strong">${AR.escapeHtml(c.domain)}</span></td>
+        <td><span class="mono" style="font-size:.74rem">${AR.escapeHtml(c.role || "—")}</span></td>
+        <td>${AR.statusBadge(c.status)}</td>
+        <td>${AR.escapeHtml(c.ip_address || "—")}</td>
+        <td><span style="font-size:.78rem;color:var(--text-3)">${AR.escapeHtml(c.hosting_provider || "—")}</span></td>
+        <td>${c.cloudflare_protected ? AR.badge("CF", "orange") : "—"}</td>
+        <td><span style="font-size:.74rem;color:var(--text-4)">${AR.fmt.relative(c.first_seen)}</span></td>
+      </tr>
+    `).join("");
+
+    host.innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>Domain</th><th>Role</th><th>Status</th><th>IP</th><th>Hosting</th><th>CF</th><th>First seen</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+
+    targetSelect.innerHTML = r.c2_domains
+      .map(c => `<option value="${AR.escapeHtml(c.domain)}">${AR.escapeHtml(c.domain)}</option>`)
+      .join("");
+  } catch (e) {
+    AR.showError("c2-table-host", e.message);
+  }
+}
+
+document.getElementById("btn-add").addEventListener("click", async () => {
+  const domain = document.getElementById("new-domain").value.trim();
+  const role = document.getElementById("new-role").value;
+  const status = document.getElementById("new-status").value;
+  if (!domain) {
+    AR.toast("Domain required", "error");
+    return;
+  }
+  try {
+    await AR.post("/c2", { domain, role, status });
+    AR.toast(`${domain} added`, "success");
+    document.getElementById("new-domain").value = "";
+    await loadC2();
+  } catch (e) {
+    AR.toast(e.message, "error");
+  }
+});
+
+document.getElementById("btn-complain").addEventListener("click", async () => {
+  const target = document.getElementById("comp-target").value;
+  const desk = document.getElementById("comp-desk").value;
+  if (!target) {
+    AR.toast("Pick a target", "error");
+    return;
+  }
+  const result = document.getElementById("comp-result");
+  result.innerHTML = '<div class="loading-spinner">Filing…</div>';
+  try {
+    let endpoint;
+    if (desk === "cloudflare") endpoint = `/complain/cloudflare/${target}`;
+    else if (desk === "all") endpoint = `/complain/all/${target}`;
+    else endpoint = `/complain/hosting/${target}`;
+
+    const r = await AR.post(endpoint);
+    result.innerHTML = `<pre class="code" style="margin:0;padding:.85rem;font-size:.78rem;background:var(--bg-card-2);border-radius:6px;overflow:auto">${AR.escapeHtml(JSON.stringify(r, null, 2))}</pre>`;
+    AR.toast("Complaint filed", "success");
+  } catch (e) {
+    result.innerHTML = `<div class="error-banner">${AR.escapeHtml(e.message)}</div>`;
+  }
+});
+
+loadC2();
+</script>
+</body>
+</html>

@@ -684,6 +684,31 @@ input,textarea,select{font:inherit;color:inherit;background:none;border:none}
   body{background:white !important;color:#000 !important}
 }
 
+/* ═══ LOADING / EMPTY / ERROR / TOAST ═══ */
+.loading-spinner{padding:2rem;text-align:center;color:var(--text-3);font-size:.85rem;font-family:var(--font-mono)}
+.loading-spinner::before{content:"◐";display:inline-block;margin-right:.4rem;animation:ar-spin 1s linear infinite}
+@keyframes ar-spin{to{transform:rotate(360deg)}}
+.empty-state{padding:2rem;text-align:center;color:var(--text-4);font-size:.85rem;font-style:italic}
+.error-banner{padding:.85rem 1rem;background:rgba(220,68,68,0.08);border:1px solid rgba(220,68,68,0.3);
+  border-radius:7px;color:#ff8a8a;font-size:.85rem;margin-bottom:1rem}
+
+#ar-toast-host{position:fixed;bottom:1.5rem;right:1.5rem;z-index:1000;display:flex;flex-direction:column;gap:.5rem;pointer-events:none}
+.ar-toast{padding:.7rem 1rem;background:var(--bg-card);border:1px solid var(--border-hi);border-radius:7px;
+  font-size:.85rem;color:var(--text);box-shadow:var(--shadow-pop);min-width:240px;max-width:380px;
+  opacity:0;transform:translateX(20px);transition:all .25s;pointer-events:auto}
+.ar-toast.show{opacity:1;transform:translateX(0)}
+.ar-toast-success{border-left:3px solid var(--green)}
+.ar-toast-error{border-left:3px solid var(--red);color:#ff9d9d}
+.ar-toast-info{border-left:3px solid var(--teal)}
+
+/* form/field küçük tweak */
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.7rem;margin-bottom:1rem}
+.form-row label{display:flex;flex-direction:column;gap:.3rem;font-size:.78rem;color:var(--text-3)}
+.form-row input,.form-row select,.form-row textarea{padding:.55rem .7rem;background:var(--bg-card-2);
+  border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:inherit;font-size:.85rem}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{outline:none;border-color:var(--teal)}
+.form-row button{align-self:flex-end}
+
 /* ═══ RESPONSIVE ═══ */
 @media (max-width:1080px){
   .kpis{grid-template-columns:repeat(2, 1fr)}

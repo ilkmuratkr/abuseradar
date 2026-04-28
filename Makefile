@@ -1,4 +1,4 @@
-.PHONY: up down logs build csv crawl classify contacts monitor dashboard db-shell test clean up-prod down-prod web
+.PHONY: up down logs build csv crawl classify contacts monitor db-shell test clean up-prod down-prod web
 
 # ═══ Docker — dev (default) ═══
 up:
@@ -92,10 +92,6 @@ victims:
 c2:
 	@docker exec vpn-us curl -s http://localhost:8000/c2 | python3 -m json.tool
 
-# ═══ Dashboard ═══
-dashboard:
-	@echo "Dashboard: http://localhost:7778"
-
 # ═══ DB shell ═══
 db-shell:
 	docker compose exec db psql -U spamwatch -d spamwatch
@@ -145,7 +141,7 @@ help:
 	@echo "make victims         → Mağdur siteleri listele"
 	@echo "make c2              → C2 domainlerini listele"
 	@echo "make vpn-check       → VPN IP kontrolü"
-	@echo "make dashboard       → Dashboard URL'sini göster"
+	@echo "make web             → Static site (port 8765) — public + /console/"
 	@echo "make db-shell        → PostgreSQL shell"
 	@echo "make complain-cf-domain DOMAIN=... → CF abuse (OpenClaw)"
 	@echo "make complain-all-domain DOMAIN=...→ Tüm şikayetler (OpenClaw)"

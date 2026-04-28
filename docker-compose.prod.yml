@@ -37,15 +37,6 @@ services:
       - ./data:/data
     restart: always
 
-  dashboard:
-    volumes:
-      - ./data:/data
-      - ./app/notifier/templates:/app/notifier/templates:ro
-      - /var/run/docker.sock:/var/run/docker.sock
-    ports:
-      - "127.0.0.1:${PORT_DASHBOARD:-7778}:8501"
-    restart: always
-
   openclaw:
     ports:
       - "127.0.0.1:${PORT_OPENCLAW:-18789}:18789"

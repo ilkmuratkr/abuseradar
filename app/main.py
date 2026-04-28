@@ -1,12 +1,29 @@
-"""AbuseRadar - FastAPI Ana Uygulama."""
+"""AbuseRadar — FastAPI Ana Uygulama."""
 
+import os
+import subprocess
 from contextlib import asynccontextmanager
+from datetime import datetime
+from pathlib import Path
 
-from fastapi import FastAPI
-from sqlalchemy import text
+from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from sqlalchemy import select, text
 
 from config import settings
-from models.database import async_session, init_db
+from models.database import (
+    Backlink,
+    C2Domain,
+    Complaint,
+    Contact,
+    CsvFile,
+    DetectedHacklink,
+    Notification,
+    Site,
+    async_session,
+    init_db,
+)
+from utils import evidence_reader
 
 
 @asynccontextmanager
@@ -18,9 +35,42 @@ async def lifespan(app: FastAPI):
 app = FastAPI(title=settings.project_name, lifespan=lifespan)
 
 
+# ═══════════════════════════════════════════════════════════════
+# HEALTH & STATS
+# ═══════════════════════════════════════════════════════════════
+
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "project": settings.project_name}
+
+
+@app.get("/health/detailed")
+async def health_detailed():
+    """DB + Redis + VPN + Crawler + Notifier durumu."""
+    out: dict = {"db": "unknown", "redis": "unknown"}
+
+    try:
+        async with async_session() as session:
+            await session.execute(text("SELECT 1"))
+        out["db"] = "healthy"
+    except Exception as e:
+        out["db"] = f"error: {e}"
+
+    try:
+        import redis.asyncio as redis_async
+
+        r = redis_async.from_url(settings.redis_url)
+        await r.ping()
+        await r.aclose()
+        out["redis"] = "healthy"
+    except Exception as e:
+        out["redis"] = f"error: {e}"
+
+    out["gemini_key"] = "set" if settings.gemini_api_key and not settings.gemini_api_key.startswith("your_") else "missing"
+    out["resend_key"] = "set" if settings.resend_api_key and not settings.resend_api_key.startswith("your_") else "missing"
+
+    return out
 
 
 @app.get("/stats")
@@ -35,14 +85,38 @@ async def stats():
             "detected_hacklinks": "SELECT count(*) FROM detected_hacklinks",
             "c2_domains": "SELECT count(*) FROM c2_domains",
             "notifications_sent": "SELECT count(*) FROM notifications WHERE status='sent'",
-            "complaints_filed": "SELECT count(*) FROM complaints WHERE status != 'pending'",
+            "notifications_remediated": "SELECT count(*) FROM notifications WHERE status='remediated'",
+            "complaints_total": "SELECT count(*) FROM complaints",
+            "complaints_pending": "SELECT count(*) FROM complaints WHERE status IN ('pending','submitted')",
+            "complaints_resolved": "SELECT count(*) FROM complaints WHERE status='resolved'",
+            "contacts_found": "SELECT count(*) FROM contacts",
         }
-        result = {}
+        result: dict = {}
         for key, query in queries.items():
             r = await session.execute(text(query))
             result[key] = r.scalar() or 0
 
+        # Kategori dağılımı
+        cat_q = await session.execute(
+            text("SELECT category, count(*) FROM backlinks GROUP BY category ORDER BY 2 DESC")
+        )
+        result["category_breakdown"] = [{"category": r[0], "count": r[1]} for r in cat_q.all()]
+
+        # Mağdur tip dağılımı
+        type_q = await session.execute(
+            text(
+                "SELECT category_detail, count(*) FROM backlinks "
+                "WHERE category='MAGDUR' GROUP BY category_detail ORDER BY 2 DESC"
+            )
+        )
+        result["victim_type_breakdown"] = [{"type": r[0], "count": r[1]} for r in type_q.all()]
+
     return result
+
+
+# ═══════════════════════════════════════════════════════════════
+# CSV
+# ═══════════════════════════════════════════════════════════════
 
 
 @app.post("/csv/process")
@@ -51,22 +125,82 @@ async def process_csv():
     from csv_processor.parser import process_inbox
 
     results = await process_inbox()
-    return {"processed": len([r for r in results if r["status"] == "completed"]), "results": results}
+    return {
+        "processed": len([r for r in results if r["status"] == "completed"]),
+        "results": results,
+    }
+
+
+@app.post("/csv/upload")
+async def csv_upload(file: UploadFile = File(...)):
+    """CSV upload — inbox/'a yazar."""
+    if not file.filename or not file.filename.lower().endswith(".csv"):
+        raise HTTPException(400, "CSV dosyası bekleniyor")
+
+    inbox = Path(settings.csv_inbox_path)
+    inbox.mkdir(parents=True, exist_ok=True)
+
+    safe_name = Path(file.filename).name
+    target = inbox / safe_name
+
+    body = await file.read()
+    target.write_bytes(body)
+
+    return {
+        "filename": safe_name,
+        "size": len(body),
+        "saved_to": str(target),
+        "next_step": "POST /csv/process",
+    }
+
+
+@app.get("/csv-files")
+async def list_csv_files(limit: int = 50):
+    """İşlenmiş CSV listesi."""
+    async with async_session() as session:
+        rows = await session.execute(
+            text(
+                "SELECT id, filename, target_domain, export_date, total_rows, "
+                "new_rows, skipped_rows, status, completed_at, created_at "
+                "FROM csv_files ORDER BY created_at DESC LIMIT :limit"
+            ),
+            {"limit": limit},
+        )
+        out = []
+        for r in rows.all():
+            out.append(
+                {
+                    "id": r[0],
+                    "filename": r[1],
+                    "target_domain": r[2],
+                    "export_date": r[3].isoformat() if r[3] else None,
+                    "total_rows": r[4],
+                    "new_rows": r[5],
+                    "skipped_rows": r[6],
+                    "status": r[7],
+                    "completed_at": r[8].isoformat() if r[8] else None,
+                    "created_at": r[9].isoformat() if r[9] else None,
+                }
+            )
+    return {"count": len(out), "files": out}
+
+
+# ═══════════════════════════════════════════════════════════════
+# CLASSIFY
+# ═══════════════════════════════════════════════════════════════
 
 
 @app.post("/classify")
 async def classify_all():
     """Tüm BELIRSIZ backlink'leri sınıflandır."""
     from classifier.rules import classify_backlink
-    from models.database import Backlink
-    from sqlalchemy import select
 
     async with async_session() as session:
         result = await session.execute(
             select(Backlink).where(Backlink.category == "BELIRSIZ")
         )
         backlinks = result.scalars().all()
-        counts = {}
+        counts: dict = {}
         for bl in backlinks:
             row = {
                 "referring_url": bl.referring_url,
@@ -83,129 +217,500 @@ async def classify_all():
     return {"classified": sum(counts.values()), "breakdown": counts}
 
 
-@app.post("/crawl/{domain}")
-async def crawl_site(domain: str):
-    """Tek bir siteyi crawl et. Crawler container'da çalıştırılmalı."""
-    return {
-        "message": f"Crawler VPN-TR üzerinden çalışır. Komut:",
-        "command": f"docker compose run --rm crawler python -m crawler.cli https://{domain}/",
-    }
-
-
-@app.get("/victims")
-async def list_victims():
-    """Mağdur siteleri listele."""
-    from models.database import Backlink
-    from sqlalchemy import select, func
-
-    async with async_session() as session:
-        result = await session.execute(
-            select(
-                Backlink.referring_url,
-                Backlink.referring_title,
-                Backlink.anchor_text,
-                Backlink.domain_rating,
-                Backlink.spam_score,
-                Backlink.category_detail,
-            )
-            .where(Backlink.category == "MAGDUR")
-            .order_by(Backlink.domain_rating.desc().nullslast())
-            .limit(100)
-        )
-        victims = [
-            {
-                "url": r[0],
-                "title": r[1],
-                "anchor": r[2],
-                "dr": float(r[3]) if r[3] else None,
-                "spam_score": r[4],
-                "detail": r[5],
-            }
-            for r in result.all()
-        ]
-
-    return {"count": len(victims), "victims": victims}
-
-
 @app.post("/classify/multi-signal")
 async def classify_multi_signal():
-    """Coklu sinyal ile yeniden siniflandir (daha guvenilir)."""
     from classifier.multi_signal import reclassify_all
+
     results = await reclassify_all()
     return {"method": "multi_signal", "results": results}
 
 
 @app.post("/classify/analyze/{domain}")
 async def analyze_domain(domain: str):
-    """Tek domain icin coklu sinyal analizi."""
     from classifier.multi_signal import calculate_multi_signal_score
+
     async with async_session() as session:
         result = await calculate_multi_signal_score(f"https://{domain}/", session)
     return result
 
 
-@app.post("/pipeline/run")
-async def run_pipeline(auto_crawl: bool = False):
-    """Tam pipeline: CSV isle → siniflandir → saldirgan listesi → (opsiyonel) crawl."""
-    from pipeline import run_full_pipeline
-    return await run_full_pipeline(auto_crawl=auto_crawl)
+# ═══════════════════════════════════════════════════════════════
+# BACKLINKS
+# ═══════════════════════════════════════════════════════════════
 
 
-@app.get("/pipeline/status")
-async def pipeline_status():
-    """Pipeline durumunu goster."""
-    from pipeline import get_pipeline_status
-    return await get_pipeline_status()
+@app.get("/backlinks")
+async def list_backlinks(
+    category: str | None = Query(None),
+    min_spam_score: int = Query(0, ge=0, le=100),
+    limit: int = Query(100, ge=1, le=1000),
+    offset: int = Query(0, ge=0),
+):
+    """Backlink listesi (filter + paginated)."""
+    where = "WHERE 1=1"
+    params: dict = {"limit": limit, "offset": offset, "min_score": min_spam_score}
+    if category and category != "all":
+        where += " AND category = :cat"
+        params["cat"] = category
+    if min_spam_score > 0:
+        where += " AND spam_score >= :min_score"
+
+    async with async_session() as session:
+        total_q = await session.execute(
+            text(f"SELECT count(*) FROM backlinks {where}"), params
+        )
+        total = total_q.scalar() or 0
+
+        rows = await session.execute(
+            text(
+                f"SELECT referring_url, referring_title, anchor_text, target_domain, "
+                f"spam_score, category, category_detail, domain_rating, traffic, "
+                f"platform, is_rendered, is_raw, first_seen, last_seen "
+                f"FROM backlinks {where} "
+                f"ORDER BY spam_score DESC, domain_rating DESC NULLS LAST "
+                f"LIMIT :limit OFFSET :offset"
+            ),
+            params,
+        )
+        out = []
+        for r in rows.all():
+            out.append(
+                {
+                    "referring_url": r[0],
+                    "referring_title": r[1],
+                    "anchor_text": r[2],
+                    "target_domain": r[3],
+                    "spam_score": r[4],
+                    "category": r[5],
+                    "category_detail": r[6],
+                    "domain_rating": float(r[7]) if r[7] else None,
+                    "traffic": r[8],
+                    "platform": r[9],
+                    "is_rendered": r[10],
+                    "is_raw": r[11],
+                    "first_seen": r[12].isoformat() if r[12] else None,
+                    "last_seen": r[13].isoformat() if r[13] else None,
+                }
+            )
+
+        # Detay dağılımı (filtreye göre)
+        detail_q = await session.execute(
+            text(
+                f"SELECT category_detail, count(*) FROM backlinks {where} "
+                f"GROUP BY category_detail ORDER BY 2 DESC LIMIT 15"
+            ),
+            {k: v for k, v in params.items() if k not in ("limit", "offset")},
+        )
+        detail_dist = [{"detail": r[0] or "—", "count": r[1]} for r in detail_q.all()]
+
+    return {
+        "total": total,
+        "count": len(out),
+        "offset": offset,
+        "limit": limit,
+        "backlinks": out,
+        "detail_breakdown": detail_dist,
+    }
 
 
-@app.get("/pipeline/attackers")
-async def list_attackers():
-    """Saldirgan domain listesi."""
-    from pipeline import extract_attacker_domains
-    attackers = await extract_attacker_domains()
-    return {"count": len(attackers), "attackers": attackers}
+# ═══════════════════════════════════════════════════════════════
+# VICTIMS / SITES
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.get("/victims")
+async def list_victims(
+    site_type: str | None = Query(None),
+    verified: str | None = Query(None),
+    limit: int = Query(200, ge=1, le=2000),
+):
+    """Mağdur siteleri listele (filter destekli)."""
+    where = "WHERE b.category='MAGDUR'"
+    params: dict = {"limit": limit}
+    if site_type and site_type != "all":
+        where += " AND b.category_detail = :tip"
+        params["tip"] = site_type
+    if verified == "verified":
+        where += " AND s.injection_verified IS TRUE"
+    elif verified == "pending":
+        where += " AND (s.injection_verified IS NULL OR s.injection_verified = FALSE)"
+
+    async with async_session() as session:
+        rows = await session.execute(
+            text(
+                f"SELECT DISTINCT ON (b.referring_url) "
+                f"b.referring_url, b.referring_title, b.anchor_text, "
+                f"b.domain_rating, b.traffic, b.platform, b.spam_score, "
+                f"b.category_detail, b.first_seen, b.last_seen, "
+                f"s.injection_verified, s.status, s.last_crawled_at "
+                f"FROM backlinks b "
+                f"LEFT JOIN sites s ON s.domain = split_part(split_part(b.referring_url, '://', 2), '/', 1) "
+                f"{where} "
+                f"ORDER BY b.referring_url, b.domain_rating DESC NULLS LAST "
+                f"LIMIT :limit"
+            ),
+            params,
+        )
+        out = []
+        for r in rows.all():
+            out.append(
+                {
+                    "url": r[0],
+                    "title": r[1],
+                    "anchor": r[2],
+                    "dr": float(r[3]) if r[3] else None,
+                    "traffic": r[4],
+                    "platform": r[5],
+                    "spam_score": r[6],
+                    "type": r[7],
+                    "first_seen": r[8].isoformat() if r[8] else None,
+                    "last_seen": r[9].isoformat() if r[9] else None,
+                    "verified": r[10],
+                    "crawl_status": r[11],
+                    "last_crawl": r[12].isoformat() if r[12] else None,
+                }
+            )
+
+    return {"count": len(out), "victims": out}
+
+
+@app.get("/sites/recent")
+async def recent_sites(limit: int = 20):
+    """Son crawl edilen siteler."""
+    async with async_session() as session:
+        rows = await session.execute(
+            text(
+                "SELECT s.domain, s.status, s.injection_verified, s.platform, "
+                "s.last_crawled_at, "
+                "(SELECT count(*) FROM detected_hacklinks h WHERE h.site_id = s.id) "
+                "FROM sites s WHERE s.last_crawled_at IS NOT NULL "
+                "ORDER BY s.last_crawled_at DESC LIMIT :limit"
+            ),
+            {"limit": limit},
+        )
+        out = []
+        for r in rows.all():
+            out.append(
+                {
+                    "domain": r[0],
+                    "status": r[1],
+                    "verified": r[2],
+                    "platform": r[3],
+                    "last_crawled_at": r[4].isoformat() if r[4] else None,
+                    "hacklink_count": r[5],
+                }
+            )
+    return {"count": len(out), "sites": out}
+
+
+# ═══════════════════════════════════════════════════════════════
+# CRAWL & CONTACTS
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.post("/crawl/{domain}")
+async def crawl_site(domain: str):
+    return {
+        "message": "Crawler VPN-TR üzerinden çalışır.",
+        "command": f"docker compose run --rm crawler python -m crawler.cli https://{domain}/",
+    }
 
 
 @app.post("/contacts/{domain}")
 async def find_contacts(domain: str):
-    """Bir site için iletişim bilgisi bul."""
     from contacts.finder import find_all_contacts
 
     contacts = await find_all_contacts(f"https://{domain}/", domain)
     return {"domain": domain, "count": len(contacts), "contacts": contacts}
 
 
-@app.post("/monitor/weekly")
-async def run_monitoring():
-    """Haftalık monitoring döngüsünü tetikle."""
-    from monitoring.scheduler import run_weekly_cycle
+# ═══════════════════════════════════════════════════════════════
+# PIPELINE
+# ═══════════════════════════════════════════════════════════════
 
-    result = await run_weekly_cycle()
-    return result
+
+@app.post("/pipeline/run")
+async def run_pipeline(auto_crawl: bool = False):
+    from pipeline import run_full_pipeline
+
+    return await run_full_pipeline(auto_crawl=auto_crawl)
+
+
+@app.get("/pipeline/status")
+async def pipeline_status():
+    from pipeline import get_pipeline_status
+
+    return await get_pipeline_status()
+
+
+@app.get("/pipeline/attackers")
+async def list_attackers():
+    from pipeline import extract_attacker_domains
+
+    attackers = await extract_attacker_domains()
+    return {"count": len(attackers), "attackers": attackers}
+
+
+@app.get("/pipeline/unverified")
+async def pipeline_unverified(limit: int = 50):
+    """Doğrulanmamış mağdur siteler (crawl bekliyor)."""
+    async with async_session() as session:
+        rows = await session.execute(
+            text(
+                "SELECT DISTINCT "
+                "  split_part(split_part(b.referring_url, '://', 2), '/', 1) AS domain, "
+                "  b.referring_url, b.category_detail, b.domain_rating, b.traffic "
+                "FROM backlinks b "
+                "LEFT JOIN sites s ON s.domain = split_part(split_part(b.referring_url, '://', 2), '/', 1) "
+                "WHERE b.category = 'MAGDUR' "
+                "  AND (s.last_crawled_at IS NULL OR s.injection_verified IS NULL) "
+                "ORDER BY b.domain_rating DESC NULLS LAST LIMIT :limit"
+            ),
+            {"limit": limit},
+        )
+        out = [
+            {
+                "domain": r[0],
+                "url": r[1],
+                "type": r[2],
+                "dr": float(r[3]) if r[3] else None,
+                "traffic": r[4],
+            }
+            for r in rows.all()
+        ]
+    return {"count": len(out), "sites": out}
+
+
+@app.get("/pipeline/verified")
+async def pipeline_verified(limit: int = 100):
+    """Doğrulanmış mağdurlar — sikayet/email için hazır."""
+    async with async_session() as session:
+        rows = await session.execute(
+            text(
+                "SELECT s.domain, s.status, s.platform, s.last_crawled_at, "
+                "(SELECT count(*) FROM detected_hacklinks h WHERE h.site_id = s.id) AS hacklink_count, "
+                "(SELECT count(*) FROM contacts c WHERE c.site_id = s.id) AS contact_count, "
+                "(SELECT count(*) FROM notifications n WHERE n.site_id = s.id AND n.status = 'sent') AS sent_count "
+                "FROM sites s WHERE s.injection_verified = true "
+                "ORDER BY s.last_crawled_at DESC LIMIT :limit"
+            ),
+            {"limit": limit},
+        )
+        out = [
+            {
+                "domain": r[0],
+                "status": r[1],
+                "platform": r[2],
+                "last_crawled_at": r[3].isoformat() if r[3] else None,
+                "hacklink_count": r[4],
+                "contact_count": r[5],
+                "notifications_sent": r[6],
+            }
+            for r in rows.all()
+        ]
+    return {"count": len(out), "sites": out}
+
+
+# ═══════════════════════════════════════════════════════════════
+# COMPLAINTS & NOTIFICATIONS
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.get("/complaints")
+async def list_complaints(
+    platform: str | None = Query(None),
+    status: str | None = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+):
+    where = "WHERE 1=1"
+    params: dict = {"limit": limit}
+    if platform and platform != "all":
+        where += " AND platform = :p"
+        params["p"] = platform
+    if status and status != "all":
+        where += " AND status = :s"
+        params["s"] = status
+
+    async with async_session() as session:
+        rows = await session.execute(
+            text(
+                f"SELECT id, target_domain, target_type, platform, status, "
+                f"submitted_at, followup_count, max_followups, next_check_at, "
+                f"resolved_at, notes, created_at "
+                f"FROM complaints {where} ORDER BY created_at DESC LIMIT :limit"
+            ),
+            params,
+        )
+        out = []
+        for r in rows.all():
+            out.append(
+                {
+                    "id": r[0],
+                    "target_domain": r[1],
+                    "target_type": r[2],
+                    "platform": r[3],
+                    "status": r[4],
+                    "submitted_at": r[5].isoformat() if r[5] else None,
+                    "followup_count": r[6],
+                    "max_followups": r[7],
+                    "next_check_at": r[8].isoformat() if r[8] else None,
+                    "resolved_at": r[9].isoformat() if r[9] else None,
+                    "notes": r[10],
+                    "created_at": r[11].isoformat() if r[11] else None,
+                }
+            )
+
+        # Status dağılımı
+        dist_q = await session.execute(
+            text("SELECT status, count(*) FROM complaints GROUP BY status")
+        )
+        dist = [{"status": r[0], "count": r[1]} for r in dist_q.all()]
+
+    return {"count": len(out), "complaints": out, "status_breakdown": dist}
+
+
+@app.get("/notifications")
+async def list_notifications(
+    status: str | None = Query(None),
+    limit: int = Query(200, ge=1, le=1000),
+):
+    where = "WHERE 1=1"
+    params: dict = {"limit": limit}
+    if status and status != "all":
+        where += " AND n.status = :s"
+        params["s"] = status
+
+    async with async_session() as session:
+        rows = await session.execute(
+            text(
+                f"SELECT n.id, s.domain, c.email, n.email_type, n.language, n.status, "
+                f"n.send_count, n.max_sends, n.sent_at, n.injection_still_active, "
+                f"n.remediated_at, n.created_at "
+                f"FROM notifications n "
+                f"JOIN sites s ON n.site_id = s.id "
+                f"JOIN contacts c ON n.contact_id = c.id "
+                f"{where} ORDER BY n.created_at DESC LIMIT :limit"
+            ),
+            params,
+        )
+        out = []
+        for r in rows.all():
+            out.append(
+                {
+                    "id": r[0],
+                    "domain": r[1],
+                    "email": r[2],
+                    "email_type": r[3],
+                    "language": r[4],
+                    "status": r[5],
+                    "send_count": r[6],
+                    "max_sends": r[7],
+                    "sent_at": r[8].isoformat() if r[8] else None,
+                    "injection_still_active": r[9],
+                    "remediated_at": r[10].isoformat() if r[10] else None,
+                    "created_at": r[11].isoformat() if r[11] else None,
+                }
+            )
+    return {"count": len(out), "notifications": out}
+
+
+@app.get("/notification-templates/{lang}")
+async def get_notification_template(lang: str):
+    """Email şablonunu oku (tr, en, pt, es, fr)."""
+    if lang not in ("tr", "en", "pt", "es", "fr"):
+        raise HTTPException(404, "Geçerli diller: tr, en, pt, es, fr")
+    p = Path("/app/notifier/templates") / f"alert_{lang}.txt"
+    if not p.exists():
+        # Local fallback
+        p = Path(__file__).parent / "notifier" / "templates" / f"alert_{lang}.txt"
+    if not p.exists():
+        raise HTTPException(404, f"Şablon bulunamadı: {lang}")
+    return PlainTextResponse(p.read_text(encoding="utf-8"))
+
+
+# ═══════════════════════════════════════════════════════════════
+# C2
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.get("/c2")
+async def list_c2():
+    async with async_session() as session:
+        result = await session.execute(select(C2Domain))
+        c2s = [
+            {
+                "id": c.id,
+                "domain": c.domain,
+                "role": c.role,
+                "status": c.status,
+                "ip_address": c.ip_address,
+                "asn": c.asn,
+                "hosting_provider": c.hosting_provider,
+                "cloudflare_protected": c.cloudflare_protected,
+                "registrar": c.registrar,
+                "first_seen": c.first_seen.isoformat() if c.first_seen else None,
+            }
+            for c in result.scalars().all()
+        ]
+
+    return {"count": len(c2s), "c2_domains": c2s}
+
+
+@app.post("/c2")
+async def add_c2(payload: dict):
+    """Yeni C2 domain ekle. Body: {domain, role, status}"""
+    domain = (payload.get("domain") or "").strip().lower()
+    role = payload.get("role") or "primary_c2_panel"
+    status = payload.get("status") or "active"
+
+    if not domain:
+        raise HTTPException(400, "domain gerekli")
+    if role not in (
+        "primary_c2_panel", "fallback_c2_panel", "script_host", "pbn_hub"
+    ):
+        raise HTTPException(400, "Geçersiz rol")
+
+    async with async_session() as session:
+        existing = await session.execute(
+            select(C2Domain).where(C2Domain.domain == domain)
+        )
+        if existing.scalar_one_or_none():
+            raise HTTPException(409, f"{domain} zaten mevcut")
+
+        c2 = C2Domain(domain=domain, role=role, status=status)
+        session.add(c2)
+        await session.commit()
+        await session.refresh(c2)
+
+    return {"id": c2.id, "domain": c2.domain, "role": c2.role, "status": c2.status}
+
+
+# ═══════════════════════════════════════════════════════════════
+# COMPLAIN
+# ═══════════════════════════════════════════════════════════════
 
 
 @app.get("/hosting/{domain}")
 async def hosting_info(domain: str):
-    """Domain'in hosting bilgisi: IP, provider, CF durumu, abuse email."""
     from complainant.hosting import get_hosting_info
+
     return await get_hosting_info(domain)
 
 
 @app.get("/complaint-targets/{domain}")
 async def complaint_targets(domain: str):
-    """Bir domain icin tum sikayet hedeflerini goster."""
     from complainant.hosting import get_complaint_targets
+
     return await get_complaint_targets(domain)
 
 
 @app.post("/complain/hosting/{domain}")
 async def complain_hosting(domain: str):
-    """Hosting provider'a abuse raporu gonder."""
     from complainant.hosting import get_hosting_info, report_to_hosting
 
     info = await get_hosting_info(domain)
     if not info.get("abuse_email"):
-        return {"error": f"{domain} icin hosting abuse email bulunamadi", "info": info}
+        return {"error": f"{domain} için hosting abuse email bulunamadı", "info": info}
 
     result = await report_to_hosting(
         domain=domain,
@@ -218,10 +723,7 @@ async def complain_hosting(domain: str):
 
 @app.post("/complain/cloudflare/{domain}")
 async def complain_cloudflare(domain: str):
-    """OpenClaw ile Cloudflare abuse formu doldur."""
     from complainant.openclaw import report_cloudflare
-    from models.database import C2Domain
-    from sqlalchemy import select
 
     async with async_session() as session:
         result = await session.execute(
@@ -247,7 +749,6 @@ async def complain_cloudflare(domain: str):
 
 @app.post("/complain/all/{domain}")
 async def complain_all(domain: str):
-    """OpenClaw ile tüm şikayet formlarını doldur (CF + Google + ICANN)."""
     from complainant.openclaw import run_all_complaints_for_c2
 
     evidence = {
@@ -263,23 +764,89 @@ async def complain_all(domain: str):
     return {"domain": domain, "results": results}
 
 
-@app.get("/c2")
-async def list_c2():
-    """C2 domainlerini listele."""
-    from models.database import C2Domain
-    from sqlalchemy import select
+# ═══════════════════════════════════════════════════════════════
+# EVIDENCE
+# ═══════════════════════════════════════════════════════════════
 
-    async with async_session() as session:
-        result = await session.execute(select(C2Domain))
-        c2s = [
-            {
-                "domain": c.domain,
-                "role": c.role,
-                "status": c.status,
-                "ip": c.ip_address,
-                "hosting": c.hosting_provider,
-            }
-            for c in result.scalars().all()
-        ]
 
-    return {"count": len(c2s), "c2_domains": c2s}
+@app.get("/evidence")
+async def evidence_list():
+    """Tüm evidence bundle'larını listele."""
+    bundles = evidence_reader.list_bundles()
+    # captured_at'ı ISO string'e çevir
+    for b in bundles:
+        if b.get("captured_at"):
+            b["captured_at"] = datetime.fromtimestamp(b["captured_at"]).isoformat()
+    return {"count": len(bundles), "bundles": bundles}
+
+
+@app.get("/evidence/{domain}")
+async def evidence_detail(domain: str):
+    bundle = evidence_reader.get_bundle(domain)
+    if not bundle:
+        raise HTTPException(404, f"Bundle bulunamadı: {domain}")
+    if bundle.get("captured_at"):
+        bundle["captured_at"] = datetime.fromtimestamp(bundle["captured_at"]).isoformat()
+    return bundle
+
+
+@app.get("/evidence/{domain}/screenshot/{idx}")
+async def evidence_screenshot(domain: str, idx: int):
+    p = evidence_reader.get_screenshot_path(domain, idx)
+    if not p:
+        raise HTTPException(404, "Screenshot bulunamadı")
+    return FileResponse(str(p), media_type="image/png")
+
+
+@app.get("/evidence/{domain}/hacklinks")
+async def evidence_hacklinks(domain: str):
+    data = evidence_reader.get_hacklinks(domain)
+    if data is None:
+        raise HTTPException(404, "Hacklinks analizi bulunamadı")
+    return data
+
+
+@app.get("/evidence/{domain}/dom")
+async def evidence_dom_list(domain: str):
+    return {"files": evidence_reader.list_dom_files(domain)}
+
+
+@app.get("/evidence/{domain}/dom/{name}")
+async def evidence_dom_content(domain: str, name: str):
+    content = evidence_reader.get_dom_content(domain, name)
+    if content is None:
+        raise HTTPException(404, "DOM dosyası bulunamadı")
+    return PlainTextResponse(content)
+
+
+# ═══════════════════════════════════════════════════════════════
+# SYSTEM
+# ═══════════════════════════════════════════════════════════════
+
+
+@app.get("/vpn/{name}/status")
+async def vpn_status(name: str):
+    """VPN egress IP — name: tr veya us."""
+    if name not in ("tr", "us"):
+        raise HTTPException(400, "name: tr veya us")
+    container = f"vpn-{name}"
+    try:
+        result = subprocess.run(
+            ["docker", "exec", container, "curl", "-s", "--max-time", "5", "https://ipinfo.io/json"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode != 0 or not result.stdout:
+            return {"container": container, "status": "unreachable", "stderr": result.stderr}
+        import json
+        return {"container": container, "status": "ok", **json.loads(result.stdout)}
+    except FileNotFoundError:
+        return {"container": container, "status": "docker-cli-missing"}
+    except Exception as e:
+        return {"container": container, "status": "error", "error": str(e)}
+
+
+@app.post("/monitor/weekly")
+async def run_monitoring():
+    from monitoring.scheduler import run_weekly_cycle
+
+    return await run_weekly_cycle()

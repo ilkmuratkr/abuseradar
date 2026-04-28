@@ -16,17 +16,15 @@
   <main class="main">
     <header class="topbar">
       <div class="topbar-left">
-        <button class="icon-btn" data-toggle-rail aria-label="Toggle sidebar" style="display:none">
-          <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        </button>
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
         <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Pipeline</span></nav>
       </div>
       <div class="topbar-right">
-        <div class="search">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-          <input type="text" placeholder="Search runs, batches, errors…">
-          <kbd>⌘K</kbd>
-        </div>
+        <button class="btn btn-ghost" id="btn-refresh">Refresh</button>
+        <button class="btn btn-primary" id="btn-run">
+          <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
+          Run pipeline
+        </button>
       </div>
     </header>
 
@@ -34,115 +32,222 @@
       <div class="page-head">
         <div>
           <h1>Pipeline</h1>
-          <p>Five-stage breach pipeline. Each transition is cryptographically logged. Cycle: weekly continuous + on-demand runs.</p>
-        </div>
-        <div class="page-head-actions">
-          <button class="btn btn-ghost">Pause cycle</button>
-          <button class="btn btn-primary">
-            <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
-            Run full pipeline
-          </button>
+          <p>Five-stage flow: collect → classify → verify (crawl) → attribute &amp; notify → force closure. Verified sites only get notified.</p>
         </div>
       </div>
 
-      <!-- Pipeline progress visual -->
-      <section class="panel">
-        <div class="panel-head">
-          <h3>Current run · AR-PL-2421</h3>
-          <span class="meta">Started 3 hours ago · ETA 18 minutes</span>
-        </div>
-        <div class="panel-body">
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:.6rem;margin-bottom:1.4rem">
-            <!-- Stage cards -->
-            <div style="background:var(--bg-card-2);border:1px solid var(--border-hi);border-radius:8px;padding:.85rem">
-              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);letter-spacing:1px;margin-bottom:.4rem">01 · DONE</div>
-              <div style="font-weight:600;color:var(--text);font-size:.88rem;margin-bottom:.5rem">Collect</div>
-              <div style="font-size:.74rem;color:var(--text-3);line-height:1.5">3,418 rows ingested · 117 new · 2 disputed</div>
-              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:100%;background:var(--green)"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--green)">100%</span></div>
-            </div>
-            <div style="background:var(--bg-card-2);border:1px solid var(--border-hi);border-radius:8px;padding:.85rem">
-              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--green);letter-spacing:1px;margin-bottom:.4rem">02 · DONE</div>
-              <div style="font-weight:600;color:var(--text);font-size:.88rem;margin-bottom:.5rem">Classify</div>
-              <div style="font-size:.74rem;color:var(--text-3);line-height:1.5">3,418 scored · 117 new flagged · Gemini ok</div>
-              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:100%;background:var(--green)"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--green)">100%</span></div>
-            </div>
-            <div style="background:var(--bg-card-2);border:1px solid rgba(244,161,74,0.4);border-radius:8px;padding:.85rem;box-shadow:0 0 0 1px rgba(244,161,74,0.15)">
-              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--orange);letter-spacing:1px;margin-bottom:.4rem">03 · ACTIVE</div>
-              <div style="font-weight:600;color:var(--text);font-size:.88rem;margin-bottom:.5rem">Verify on-site</div>
-              <div style="font-size:.74rem;color:var(--text-3);line-height:1.5">187 of 248 pages rendered via VPN-TR</div>
-              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:75%;background:var(--orange)"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--orange)">75%</span></div>
-            </div>
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.85rem;opacity:.55">
-              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-4);letter-spacing:1px;margin-bottom:.4rem">04 · QUEUED</div>
-              <div style="font-weight:600;color:var(--text-2);font-size:.88rem;margin-bottom:.5rem">Attribute &amp; notify</div>
-              <div style="font-size:.74rem;color:var(--text-4);line-height:1.5">Awaiting verification batch</div>
-              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:0%"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-4)">—</span></div>
-            </div>
-            <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:.85rem;opacity:.55">
-              <div style="font-family:var(--font-mono);font-size:.65rem;color:var(--text-4);letter-spacing:1px;margin-bottom:.4rem">05 · QUEUED</div>
-              <div style="font-weight:600;color:var(--text-2);font-size:.88rem;margin-bottom:.5rem">Force closure</div>
-              <div style="font-size:.74rem;color:var(--text-4);line-height:1.5">Awaiting notification batch</div>
-              <div class="progress" style="margin-top:.7rem"><div class="progress-bar"><div style="width:0%"></div></div><span style="font-family:var(--font-mono);font-size:.7rem;color:var(--text-4)">—</span></div>
-            </div>
-          </div>
+      <!-- Stats row -->
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-label">CSVs processed</div><div class="kpi-value" data-kpi="csv_processed" data-dynamic="1">—</div><div class="kpi-trend">all-time</div></div>
+        <div class="kpi"><div class="kpi-label">Total backlinks</div><div class="kpi-value" data-kpi="total_backlinks" data-dynamic="1">—</div><div class="kpi-trend">indexed</div></div>
+        <div class="kpi gold"><div class="kpi-label">Verified victims</div><div class="kpi-value" data-kpi="verified_victims" data-dynamic="1">—</div><div class="kpi-trend">crawl-confirmed</div></div>
+        <div class="kpi orange"><div class="kpi-label">Unverified</div><div class="kpi-value" data-kpi="unverified" data-dynamic="1">—</div><div class="kpi-trend">awaiting crawl</div></div>
+        <div class="kpi green"><div class="kpi-label">Remediated</div><div class="kpi-value" data-kpi="remediated" data-dynamic="1">—</div><div class="kpi-trend">closed cases</div></div>
+      </div>
 
-          <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:.5rem;font-size:.78rem">
-            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Run ID</span><span class="mono" style="color:var(--text);font-family:var(--font-mono)">AR-PL-2421</span></div>
-            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Started</span><span style="color:var(--text)">25 Apr · 14:31</span></div>
-            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Triggered by</span><span style="color:var(--text)">Weekly cron</span></div>
-            <div style="display:flex;flex-direction:column;gap:.2rem"><span style="color:var(--text-4);font-size:.7rem;text-transform:uppercase;letter-spacing:1px">Audit log</span><a href="report.html" class="btn-link" style="font-size:.78rem">Open trace →</a></div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Recent runs -->
-      <section class="panel row-gap">
-        <div class="panel-head">
-          <h3>Recent runs</h3>
-          <span class="meta">last 14 days</span>
-        </div>
-        <table class="tbl">
-          <thead><tr><th>Run ID</th><th>Started</th><th>Trigger</th><th>Duration</th><th>Outcome</th><th>Stage details</th></tr></thead>
-          <tbody>
-            <tr><td class="mono">AR-PL-2421</td><td>25 Apr · 14:31</td><td>Weekly cron</td><td>3h 12m (active)</td><td><span class="badge orange">Running</span></td><td>117 new · 187/248 verified</td></tr>
-            <tr><td class="mono">AR-PL-2420</td><td>18 Apr · 14:30</td><td>Weekly cron</td><td>3h 48m</td><td><span class="badge green">Completed</span></td><td>284 new · 41 newly verified · 22 closed</td></tr>
-            <tr><td class="mono">AR-PL-2419</td><td>14 Apr · 09:12</td><td>Manual · analyst@cert.tr</td><td>1h 02m</td><td><span class="badge green">Completed</span></td><td>Re-verification batch only · 47 sites</td></tr>
-            <tr><td class="mono">AR-PL-2418</td><td>11 Apr · 14:30</td><td>Weekly cron</td><td>4h 11m</td><td><span class="badge green">Completed</span></td><td>312 new · 38 newly verified · 18 closed</td></tr>
-            <tr><td class="mono">AR-PL-2417</td><td>04 Apr · 14:30</td><td>Weekly cron</td><td>2h 56m</td><td><span class="badge red">Partial</span></td><td>Crawler VPN-TR rotation failure · 38/241 verified</td></tr>
-            <tr><td class="mono">AR-PL-2416</td><td>28 Mar · 14:30</td><td>Weekly cron</td><td>3h 22m</td><td><span class="badge green">Completed</span></td><td>198 new · 33 newly verified · 14 closed</td></tr>
-          </tbody>
-        </table>
-      </section>
-
+      <!-- Classification + complaints breakdown -->
       <div class="grid-2 row-gap">
         <section class="panel">
-          <div class="panel-head"><h3>Upcoming runs</h3></div>
+          <div class="panel-head"><h3>Classification breakdown</h3></div>
           <div class="panel-body">
-            <ul class="activity-list">
-              <li><div class="activity-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></div><div class="activity-body"><div class="activity-title">Weekly cron — full cycle</div><div class="activity-meta">Tomorrow · 14:30 UTC+3</div></div></li>
-              <li><div class="activity-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></div><div class="activity-body"><div class="activity-title">Re-verification sweep</div><div class="activity-meta">Tomorrow · 03:00 UTC+3 · 47 sites pending recheck</div></div></li>
-              <li><div class="activity-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="12,7 12,12 15,14"/></svg></div><div class="activity-body"><div class="activity-title">Notification retry batch</div><div class="activity-meta">In 6 hours · 12 bounces from previous send</div></div></li>
-            </ul>
+            <div id="cls-chart" class="chart-bars"><div class="loading-spinner">…</div></div>
           </div>
         </section>
-
         <section class="panel">
-          <div class="panel-head"><h3>Manual ingest</h3></div>
+          <div class="panel-head"><h3>Complaints by status</h3></div>
           <div class="panel-body">
-            <p style="color:var(--text-3);font-size:.85rem;margin-bottom:1rem">Drop a backlink CSV from Ahrefs, Majestic or your own crawler — the pipeline will dedupe, score and verify on the next run.</p>
-            <div style="border:2px dashed var(--border-strong);border-radius:8px;padding:1.6rem 1rem;text-align:center;color:var(--text-3);font-size:.85rem;cursor:pointer;transition:border-color .15s">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:28px;height:28px;margin:0 auto .55rem;display:block;color:var(--text-4)"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-              <div style="color:var(--text-2);font-weight:500">Drop CSV here or <a href="#" style="color:var(--teal)">browse files</a></div>
-              <div style="margin-top:.4rem;font-size:.74rem;color:var(--text-4)">Up to 50 MB · UTF-8 · auto-detected delimiter</div>
-            </div>
+            <div id="comp-chart" class="chart-bars"><div class="loading-spinner">…</div></div>
           </div>
         </section>
       </div>
+
+      <!-- Unverified victims -->
+      <section class="panel row-gap">
+        <div class="panel-head">
+          <h3>Unverified victims · awaiting crawl</h3>
+          <span class="meta" id="unv-count">—</span>
+        </div>
+        <div id="unv-host"><div class="loading-spinner">Loading…</div></div>
+      </section>
+
+      <!-- Verified victims -->
+      <section class="panel row-gap">
+        <div class="panel-head">
+          <h3>Verified victims · ready for notification &amp; complaint</h3>
+          <span class="meta" id="ver-count">—</span>
+        </div>
+        <div id="ver-host"><div class="loading-spinner">Loading…</div></div>
+      </section>
+
+      <!-- Attackers -->
+      <section class="panel row-gap">
+        <div class="panel-head">
+          <h3>Top attacker domains</h3>
+          <button class="btn btn-ghost" id="btn-extract">Re-extract</button>
+        </div>
+        <div id="att-host"><div class="loading-spinner">Loading…</div></div>
+      </section>
 
     </div>
   </main>
 </div>
 
+<script src="api.js"></script>
 <script src="console.js"></script>
+<script>
+function barChart(host, items, valueKey, labelKey, kindFn) {
+  if (!items.length) {
+    host.innerHTML = '<div class="empty-state">No data.</div>';
+    return;
+  }
+  const max = Math.max(1, ...items.map(i => i[valueKey] || 0));
+  host.innerHTML = items.map(i => {
+    const pct = Math.round(((i[valueKey] || 0) / max) * 100);
+    const k = kindFn ? kindFn(i) : "";
+    return `
+      <div class="chart-bar-row">
+        <span class="chart-bar-label">${AR.escapeHtml(i[labelKey] || "—")}</span>
+        <span class="chart-bar-track"><span class="chart-bar-fill ${k}" style="width:${pct}%"></span></span>
+        <span class="chart-bar-value">${AR.fmt.num(i[valueKey] || 0)}</span>
+      </div>
+    `;
+  }).join("");
+}
+
+async function loadStatus() {
+  try {
+    const s = await AR.get("/pipeline/status");
+    AR.fillKpis(s);
+    // classification
+    const cls = Object.entries(s.classification || {}).map(([k, v]) => ({label: k, count: v}));
+    barChart(document.getElementById("cls-chart"), cls, "count", "label",
+      i => i.label === "MAGDUR" ? "orange" : i.label === "SALDIRGAN" ? "red" : i.label === "ARAC" ? "gold" : "");
+    // complaints
+    const comps = Object.entries(s.complaints || {}).map(([k, v]) => ({label: k, count: v}));
+    if (comps.length === 0) {
+      document.getElementById("comp-chart").innerHTML = '<div class="empty-state">No complaints filed yet.</div>';
+    } else {
+      barChart(document.getElementById("comp-chart"), comps, "count", "label",
+        i => i.label === "resolved" ? "" : i.label === "pending" ? "orange" : "");
+    }
+  } catch (e) {
+    AR.toast("Status: " + e.message, "error");
+  }
+}
+
+async function loadUnverified() {
+  try {
+    const r = await AR.get("/pipeline/unverified?limit=30");
+    AR.setText("unv-count", `${r.count} sites`);
+    if (!r.sites.length) {
+      AR.showEmpty("unv-host", "All MAGDUR sites have been crawled.");
+      return;
+    }
+    const rows = r.sites.map(s => `
+      <tr>
+        <td><span class="strong">${AR.escapeHtml(s.domain)}</span></td>
+        <td><span class="mono" style="font-size:.74rem;color:var(--text-3)">${AR.escapeHtml(AR.fmt.truncate(s.url, 70))}</span></td>
+        <td>${AR.escapeHtml(s.type || "—")}</td>
+        <td class="right">${s.dr ?? "—"}</td>
+        <td class="right">${AR.fmt.num(s.traffic)}</td>
+        <td class="right"><button class="btn-link" data-domain="${AR.escapeHtml(s.domain)}" data-action="crawl">Crawl cmd →</button></td>
+      </tr>
+    `).join("");
+    document.getElementById("unv-host").innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>Domain</th><th>URL</th><th>Type</th><th class="right">DR</th><th class="right">Traffic</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    document.querySelectorAll('[data-action="crawl"]').forEach(b => {
+      b.addEventListener("click", async () => {
+        try {
+          const r = await AR.post(`/crawl/${b.dataset.domain}`);
+          navigator.clipboard.writeText(r.command);
+          AR.toast("Crawl cmd copied to clipboard", "success");
+        } catch (e) { AR.toast(e.message, "error"); }
+      });
+    });
+  } catch (e) {
+    AR.showError("unv-host", e.message);
+  }
+}
+
+async function loadVerified() {
+  try {
+    const r = await AR.get("/pipeline/verified?limit=50");
+    AR.setText("ver-count", `${r.count} ready`);
+    if (!r.sites.length) {
+      AR.showEmpty("ver-host", "No verified victims yet — crawl first.");
+      return;
+    }
+    const rows = r.sites.map(s => `
+      <tr>
+        <td><span class="strong">${AR.escapeHtml(s.domain)}</span></td>
+        <td>${AR.statusBadge(s.status)}</td>
+        <td class="right strong">${s.hacklink_count}</td>
+        <td class="right">${s.contact_count}</td>
+        <td class="right">${s.notifications_sent}</td>
+        <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(s.last_crawled_at)}</span></td>
+      </tr>
+    `).join("");
+    document.getElementById("ver-host").innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>Domain</th><th>Status</th><th class="right">Hacklinks</th><th class="right">Contacts</th><th class="right">Sent</th><th>Last crawl</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    AR.showError("ver-host", e.message);
+  }
+}
+
+async function loadAttackers() {
+  try {
+    const r = await AR.get("/pipeline/attackers");
+    if (!r.attackers || !r.attackers.length) {
+      AR.showEmpty("att-host", "No attacker domains classified yet.");
+      return;
+    }
+    const rows = r.attackers.slice(0, 30).map(a => `
+      <tr>
+        <td><span class="strong">${AR.escapeHtml(a.domain || a.target_domain || "—")}</span></td>
+        <td class="right">${AR.fmt.num(a.victim_count || a.count || 0)}</td>
+        <td><span class="mono" style="font-size:.74rem">${AR.escapeHtml(a.category_detail || a.detail || "—")}</span></td>
+        <td class="right"><a href="c2.html" class="btn-link">Manage →</a></td>
+      </tr>
+    `).join("");
+    document.getElementById("att-host").innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>Domain</th><th class="right">Victim count</th><th>Detail</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  } catch (e) {
+    AR.showError("att-host", e.message);
+  }
+}
+
+document.getElementById("btn-run").addEventListener("click", async () => {
+  AR.toast("Pipeline running…");
+  try {
+    const r = await AR.post("/pipeline/run");
+    AR.toast(`CSV: ${r.csv?.processed || 0} · classified: ${JSON.stringify(r.classification || {})}`, "success");
+    await Promise.all([loadStatus(), loadUnverified(), loadVerified(), loadAttackers()]);
+  } catch (e) {
+    AR.toast(e.message, "error");
+  }
+});
+
+document.getElementById("btn-extract").addEventListener("click", loadAttackers);
+document.getElementById("btn-refresh").addEventListener("click", () => {
+  loadStatus(); loadUnverified(); loadVerified(); loadAttackers();
+});
+
+loadStatus();
+loadUnverified();
+loadVerified();
+loadAttackers();
+</script>
 </body>
 </html>

@@ -20,112 +20,161 @@
         <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Settings</span></nav>
       </div>
       <div class="topbar-right">
-        <button class="btn btn-ghost">Discard</button>
-        <button class="btn btn-primary">Save changes</button>
+        <button class="btn btn-ghost" id="btn-refresh">Refresh</button>
       </div>
     </header>
 
     <div class="content">
       <div class="page-head">
         <div>
-          <h1>Settings</h1>
-          <p>System health, integrations, jurisdiction scope and team access. Changes audit-logged.</p>
+          <h1>System health &amp; settings</h1>
+          <p>Live status of database, redis, VPN egress, integrations and API keys.</p>
         </div>
       </div>
 
-      <div class="grid-1-2">
-        <!-- Sub-nav -->
-        <nav class="panel" style="padding:.5rem">
-          <div style="display:flex;flex-direction:column">
-            <a href="#system" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--teal);background:var(--teal-soft);font-weight:600">System health</a>
-            <a href="#integrations" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Integrations</a>
-            <a href="#scope" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Jurisdiction scope</a>
-            <a href="#team" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Team &amp; access</a>
-            <a href="#api" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">API keys</a>
-            <a href="#audit" style="padding:.55rem .85rem;border-radius:6px;font-size:.85rem;color:var(--text-2)">Audit log</a>
+      <div class="grid-2 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>System health</h3><span class="dot-status live" id="health-dot"></span></div>
+          <div class="panel-body">
+            <table class="tbl">
+              <tbody id="health-rows">
+                <tr><td><span class="dot-status"></span> Loading…</td></tr>
+              </tbody>
+            </table>
           </div>
-        </nav>
+        </section>
 
-        <div class="stack">
-          <!-- System health -->
-          <section class="panel" id="system">
-            <div class="panel-head"><h3>System health</h3><span class="meta">live</span></div>
-            <div class="panel-body">
-              <table class="tbl">
-                <tbody>
-                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Database (PostgreSQL)</span></td><td><span style="color:var(--text-3);font-size:.78rem">14 connections · 23ms p99</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
-                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Cache (Redis)</span></td><td><span style="color:var(--text-3);font-size:.78rem">112MB used · 0 evictions</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
-                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Backend API (FastAPI)</span></td><td><span style="color:var(--text-3);font-size:.78rem">v1.4.2 · uptime 12d</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
-                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Crawler · VPN-TR</span></td><td><span style="color:var(--text-3);font-size:.78rem">149.102.229.145 · Istanbul</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
-                  <tr><td><span class="dot-status warn"></span> &nbsp;<span class="strong">Crawler · VPN-US</span></td><td><span style="color:var(--text-3);font-size:.78rem">185.213.193.203 · Washington · slow rotation</span></td><td class="right"><span class="badge orange">Slow</span></td></tr>
-                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">Notifier · Resend</span></td><td><span style="color:var(--text-3);font-size:.78rem">domain verified · DKIM ok</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
-                  <tr><td><span class="dot-status live"></span> &nbsp;<span class="strong">OpenClaw agent</span></td><td><span style="color:var(--text-3);font-size:.78rem">v0.6.1 · last action 4m ago</span></td><td class="right"><span class="badge green">Healthy</span></td></tr>
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <!-- Integrations -->
-          <section class="panel" id="integrations">
-            <div class="panel-head"><h3>Integrations</h3></div>
-            <div class="panel-body" style="display:flex;flex-direction:column;gap:.55rem">
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
-                <div><div class="strong" style="font-size:.88rem">Gemini · classifier &amp; vision</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">3 keys active · last call 12s ago</div></div>
-                <span class="badge green">Connected</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
-                <div><div class="strong" style="font-size:.88rem">Resend · outbound email</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">abuseradar.org verified · DMARC pass</div></div>
-                <span class="badge green">Connected</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
-                <div><div class="strong" style="font-size:.88rem">Cloudflare · abuse desk</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">automated complaint filing</div></div>
-                <span class="badge green">Connected</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
-                <div><div class="strong" style="font-size:.88rem">Google Safe Browsing</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">reporting only · no API key required</div></div>
-                <span class="badge muted">Public</span>
-              </div>
-              <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px dashed var(--border);border-radius:7px">
-                <div><div class="strong" style="font-size:.88rem;color:var(--text-3)">Slack · alert routing</div><div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">not configured</div></div>
-                <button class="btn btn-ghost" style="padding:.4rem .75rem;font-size:.78rem">Connect</button>
-              </div>
-            </div>
-          </section>
-
-          <!-- Jurisdiction scope -->
-          <section class="panel" id="scope">
-            <div class="panel-head"><h3>Jurisdiction scope</h3></div>
-            <div class="panel-body">
-              <p style="color:var(--text-3);font-size:.85rem;margin-bottom:1rem">Define which national TLDs and sectors AbuseRadar should track for your engagement.</p>
-              <div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1.2rem">
-                <span class="badge teal">.gov.tr</span>
-                <span class="badge teal">.edu.tr</span>
-                <span class="badge teal">.bel.tr</span>
-                <span class="badge teal">.gov.br</span>
-                <span class="badge teal">.edu.br</span>
-                <span class="badge teal">.gov.ar</span>
-                <span class="badge muted">+12 more</span>
-                <button class="btn btn-ghost" style="padding:.25rem .55rem;font-size:.7rem;border-radius:99px">+ add TLD</button>
-              </div>
-              <div class="field">
-                <label>Sectors in scope</label>
-                <div style="display:flex;flex-wrap:wrap;gap:.4rem">
-                  <span class="badge gold">Government</span>
-                  <span class="badge gold">Higher education</span>
-                  <span class="badge gold">Healthcare</span>
-                  <span class="badge muted">Financial</span>
-                  <span class="badge muted">Critical infra</span>
-                </div>
-              </div>
-            </div>
-          </section>
-
-        </div>
+        <section class="panel">
+          <div class="panel-head"><h3>VPN egress</h3></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:.7rem" id="vpn-host">
+            <div class="loading-spinner">Probing VPN containers…</div>
+          </div>
+        </section>
       </div>
+
+      <div class="grid-2 row-gap">
+        <section class="panel">
+          <div class="panel-head"><h3>Integrations</h3></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:.55rem" id="integ-host">
+            <div class="loading-spinner">Loading…</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h3>Maintenance</h3></div>
+          <div class="panel-body" style="display:flex;flex-direction:column;gap:.5rem">
+            <button class="btn btn-primary" id="btn-monitor" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-3-6.7L21 8"/><polyline points="21 3 21 8 16 8"/></svg>
+              Run weekly monitoring cycle
+            </button>
+            <a href="csv.html" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
+              Process CSV inbox
+            </a>
+            <a href="pipeline.html" class="btn btn-ghost" style="justify-content:flex-start">
+              <svg viewBox="0 0 24 24"><polygon points="6,4 20,12 6,20"/></svg>
+              Run pipeline
+            </a>
+          </div>
+        </section>
+      </div>
+
     </div>
   </main>
 </div>
 
+<script src="api.js"></script>
 <script src="console.js"></script>
+<script>
+function statusBadge(s) {
+  if (typeof s === "string" && s.startsWith("error")) return AR.badge(s.slice(0, 30), "red");
+  if (s === "healthy" || s === "ok") return AR.badge("Healthy", "green");
+  if (s === "set") return AR.badge("Configured", "green");
+  if (s === "missing") return AR.badge("Missing", "orange");
+  return AR.badge(String(s), "muted");
+}
+
+async function loadHealth() {
+  try {
+    const h = await AR.get("/health/detailed");
+    const rows = [
+      ["Database (PostgreSQL)", h.db],
+      ["Cache (Redis)", h.redis],
+      ["Gemini API key", h.gemini_key],
+      ["Resend API key", h.resend_key],
+    ];
+    document.getElementById("health-rows").innerHTML = rows.map(([k, v]) => `
+      <tr>
+        <td><span class="dot-status ${v === 'healthy' || v === 'set' ? 'live' : 'warn'}"></span> &nbsp;<span class="strong">${AR.escapeHtml(k)}</span></td>
+        <td class="right">${statusBadge(v)}</td>
+      </tr>
+    `).join("");
+  } catch (e) {
+    document.getElementById("health-rows").innerHTML = `<tr><td colspan="2"><div class="error-banner">${AR.escapeHtml(e.message)}</div></td></tr>`;
+  }
+}
+
+async function loadVpn() {
+  const host = document.getElementById("vpn-host");
+  host.innerHTML = "";
+  for (const name of ["tr", "us"]) {
+    try {
+      const v = await AR.get(`/vpn/${name}/status`);
+      const ok = v.status === "ok";
+      host.innerHTML += `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
+          <div>
+            <div class="strong" style="font-size:.88rem">VPN-${name.toUpperCase()} ${ok ? "🟢" : "⚠"}</div>
+            <div style="font-size:.72rem;color:var(--text-4);margin-top:.15rem">
+              ${ok ? `${AR.escapeHtml(v.ip || "")} · ${AR.escapeHtml(v.city || "")} ${AR.escapeHtml(v.country || "")}` : AR.escapeHtml(v.status || "down")}
+            </div>
+          </div>
+          ${ok ? AR.badge("Healthy", "green") : AR.badge("Down", "red")}
+        </div>
+      `;
+    } catch (e) {
+      host.innerHTML += `<div class="error-banner">VPN-${name.toUpperCase()}: ${AR.escapeHtml(e.message)}</div>`;
+    }
+  }
+}
+
+async function loadIntegrations() {
+  try {
+    const h = await AR.get("/health/detailed");
+    const items = [
+      { name: "Gemini · classifier & vision", status: h.gemini_key === "set" ? "connected" : "missing" },
+      { name: "Resend · outbound email", status: h.resend_key === "set" ? "connected" : "missing" },
+      { name: "Cloudflare abuse · OpenClaw", status: "automated" },
+      { name: "Google Safe Browsing", status: "public" },
+    ];
+    document.getElementById("integ-host").innerHTML = items.map(i => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:.7rem .9rem;border:1px solid var(--border);border-radius:7px">
+        <div class="strong" style="font-size:.85rem">${AR.escapeHtml(i.name)}</div>
+        ${i.status === "connected" ? AR.badge("Connected", "green") :
+          i.status === "missing" ? AR.badge("API key missing", "orange") :
+          AR.badge(i.status, "muted")}
+      </div>
+    `).join("");
+  } catch (e) {
+    document.getElementById("integ-host").innerHTML = `<div class="error-banner">${AR.escapeHtml(e.message)}</div>`;
+  }
+}
+
+document.getElementById("btn-monitor").addEventListener("click", async () => {
+  AR.toast("Weekly monitoring running…");
+  try {
+    const r = await AR.post("/monitor/weekly");
+    AR.toast(`Done: ${JSON.stringify(r).slice(0, 80)}`, "success");
+  } catch (e) { AR.toast(e.message, "error"); }
+});
+
+document.getElementById("btn-refresh").addEventListener("click", () => {
+  loadHealth(); loadVpn(); loadIntegrations();
+});
+
+loadHealth();
+loadVpn();
+loadIntegrations();
+</script>
 </body>
 </html>

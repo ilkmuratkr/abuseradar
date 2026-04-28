@@ -163,16 +163,19 @@ sudo chown -R www-data:www-data /var/www/abuseradar
 
 > Alternative: skip nginx and use **Caddy** — auto-SSL, simpler config. See `infra/Caddyfile`.
 
-## 8. Optional: protect the admin paths
+## 8. Console basic auth (REQUIRED — nginx config expects htpasswd)
 
-The Streamlit dashboard at `/admin/` ships with no auth. Either remove that location block from `infra/nginx/abuseradar.conf`, or put basic auth in front:
+The admin console at `/console/` and API at `/api/` are protected by nginx basic auth. Create the htpasswd file before reloading nginx:
 
 ```bash
 sudo apt install -y apache2-utils
-sudo htpasswd -c /etc/nginx/.htpasswd analyst
-# uncomment the auth_basic lines in /etc/nginx/sites-available/abuseradar.conf
-sudo systemctl reload nginx
+sudo htpasswd -cb /etc/nginx/.abuseradar.htpasswd Enki '<your_password>'
+sudo chmod 640 /etc/nginx/.abuseradar.htpasswd
+sudo chown root:www-data /etc/nginx/.abuseradar.htpasswd
+sudo nginx -t && sudo systemctl reload nginx
 ```
+
+To add more users: `sudo htpasswd -b /etc/nginx/.abuseradar.htpasswd <user> <pass>`.
 
 ## 9. Boot-time auto-start
 
@@ -218,7 +221,7 @@ For a static-only site change (HTML/CSS/JS), nothing to rebuild — nginx serves
 | VPN unhealthy | `docker compose logs vpn-tr` — wg0.conf valid? Provider endpoint reachable? |
 | `make vpn-check` returns wrong country | The microsocks proxy hasn't started yet; wait 30 s and retry |
 | Certbot fails | DNS A-record missing or not propagated. Check with `dig abuseradar.org` |
-| Streamlit `/admin/` blank | Add the websocket headers (already in `abuseradar.conf`) and reload nginx |
+| `/console/` 401 | Re-create htpasswd: `sudo htpasswd -cb /etc/nginx/.abuseradar.htpasswd Enki '<pass>'`, then reload nginx |
 | Postgres won't start | Old `pgdata` volume from an earlier password — `docker compose down -v` if it's safe to wipe |
 
 ## 13. Mac / Ubuntu differences (one-pager)

@@ -20,92 +20,148 @@
         <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Attackers</span></nav>
       </div>
       <div class="topbar-right">
-        <div class="search">
-          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>
-          <input type="text" placeholder="Search domain, ASN, registrar…">
-          <kbd>⌘K</kbd>
-        </div>
+        <a href="c2.html" class="btn btn-primary">C2 management →</a>
       </div>
     </header>
 
     <div class="content">
       <div class="page-head">
         <div>
-          <h1>Attacker infrastructure</h1>
-          <p>3,745 attacker domains mapped to 18 operator clusters. C2 servers, redirectors, link farms and exfiltration endpoints.</p>
-        </div>
-        <div class="page-head-actions">
-          <button class="btn btn-ghost">Export graph</button>
-          <button class="btn btn-primary">Map new operator</button>
+          <h1>Attacker network</h1>
+          <p>Domains classified SALDIRGAN — link farms, redirectors, PBN hubs, sahte SEO services. Grouped by category_detail.</p>
         </div>
       </div>
 
       <div class="kpis">
-        <div class="kpi red">
-          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg></span>Total domains</div>
-          <div class="kpi-value" data-target="3745">3,745</div>
-          <div class="kpi-trend">across 18 clusters</div>
-        </div>
-        <div class="kpi gold">
-          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>C2 servers</div>
-          <div class="kpi-value" data-target="42">42</div>
-          <div class="kpi-trend">3 confirmed primary</div>
-        </div>
-        <div class="kpi orange">
-          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><path d="M5 12l4 4L19 6"/></svg></span>Redirectors</div>
-          <div class="kpi-value" data-target="187">187</div>
-          <div class="kpi-trend">12 just rotated</div>
-        </div>
-        <div class="kpi green">
-          <div class="kpi-label"><span class="kpi-icon"><svg viewBox="0 0 24 24"><polyline points="22,6 12,16 6,10"/></svg></span>Disrupted</div>
-          <div class="kpi-value" data-target="64">64</div>
-          <div class="kpi-trend">last 90 days</div>
-        </div>
+        <div class="kpi red"><div class="kpi-label">Attacker domains</div><div class="kpi-value" data-kpi="attacker_sites" data-dynamic="1">—</div><div class="kpi-trend">SALDIRGAN classified</div></div>
+        <div class="kpi gold"><div class="kpi-label">C2 domains</div><div class="kpi-value" data-kpi="c2_domains" data-dynamic="1">—</div><div class="kpi-trend"><a href="c2.html" class="btn-link">Manage →</a></div></div>
+        <div class="kpi orange"><div class="kpi-label">Detected hacklinks</div><div class="kpi-value" data-kpi="detected_hacklinks" data-dynamic="1">—</div><div class="kpi-trend">crawl-detected</div></div>
+        <div class="kpi"><div class="kpi-label">Verified victims</div><div class="kpi-value" data-kpi="verified_injections" data-dynamic="1">—</div><div class="kpi-trend">on-site confirmed</div></div>
       </div>
 
       <div class="grid-2-1 row-gap">
         <section class="panel">
-          <div class="panel-head">
-            <h3>Operator clusters</h3>
-            <span class="meta">ranked by victim impact</span>
+          <div class="panel-head"><h3>Attacker categories</h3><span class="meta" id="att-cat-count">—</span></div>
+          <div class="panel-body">
+            <div id="att-cat-chart" class="chart-bars"><div class="loading-spinner">…</div></div>
           </div>
-          <table class="tbl">
-            <thead><tr><th>Cluster</th><th>Operator hint</th><th>Victims</th><th>Domains</th><th>Hosting / ASN</th><th>Status</th><th></th></tr></thead>
-            <tbody>
-              <tr><td><span class="mono strong">#03</span></td><td>scriptapi.dev</td><td>412</td><td>1,184</td><td>AS14618 · AWS</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-              <tr><td><span class="mono strong">#07</span></td><td>hacklinkbacklink.com</td><td>318</td><td>892</td><td>AS197540 · netcup</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-              <tr><td><span class="mono strong">#11</span></td><td>adsfarm-x</td><td>241</td><td>514</td><td>AS24940 · Hetzner</td><td><span class="badge orange">Disrupting</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-              <tr><td><span class="mono strong">#14</span></td><td>cobet-network</td><td>174</td><td>421</td><td>AS9009 · M247</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-              <tr><td><span class="mono strong">#18</span></td><td>pharma-rdr</td><td>117</td><td>312</td><td>AS16276 · OVH</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-              <tr><td><span class="mono strong">#02</span></td><td>cas-spinner</td><td>89</td><td>168</td><td>AS200752 · Stark</td><td><span class="badge gold">Watching</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-              <tr><td><span class="mono strong">#09</span></td><td>scriptdrop</td><td>71</td><td>142</td><td>AS21859 · Zenlayer</td><td><span class="badge green">Closed</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-              <tr><td><span class="mono strong">#21</span></td><td>multifarm</td><td>54</td><td>112</td><td>AS47583 · Hostinger</td><td><span class="badge red">Active</span></td><td class="right"><a href="evidence-detail.html" class="btn-link">Map →</a></td></tr>
-            </tbody>
-          </table>
         </section>
 
         <section class="panel">
-          <div class="panel-head"><h3>Hosting concentration</h3></div>
-          <div class="panel-body">
-            <div class="chart-bars">
-              <div class="chart-bar-row"><span class="chart-bar-label">AWS (AS14618)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="100"></span></span><span class="chart-bar-value">1,184</span></div>
-              <div class="chart-bar-row"><span class="chart-bar-label">netcup (AS197540)</span><span class="chart-bar-track"><span class="chart-bar-fill orange" data-pct="75"></span></span><span class="chart-bar-value">892</span></div>
-              <div class="chart-bar-row"><span class="chart-bar-label">Hetzner (AS24940)</span><span class="chart-bar-track"><span class="chart-bar-fill gold" data-pct="43"></span></span><span class="chart-bar-value">514</span></div>
-              <div class="chart-bar-row"><span class="chart-bar-label">M247 (AS9009)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="36"></span></span><span class="chart-bar-value">421</span></div>
-              <div class="chart-bar-row"><span class="chart-bar-label">OVH (AS16276)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="26"></span></span><span class="chart-bar-value">312</span></div>
-              <div class="chart-bar-row"><span class="chart-bar-label">Other (12 ASNs)</span><span class="chart-bar-track"><span class="chart-bar-fill" data-pct="36"></span></span><span class="chart-bar-value">422</span></div>
-            </div>
-            <div style="margin-top:1.4rem;padding-top:.9rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3);line-height:1.55">
-              Top 5 hosts account for <strong style="color:var(--text)">88.7%</strong> of mapped attacker infra. Disrupting AWS + netcup unhooks an estimated 2,076 domains.
-            </div>
-          </div>
+          <div class="panel-head"><h3>Top extracted attacker domains</h3></div>
+          <div id="att-host"><div class="loading-spinner">Loading…</div></div>
         </section>
       </div>
+
+      <section class="panel row-gap">
+        <div class="panel-head">
+          <h3>Category detail</h3>
+          <select id="cat-select" style="padding:.4rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem"></select>
+        </div>
+        <div id="cat-detail-host"></div>
+      </section>
 
     </div>
   </main>
 </div>
 
+<script src="api.js"></script>
 <script src="console.js"></script>
+<script>
+async function loadStats() {
+  try {
+    const s = await AR.get("/stats");
+    AR.fillKpis(s);
+  } catch (e) { AR.toast(e.message, "error"); }
+}
+
+async function loadAttackerCats() {
+  try {
+    // Backend'den SALDIRGAN backlinkleri çek + grupla
+    const r = await AR.get("/backlinks?category=SALDIRGAN&limit=1000");
+    AR.setText("att-cat-count", `${AR.fmt.num(r.total)} attacker backlinks`);
+
+    if (!r.detail_breakdown.length) {
+      document.getElementById("att-cat-chart").innerHTML = '<div class="empty-state">No SALDIRGAN data.</div>';
+      document.getElementById("cat-select").innerHTML = '<option>—</option>';
+      return;
+    }
+
+    const max = Math.max(1, ...r.detail_breakdown.map(d => d.count));
+    document.getElementById("att-cat-chart").innerHTML = r.detail_breakdown.map(d => {
+      const pct = Math.round((d.count / max) * 100);
+      return `
+        <div class="chart-bar-row">
+          <span class="chart-bar-label" style="font-size:.74rem">${AR.escapeHtml(d.detail)}</span>
+          <span class="chart-bar-track"><span class="chart-bar-fill red" style="width:${pct}%"></span></span>
+          <span class="chart-bar-value">${AR.fmt.num(d.count)}</span>
+        </div>
+      `;
+    }).join("");
+
+    // Cat select doldur
+    const sel = document.getElementById("cat-select");
+    sel.innerHTML = r.detail_breakdown.map(d => `<option value="${AR.escapeHtml(d.detail)}">${AR.escapeHtml(d.detail)} (${d.count})</option>`).join("");
+    sel.addEventListener("change", () => loadCatDetail(sel.value));
+    if (r.detail_breakdown.length) loadCatDetail(r.detail_breakdown[0].detail);
+  } catch (e) {
+    AR.showError("att-cat-chart", e.message);
+  }
+}
+
+async function loadCatDetail(detail) {
+  const host = document.getElementById("cat-detail-host");
+  AR.showLoading("cat-detail-host");
+  try {
+    // detail breakdown'da olduğu gibi backlinks endpoint'inden topla
+    // Kolaylık için tüm SALDIRGAN'ları çekip filter ediyoruz
+    const r = await AR.get("/backlinks?category=SALDIRGAN&limit=500");
+    const items = r.backlinks.filter(b => b.category_detail === detail).slice(0, 80);
+    if (!items.length) {
+      AR.showEmpty("cat-detail-host", "No items in this category detail.");
+      return;
+    }
+    const rows = items.map(b => `
+      <tr>
+        <td><span class="strong" style="font-size:.82rem">${AR.escapeHtml(AR.fmt.domain(b.referring_url))}</span></td>
+        <td><span class="mono" style="font-size:.74rem">${AR.escapeHtml(AR.fmt.truncate(b.anchor_text || "—", 40))}</span></td>
+        <td class="right strong" style="color:var(--red)">${b.spam_score}</td>
+        <td><span style="font-size:.74rem;color:var(--text-4)">${AR.fmt.relative(b.last_seen)}</span></td>
+      </tr>
+    `).join("");
+    host.innerHTML = `<table class="tbl"><thead><tr><th>Domain</th><th>Anchor</th><th class="right">Spam</th><th>Last seen</th></tr></thead><tbody>${rows}</tbody></table>`;
+  } catch (e) {
+    AR.showError("cat-detail-host", e.message);
+  }
+}
+
+async function loadAttackerList() {
+  try {
+    const r = await AR.get("/pipeline/attackers");
+    if (!r.attackers || !r.attackers.length) {
+      AR.showEmpty("att-host", "No attacker domains extracted yet.");
+      return;
+    }
+    const rows = r.attackers.slice(0, 25).map(a => {
+      const domain = a.domain || a.target_domain || "—";
+      const count = a.victim_count ?? a.count ?? 0;
+      return `
+        <tr>
+          <td><span class="strong">${AR.escapeHtml(domain)}</span></td>
+          <td class="right">${AR.fmt.num(count)}</td>
+          <td><span class="mono" style="font-size:.74rem">${AR.escapeHtml(a.category_detail || a.detail || "—")}</span></td>
+        </tr>
+      `;
+    }).join("");
+    document.getElementById("att-host").innerHTML = `<table class="tbl"><thead><tr><th>Attacker domain</th><th class="right">Victim count</th><th>Detail</th></tr></thead><tbody>${rows}</tbody></table>`;
+  } catch (e) {
+    AR.showError("att-host", e.message);
+  }
+}
+
+loadStats();
+loadAttackerCats();
+loadAttackerList();
+</script>
 </body>
 </html>

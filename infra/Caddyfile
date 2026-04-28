@@ -1,13 +1,12 @@
 # ════════════════════════════════════════════════════════
-# AbuseRadar — Caddy alternative (zero-config TLS, simpler than nginx)
-# Place at /etc/caddy/Caddyfile and `systemctl reload caddy`.
-# Caddy auto-provisions Let's Encrypt certs on first start.
+# AbuseRadar — Caddy alternative (Cloudflare Origin cert)
 # ════════════════════════════════════════════════════════
 
 abuseradar.org, www.abuseradar.org {
+    tls /etc/ssl/cloudflare/abuseradar.org.pem /etc/ssl/cloudflare/abuseradar.org.key
+
     encode gzip
 
-    # ─── Security headers ───
     header {
         Strict-Transport-Security "max-age=31536000; includeSubDomains"
         X-Content-Type-Options "nosniff"
@@ -16,24 +15,20 @@ abuseradar.org, www.abuseradar.org {
         Permissions-Policy "geolocation=(), microphone=(), camera=()"
     }
 
-    # Static site (web/ directory, deployed to /var/www/abuseradar/web)
-    root * /var/www/abuseradar/web
+    root * /opt/abuseradar/web
+
+    # Console + API behind basic auth
+    @console path /console* /api*
+    basicauth @console {
+        Enki $2a$14$REPLACE_WITH_caddy_hash_password_OUTPUT
+    }
 
     # FastAPI backend
     handle_path /api/* {
         reverse_proxy 127.0.0.1:7777
     }
 
-    # Streamlit dashboard (websocket-aware). Protect with basic auth in prod.
-    handle_path /admin/* {
-        # Uncomment to enable basic auth:
-        # basicauth {
-        #     analyst $2a$14$...   # caddy hash-password
-        # }
-        reverse_proxy 127.0.0.1:7778
-    }
-
-    # Long-cache static assets
+    # Long-cache static
     @static path *.png *.jpg *.jpeg *.webp *.svg *.woff *.woff2
     header @static Cache-Control "public, max-age=2592000, immutable"
 
