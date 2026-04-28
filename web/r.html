@@ -283,7 +283,8 @@ async function loadReport() {
   }
 
   el("content").style.display = "block";
-  const { domain, bundle, hacklinks, hosting } = data;
+  const { domain, bundle, hacklinks } = data;
+  let hosting = null;
 
   // Header
   el("i-domain").textContent = domain;
@@ -425,24 +426,29 @@ async function loadReport() {
     }).join("");
   }
 
-  // Hosting
-  if (!hosting || hosting.error) {
-    el("hosting-body").innerHTML = '<div class="callout orange">Hosting lookup unavailable.</div>';
-  } else {
+  // Hosting — async lazy load (WHOIS yavaş)
+  el("hosting-body").innerHTML = '<div class="callout orange">Looking up hosting / registrar…</div>';
+  fetch(`/api/public/reports/${encodeURIComponent(token)}/hosting`).then(r => r.json()).then(h => {
+    if (!h || h.error) {
+      el("hosting-body").innerHTML = '<div class="callout orange">Hosting lookup unavailable.</div>';
+      return;
+    }
     el("hosting-body").innerHTML = `
       <div class="panel"><div class="panel-pad">
         <table class="hl-tbl">
           <tbody>
-            <tr><th style="width:32%">IP address</th><td class="mono">${escapeHtml(hosting.ip || "—")}</td></tr>
-            <tr><th>ASN</th><td class="mono">${escapeHtml(hosting.asn || "—")}</td></tr>
-            <tr><th>Hosting provider</th><td>${escapeHtml(hosting.hosting_provider || hosting.provider || "—")}</td></tr>
-            <tr><th>Cloudflare-fronted</th><td>${hosting.cloudflare_protected ? "Yes" : "No"}</td></tr>
-            <tr><th>Registrar</th><td>${escapeHtml(hosting.registrar || "—")}</td></tr>
+            <tr><th style="width:32%">IP address</th><td class="mono">${escapeHtml(h.ip || "—")}</td></tr>
+            <tr><th>ASN</th><td class="mono">${escapeHtml(h.asn || "—")}</td></tr>
+            <tr><th>Hosting provider</th><td>${escapeHtml(h.hosting_provider || h.provider || "—")}</td></tr>
+            <tr><th>Cloudflare-fronted</th><td>${h.cloudflare_protected ? "Yes" : "No"}</td></tr>
+            <tr><th>Registrar</th><td>${escapeHtml(h.registrar || "—")}</td></tr>
           </tbody>
         </table>
       </div></div>
     `;
-  }
+  }).catch(() => {
+    el("hosting-body").innerHTML = '<div class="callout orange">Hosting lookup failed.</div>';
+  });
 }
 </script>
 </body>

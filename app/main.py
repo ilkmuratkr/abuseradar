@@ -1031,21 +1031,33 @@ async def public_report(token: str):
 
     hacklinks = evidence_reader.get_hacklinks(domain) or {}
 
-    # Hosting info (varsa)
-    hosting_info = None
-    try:
-        from complainant.hosting import get_hosting_info
-        hosting_info = await get_hosting_info(domain)
-    except Exception:
-        hosting_info = None
-
+    # Hosting info AYRI endpoint'e taşındı (WHOIS yavaş, lazy load).
     return {
         "domain": domain,
         "bundle": bundle,
         "hacklinks": hacklinks,
-        "hosting": hosting_info,
         "view_count": rt.view_count,
     }
+
+
+@app.get("/public/reports/{token}/hosting")
+async def public_report_hosting(token: str):
+    """AUTH GEREKMEZ. Hosting/WHOIS info — yavaş çağrı, frontend lazy load eder."""
+    async with async_session() as session:
+        rt_q = await session.execute(
+            select(ReportToken).where(ReportToken.token == token)
+        )
+        rt = rt_q.scalar_one_or_none()
+        if not rt or rt.revoked:
+            raise HTTPException(404, "Invalid link")
+        if rt.expires_at and rt.expires_at < datetime.now(timezone.utc):
+            raise HTTPException(410, "Link expired")
+        domain = rt.domain
+    try:
+        from complainant.hosting import get_hosting_info
+        return await get_hosting_info(domain)
+    except Exception as e:
+        return {"error": str(e)}
 
 
 @app.get("/public/reports/{token}/screenshot/{name}")
