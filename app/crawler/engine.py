@@ -24,7 +24,8 @@ from .html_analyzer import (
 
 logger = logging.getLogger(__name__)
 
-MAX_PAGES_PER_SITE = 10  # multi-page crawl limit
+MAX_PAGES_PER_SITE = 5  # multi-page crawl limit
+SAME_DOMAIN_DELAY_SEC = 2  # sayfalar arası bekleme
 
 
 async def get_known_spam_domains() -> set[str]:
@@ -398,9 +399,8 @@ async def crawl_site(homepage_url: str, max_pages: int = MAX_PAGES_PER_SITE) -> 
     for idx, page_url in enumerate(pages, start=1):
         # Same-domain rate limit — sayfalar arası bekle (ilk sayfa hariç)
         if idx > 1:
-            delay = settings.crawl_same_domain_delay or 5
-            logger.info(f"[{domain}] Page {idx}/{len(pages)}: waiting {delay}s (rate-limit) → {page_url}")
-            await asyncio.sleep(delay)
+            logger.info(f"[{domain}] Page {idx}/{len(pages)}: waiting {SAME_DOMAIN_DELAY_SEC}s (rate-limit) → {page_url}")
+            await asyncio.sleep(SAME_DOMAIN_DELAY_SEC)
         else:
             logger.info(f"[{domain}] Page {idx}/{len(pages)}: {page_url}")
         try:
