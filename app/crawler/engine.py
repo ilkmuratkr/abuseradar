@@ -175,7 +175,9 @@ async def crawl_and_analyze(
                 js_diff_raw = compare_raw_vs_rendered(
                     raw_link_set, rendered_link_set, domain
                 )
-                # Enrich: all_links'ten anchor metnini ve link bilgisini eşle
+                # Enrich: rendered_hacklinks ZENGIN (text, score, reasons) — bunu source-of-truth al
+                rendered_by_href = {hl.get("href", ""): hl for hl in result["rendered_hacklinks"] if hl.get("href")}
+                # all_links: anchor + title fallback için
                 links_by_href = {}
                 for link in all_links:
                     h = link.get("href", "")
@@ -184,14 +186,21 @@ async def crawl_and_analyze(
                 enriched = []
                 for hl in js_diff_raw:
                     h = hl.get("href", "")
+                    rendered_match = rendered_by_href.get(h, {})
                     src_link = links_by_href.get(h, {})
                     enriched_hl = dict(hl)
-                    # Anchor metnini ekle
-                    if not enriched_hl.get("text") and not enriched_hl.get("anchor_text"):
-                        enriched_hl["text"] = (src_link.get("text") or src_link.get("title") or "").strip()
-                    # title attribute (gambling sites bazen title kullanır)
-                    if src_link.get("title"):
-                        enriched_hl["title"] = src_link["title"]
+                    # Önce rendered_hacklinks'ten al (zengin veri: anchor + score + reasons)
+                    if rendered_match:
+                        enriched_hl["text"] = enriched_hl.get("text") or rendered_match.get("text") or rendered_match.get("anchor_text") or ""
+                        enriched_hl["title"] = enriched_hl.get("title") or rendered_match.get("title") or ""
+                        enriched_hl["score"] = enriched_hl.get("score") or rendered_match.get("score") or 0
+                        enriched_hl["reasons"] = enriched_hl.get("reasons") or rendered_match.get("reasons") or rendered_match.get("detection_reasons") or []
+                        enriched_hl["hiding_method"] = enriched_hl.get("hiding_method") or rendered_match.get("hiding_method")
+                    # Yedek: all_links'ten anchor + title
+                    if not enriched_hl.get("text"):
+                        enriched_hl["text"] = (src_link.get("text") or "").strip()
+                    if not enriched_hl.get("title"):
+                        enriched_hl["title"] = (src_link.get("title") or "").strip()
                     enriched.append(enriched_hl)
                 result["js_diff_hacklinks"] = enriched
                 if result["js_diff_hacklinks"]:
