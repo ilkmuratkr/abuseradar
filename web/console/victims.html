@@ -136,9 +136,12 @@ function renderTable() {
         <td class="right strong" style="color:var(--orange)">${v.spam_score}</td>
         <td>${verified}</td>
         <td><span style="font-size:.74rem;color:var(--text-4)">${AR.fmt.relative(v.last_seen)}</span></td>
-        <td class="right">
-          <button class="btn-link crawl-btn" data-domain="${AR.escapeHtml(domain)}" data-url="${AR.escapeHtml(v.url)}">
-            Crawl →
+        <td class="right" style="white-space:nowrap">
+          <button class="btn-link crawl-btn" data-domain="${AR.escapeHtml(domain)}" data-url="${AR.escapeHtml(v.url)}" style="margin-right:.4rem">
+            Crawl
+          </button>
+          <button class="btn-link mail-btn" data-domain="${AR.escapeHtml(domain)}" data-url="${AR.escapeHtml(v.url)}">
+            Mail
           </button>
         </td>
       </tr>
@@ -152,6 +155,11 @@ function renderTable() {
     </table>
     <div style="padding:.7rem 1.1rem;border-top:1px solid var(--border);font-size:.78rem;color:var(--text-3)">Showing ${items.length} rows</div>
   `;
+
+  // Mail butonlarını bağla
+  document.querySelectorAll(".mail-btn").forEach(btn => {
+    btn.addEventListener("click", () => openMailModal(btn.dataset.domain));
+  });
 
   // Crawl butonlarını bağla
   document.querySelectorAll(".crawl-btn").forEach(btn => {
@@ -172,6 +180,137 @@ function renderTable() {
       }
     });
   });
+}
+
+// ─── Mail modal ─────────────────────────────────────────────
+function ensureMailModal() {
+  if (document.getElementById("mail-modal")) return;
+  const m = document.createElement("div");
+  m.id = "mail-modal";
+  m.style.cssText = "position:fixed;inset:0;background:rgba(0,16,22,0.75);z-index:500;display:none;align-items:center;justify-content:center;padding:1rem";
+  m.innerHTML = `
+    <div style="background:var(--bg-card);border:1px solid var(--border-hi);border-radius:10px;width:100%;max-width:580px;max-height:80vh;display:flex;flex-direction:column">
+      <div style="padding:1rem 1.2rem;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <h3 style="margin:0;font-size:1rem" id="mm-title">Send breach notification</h3>
+        <button class="icon-btn" id="mm-close" aria-label="Close"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+      </div>
+      <div id="mm-body" style="padding:1rem 1.2rem;overflow-y:auto;flex:1">Loading…</div>
+      <div style="padding:.85rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;gap:.6rem">
+        <span id="mm-counter" style="font-size:.78rem;color:var(--text-3)">0 / 10 selected</span>
+        <div style="display:flex;gap:.5rem">
+          <button class="btn btn-ghost" id="mm-find">Find contacts</button>
+          <button class="btn btn-primary" id="mm-send" disabled>Send selected</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(m);
+  m.addEventListener("click", (e) => { if (e.target === m) closeMailModal(); });
+  document.getElementById("mm-close").addEventListener("click", closeMailModal);
+}
+
+function closeMailModal() {
+  const m = document.getElementById("mail-modal");
+  if (m) m.style.display = "none";
+}
+
+let MAIL_DOMAIN = null;
+let MAIL_CONTACTS = [];
+
+async function openMailModal(domain) {
+  ensureMailModal();
+  MAIL_DOMAIN = domain;
+  document.getElementById("mm-title").textContent = `Notify: ${domain}`;
+  document.getElementById("mail-modal").style.display = "flex";
+  document.getElementById("mm-body").innerHTML = '<div class="loading-spinner">Loading saved contacts…</div>';
+  document.getElementById("mm-find").onclick = () => findContacts(domain);
+  document.getElementById("mm-send").onclick = sendSelected;
+
+  try {
+    const r = await AR.get(`/contacts/${encodeURIComponent(domain)}/saved`);
+    MAIL_CONTACTS = r.contacts || [];
+    renderMailContacts();
+  } catch (e) {
+    document.getElementById("mm-body").innerHTML = `<div class="error-banner">${AR.escapeHtml(e.message)}</div>`;
+  }
+}
+
+function renderMailContacts() {
+  const body = document.getElementById("mm-body");
+  if (!MAIL_CONTACTS.length) {
+    body.innerHTML = '<div class="empty-state">No saved contacts yet. Click "Find contacts" to scan WHOIS, security.txt and the site itself for emails.</div>';
+    updateCounter();
+    return;
+  }
+  body.innerHTML = `
+    <div style="font-size:.78rem;color:var(--text-3);margin-bottom:.7rem">Pick up to 10 recipients. Mail goes from <span class="mono">research@abuseradar.org</span>, Reply-To <span class="mono">team@abuseradar.org</span>.</div>
+    <div style="display:flex;flex-direction:column;gap:.4rem">
+      ${MAIL_CONTACTS.map(c => `
+        <label style="display:flex;align-items:center;gap:.6rem;padding:.55rem .7rem;border:1px solid var(--border);border-radius:6px;cursor:pointer">
+          <input type="checkbox" class="mm-cb" data-id="${c.id}" style="accent-color:var(--teal);flex:0 0 auto">
+          <div style="flex:1;min-width:0">
+            <div class="mono" style="font-size:.82rem;color:var(--text)">${AR.escapeHtml(c.email)}</div>
+            <div style="font-size:.7rem;color:var(--text-4);margin-top:.15rem">type: ${AR.escapeHtml(c.contact_type || "—")} · source: ${AR.escapeHtml(c.source || "—")}</div>
+          </div>
+        </label>
+      `).join("")}
+    </div>
+  `;
+  body.querySelectorAll(".mm-cb").forEach(cb => cb.addEventListener("change", updateCounter));
+  updateCounter();
+}
+
+function updateCounter() {
+  const checked = document.querySelectorAll(".mm-cb:checked");
+  const n = checked.length;
+  document.getElementById("mm-counter").textContent = `${n} / 10 selected`;
+  document.getElementById("mm-counter").style.color = n > 10 ? "var(--red)" : "var(--text-3)";
+  // 10'u aşmayı engelle
+  if (n >= 10) {
+    document.querySelectorAll(".mm-cb:not(:checked)").forEach(cb => cb.disabled = true);
+  } else {
+    document.querySelectorAll(".mm-cb").forEach(cb => cb.disabled = false);
+  }
+  document.getElementById("mm-send").disabled = n === 0 || n > 10;
+}
+
+async function findContacts(domain) {
+  const findBtn = document.getElementById("mm-find");
+  findBtn.disabled = true;
+  findBtn.textContent = "Searching…";
+  document.getElementById("mm-body").innerHTML = '<div class="loading-spinner">Scanning WHOIS, security.txt, site pages…</div>';
+  try {
+    const r = await AR.post(`/contacts/${encodeURIComponent(domain)}`);
+    MAIL_CONTACTS = r.contacts || [];
+    AR.toast(`${r.count} contact found`, "success");
+    renderMailContacts();
+  } catch (e) {
+    document.getElementById("mm-body").innerHTML = `<div class="error-banner">${AR.escapeHtml(e.message)}</div>`;
+    AR.toast(e.message, "error");
+  } finally {
+    findBtn.disabled = false;
+    findBtn.textContent = "Find contacts";
+  }
+}
+
+async function sendSelected() {
+  const ids = Array.from(document.querySelectorAll(".mm-cb:checked")).map(cb => parseInt(cb.dataset.id, 10));
+  if (!ids.length) return;
+  if (!confirm(`${ids.length} adrese mail gönderilsin mi?\n\nFrom: research@abuseradar.org\nReply-To: team@abuseradar.org\n\nThis is real outbound email — make sure the site is verified.`)) return;
+
+  const sendBtn = document.getElementById("mm-send");
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Sending…";
+  try {
+    const r = await AR.post("/notifications/send-batch", { contact_ids: ids });
+    AR.toast(`Sent: ${r.sent}, skipped: ${r.skipped}, errors: ${r.errors}`, r.errors ? "error" : "success");
+    sendBtn.textContent = `Sent ${r.sent}`;
+    setTimeout(closeMailModal, 1500);
+  } catch (e) {
+    AR.toast(e.message, "error");
+    sendBtn.textContent = "Send selected";
+    sendBtn.disabled = false;
+  }
 }
 
 async function pollCrawlStatus(domain, btn) {

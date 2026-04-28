@@ -451,10 +451,121 @@ async def crawl_status(domain: str):
 
 @app.post("/contacts/{domain}")
 async def find_contacts(domain: str):
+    """Bir site için iletişim bilgisi bul + DB'ye kaydet (Site + Contact row)."""
     from contacts.finder import find_all_contacts
 
-    contacts = await find_all_contacts(f"https://{domain}/", domain)
+    contacts_data = await find_all_contacts(f"https://{domain}/", domain)
+
+    saved = []
+    async with async_session() as session:
+        # Site row'u var mı, yoksa oluştur
+        site_q = await session.execute(select(Site).where(Site.domain == domain))
+        site = site_q.scalar_one_or_none()
+        if not site:
+            site = Site(domain=domain, url=f"https://{domain}/", status="contact_search")
+            session.add(site)
+            await session.commit()
+            await session.refresh(site)
+
+        for c in contacts_data:
+            email = c.get("email")
+            if not email:
+                continue
+            # Var mı kontrol
+            existing_q = await session.execute(
+                select(Contact).where(Contact.site_id == site.id, Contact.email == email)
+            )
+            existing = existing_q.scalar_one_or_none()
+            if existing:
+                saved.append({
+                    "id": existing.id, "email": existing.email,
+                    "source": existing.source, "contact_type": existing.contact_type,
+                })
+                continue
+            new_c = Contact(
+                site_id=site.id,
+                email=email,
+                source=c.get("source", "unknown"),
+                contact_type=c.get("contact_type", "other"),
+                language=c.get("language"),
+            )
+            session.add(new_c)
+            await session.commit()
+            await session.refresh(new_c)
+            saved.append({
+                "id": new_c.id, "email": new_c.email,
+                "source": new_c.source, "contact_type": new_c.contact_type,
+            })
+
+    return {"domain": domain, "count": len(saved), "contacts": saved}
+
+
+@app.get("/contacts/{domain}/saved")
+async def list_saved_contacts(domain: str):
+    """DB'deki kayıtlı contact'ları döndür."""
+    async with async_session() as session:
+        site_q = await session.execute(select(Site).where(Site.domain == domain))
+        site = site_q.scalar_one_or_none()
+        if not site:
+            return {"domain": domain, "count": 0, "contacts": []}
+        rows = await session.execute(
+            select(Contact).where(Contact.site_id == site.id).order_by(Contact.id)
+        )
+        contacts = [
+            {
+                "id": c.id, "email": c.email,
+                "source": c.source, "contact_type": c.contact_type,
+                "language": c.language,
+            }
+            for c in rows.scalars().all()
+        ]
     return {"domain": domain, "count": len(contacts), "contacts": contacts}
+
+
+@app.post("/notifications/send-batch")
+async def send_batch(payload: dict):
+    """Seçili contact_id'lere mail at. Max 10 cap.
+
+    Body: {"contact_ids": [int], "language": "tr|en|..."}
+    """
+    contact_ids = payload.get("contact_ids") or []
+    language = payload.get("language")
+    if not contact_ids:
+        raise HTTPException(400, "contact_ids gerekli")
+    if len(contact_ids) > 10:
+        raise HTTPException(400, "Max 10 contact (spam koruması)")
+
+    from notifier.sender import send_alert
+
+    results = []
+    async with async_session() as session:
+        for cid in contact_ids:
+            c = await session.get(Contact, int(cid))
+            if not c:
+                results.append({"contact_id": cid, "status": "error", "reason": "contact_not_found"})
+                continue
+            site = await session.get(Site, c.site_id)
+            if not site:
+                results.append({"contact_id": cid, "status": "error", "reason": "site_not_found"})
+                continue
+
+            r = await send_alert(
+                site_id=site.id,
+                contact_id=c.id,
+                domain=site.domain,
+                url=site.url or f"https://{site.domain}/",
+                hacklink_count=0,
+                first_seen=str(site.created_at),
+                language=language,
+            )
+            r["email"] = c.email
+            r["domain"] = site.domain
+            results.append(r)
+
+    sent = sum(1 for r in results if r.get("status") == "sent")
+    skipped = sum(1 for r in results if r.get("status") == "skipped")
+    errors = sum(1 for r in results if r.get("status") == "error")
+    return {"sent": sent, "skipped": skipped, "errors": errors, "results": results}
 
 
 # ═══════════════════════════════════════════════════════════════
