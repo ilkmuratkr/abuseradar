@@ -100,14 +100,28 @@ async function loadCsvList() {
         <td class="right" style="color:var(--text-4)">${AR.fmt.num(f.skipped_rows)}</td>
         <td>${AR.statusBadge(f.status)}</td>
         <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(f.completed_at || f.created_at)}</span></td>
+        <td class="right"><button class="btn-link csv-del-btn" data-id="${f.id}" data-name="${AR.escapeHtml(f.filename)}" style="color:var(--red)">Delete</button></td>
       </tr>
     `).join("");
     host.innerHTML = `
       <table class="tbl">
-        <thead><tr><th>File</th><th>Target</th><th class="right">Rows</th><th class="right">New</th><th class="right">Skipped</th><th>Status</th><th>When</th></tr></thead>
+        <thead><tr><th>File</th><th>Target</th><th class="right">Rows</th><th class="right">New</th><th class="right">Skipped</th><th>Status</th><th>When</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
+    document.querySelectorAll(".csv-del-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id, name = btn.dataset.name;
+        const purge = confirm(`Delete CSV ${name}?\n\nOK = backlinks de silinsin (purge)\nCancel = sadece CSV row silinsin, backlinks kalsın`);
+        if (!confirm(`Confirm: delete CSV "${name}"? ${purge ? "WITH backlink purge." : "Backlinks will be kept."}`)) return;
+        btn.disabled = true; btn.textContent = "Deleting…";
+        try {
+          await AR.del(`/csv-files/${id}?purge_backlinks=${purge}`);
+          AR.toast(`${name} deleted`, "success");
+          loadCsvList();
+        } catch (e) { AR.toast(e.message, "error"); btn.disabled = false; btn.textContent = "Delete"; }
+      });
+    });
   } catch (e) {
     AR.showError("csv-table-host", e.message);
   }

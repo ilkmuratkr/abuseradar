@@ -264,7 +264,7 @@ async def list_backlinks(
 
         rows = await session.execute(
             text(
-                f"SELECT referring_url, referring_title, anchor_text, target_domain, "
+                f"SELECT id, referring_url, referring_title, anchor_text, target_domain, "
                 f"spam_score, category, category_detail, domain_rating, traffic, "
                 f"platform, is_rendered, is_raw, first_seen, last_seen "
                 f"FROM backlinks {where} "
@@ -277,20 +277,21 @@ async def list_backlinks(
         for r in rows.all():
             out.append(
                 {
-                    "referring_url": r[0],
-                    "referring_title": r[1],
-                    "anchor_text": r[2],
-                    "target_domain": r[3],
-                    "spam_score": r[4],
-                    "category": r[5],
-                    "category_detail": r[6],
-                    "domain_rating": float(r[7]) if r[7] else None,
-                    "traffic": r[8],
-                    "platform": r[9],
-                    "is_rendered": r[10],
-                    "is_raw": r[11],
-                    "first_seen": r[12].isoformat() if r[12] else None,
-                    "last_seen": r[13].isoformat() if r[13] else None,
+                    "id": r[0],
+                    "referring_url": r[1],
+                    "referring_title": r[2],
+                    "anchor_text": r[3],
+                    "target_domain": r[4],
+                    "spam_score": r[5],
+                    "category": r[6],
+                    "category_detail": r[7],
+                    "domain_rating": float(r[8]) if r[8] else None,
+                    "traffic": r[9],
+                    "platform": r[10],
+                    "is_rendered": r[11],
+                    "is_raw": r[12],
+                    "first_seen": r[13].isoformat() if r[13] else None,
+                    "last_seen": r[14].isoformat() if r[14] else None,
                 }
             )
 
@@ -1016,6 +1017,73 @@ async def delete_c2(domain: str):
         if result.rowcount == 0:
             raise HTTPException(404, f"{safe} bulunamadı")
     return {"deleted": True, "domain": safe}
+
+
+@app.delete("/csv-files/{file_id}")
+async def delete_csv_file(file_id: int, purge_backlinks: bool = False):
+    """CSV file row sil.
+
+    purge_backlinks=True ise bu CSV'den gelen tüm backlink rows da silinir.
+    Default: backlink'ler korunur (csv_file_id NULL'lanır).
+    """
+    from sqlalchemy import delete, update
+    async with async_session() as session:
+        cf = await session.get(CsvFile, file_id)
+        if not cf:
+            raise HTTPException(404, "CSV not found")
+        if purge_backlinks:
+            await session.execute(delete(Backlink).where(Backlink.csv_file_id == file_id))
+        else:
+            await session.execute(
+                update(Backlink).where(Backlink.csv_file_id == file_id).values(csv_file_id=None)
+            )
+        await session.delete(cf)
+        await session.commit()
+    return {"deleted": True, "id": file_id, "purged_backlinks": purge_backlinks}
+
+
+@app.delete("/backlinks/{backlink_id}")
+async def delete_backlink(backlink_id: int):
+    from sqlalchemy import delete
+    async with async_session() as session:
+        result = await session.execute(delete(Backlink).where(Backlink.id == backlink_id))
+        await session.commit()
+        if result.rowcount == 0:
+            raise HTTPException(404, "Backlink not found")
+    return {"deleted": True, "id": backlink_id}
+
+
+@app.delete("/notifications/{notif_id}")
+async def delete_notification(notif_id: int):
+    from sqlalchemy import delete
+    async with async_session() as session:
+        result = await session.execute(delete(Notification).where(Notification.id == notif_id))
+        await session.commit()
+        if result.rowcount == 0:
+            raise HTTPException(404, "Notification not found")
+    return {"deleted": True, "id": notif_id}
+
+
+@app.delete("/complaints/{complaint_id}")
+async def delete_complaint(complaint_id: int):
+    from sqlalchemy import delete
+    async with async_session() as session:
+        result = await session.execute(delete(Complaint).where(Complaint.id == complaint_id))
+        await session.commit()
+        if result.rowcount == 0:
+            raise HTTPException(404, "Complaint not found")
+    return {"deleted": True, "id": complaint_id}
+
+
+@app.delete("/contacts/saved/{contact_id}")
+async def delete_contact(contact_id: int):
+    from sqlalchemy import delete
+    async with async_session() as session:
+        result = await session.execute(delete(Contact).where(Contact.id == contact_id))
+        await session.commit()
+        if result.rowcount == 0:
+            raise HTTPException(404, "Contact not found")
+    return {"deleted": True, "id": contact_id}
 
 
 @app.delete("/sites/{domain}")

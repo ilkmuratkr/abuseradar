@@ -112,14 +112,27 @@ async function load() {
           <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(c.submitted_at || c.created_at)}</span></td>
           <td class="right">${c.followup_count}/${c.max_followups}</td>
           <td>${c.resolved_at ? AR.fmt.relative(c.resolved_at) : "—"}</td>
+          <td class="right"><button class="btn-link comp-del-btn" data-id="${c.id}" data-target="${AR.escapeHtml(c.target_domain)}" style="color:var(--red)">Delete</button></td>
         </tr>
       `).join("");
       document.getElementById("comp-host").innerHTML = `
         <table class="tbl">
-          <thead><tr><th>Case</th><th>Target</th><th>Platform</th><th>Status</th><th>Filed</th><th class="right">Followups</th><th>Resolved</th></tr></thead>
+          <thead><tr><th>Case</th><th>Target</th><th>Platform</th><th>Status</th><th>Filed</th><th class="right">Followups</th><th>Resolved</th><th></th></tr></thead>
           <tbody>${rows}</tbody>
         </table>
       `;
+      document.querySelectorAll(".comp-del-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          const id = btn.dataset.id, target = btn.dataset.target;
+          if (!confirm(`Delete complaint case AR-CL-${id} (${target})?\n\nLocal record removed. The complaint already filed at the upstream platform (Cloudflare, hosting, registrar, etc.) is NOT withdrawn.`)) return;
+          btn.disabled = true;
+          try {
+            await AR.del(`/complaints/${id}`);
+            AR.toast("Deleted", "success");
+            load();
+          } catch (e) { AR.toast(e.message, "error"); btn.disabled = false; }
+        });
+      });
     }
 
     // Status chart

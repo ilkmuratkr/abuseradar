@@ -131,15 +131,29 @@ async function loadBacklinks() {
         <td><span class="mono" style="font-size:.74rem;color:var(--text-3)">${AR.escapeHtml(b.category_detail || "—")}</span></td>
         <td class="right">${b.domain_rating ?? "—"}</td>
         <td><span style="font-size:.74rem;color:var(--text-4)">${AR.fmt.relative(b.last_seen)}</span></td>
+        <td class="right"><button class="btn-link bl-del-btn" data-id="${b.id || ''}" data-url="${AR.escapeHtml(b.referring_url || '')}" style="color:var(--red)">×</button></td>
       </tr>
     `).join("");
 
     document.getElementById("bl-table-host").innerHTML = `
       <table class="tbl">
-        <thead><tr><th>Referring URL</th><th>Anchor</th><th>Target</th><th class="right">Spam</th><th>Cat</th><th>Detail</th><th class="right">DR</th><th>Last seen</th></tr></thead>
+        <thead><tr><th>Referring URL</th><th>Anchor</th><th>Target</th><th class="right">Spam</th><th>Cat</th><th>Detail</th><th class="right">DR</th><th>Last seen</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
+    document.querySelectorAll(".bl-del-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id, url = btn.dataset.url;
+        if (!id) { AR.toast("ID missing — reload page", "error"); return; }
+        if (!confirm(`Delete this backlink row?\n\n${url}\n\nThis is a single CSV intake row. Cannot be undone.`)) return;
+        btn.disabled = true;
+        try {
+          await AR.del(`/backlinks/${id}`);
+          AR.toast("Deleted", "success");
+          loadBacklinks();
+        } catch (e) { AR.toast(e.message, "error"); btn.disabled = false; }
+      });
+    });
 
     // Detail chart
     const detailHost = document.getElementById("bl-detail-chart");

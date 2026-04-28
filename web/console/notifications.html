@@ -103,14 +103,27 @@ async function loadList() {
         <td class="right">${n.send_count}/${n.max_sends}</td>
         <td>${n.injection_still_active === false ? AR.badge("Fixed", "green") : AR.badge("Active", "orange")}</td>
         <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(n.sent_at || n.created_at)}</span></td>
+        <td class="right"><button class="btn-link notif-del-btn" data-id="${n.id}" data-email="${AR.escapeHtml(n.email)}" style="color:var(--red)">Delete</button></td>
       </tr>
     `).join("");
     document.getElementById("notif-host").innerHTML = `
       <table class="tbl">
-        <thead><tr><th>Recipient</th><th>Lang</th><th>Type</th><th>Status</th><th class="right">Sends</th><th>Injection</th><th>Sent</th></tr></thead>
+        <thead><tr><th>Recipient</th><th>Lang</th><th>Type</th><th>Status</th><th class="right">Sends</th><th>Injection</th><th>Sent</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
+    document.querySelectorAll(".notif-del-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const id = btn.dataset.id, email = btn.dataset.email;
+        if (!confirm(`Delete notification record for ${email}?\n\nAudit log entry removed. The actual email (already delivered to recipient inbox) cannot be unsent.`)) return;
+        btn.disabled = true;
+        try {
+          await AR.del(`/notifications/${id}`);
+          AR.toast("Deleted", "success");
+          loadList();
+        } catch (e) { AR.toast(e.message, "error"); btn.disabled = false; }
+      });
+    });
   } catch (e) {
     AR.showError("notif-host", e.message);
   }
