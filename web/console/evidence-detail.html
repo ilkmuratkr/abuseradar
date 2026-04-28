@@ -3,10 +3,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Evidence detail — AbuseRadar Console</title>
+  <title>Breach report — AbuseRadar</title>
   <meta name="theme-color" content="#001016">
   <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="console.css">
+  <style>
+    /* Tek-doğru-rapor: hem operatör görünümü hem print/PDF için. */
+    .rpt { max-width: 980px; margin: 0 auto; }
+    .rpt h2 {
+      font-family: 'Bitter', serif; font-size: 1rem; font-weight: 600;
+      color: var(--text); margin: 1.4rem 0 .55rem;
+      padding-top: .9rem; border-top: 1px solid var(--border);
+    }
+    .rpt h2 .meta { font-family: 'Inter', sans-serif; font-weight: 400; font-size: .76rem; color: var(--text-3); margin-left: .5rem; }
+    .rpt-shot-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: .7rem; }
+    .rpt-shot { border: 1px solid var(--border); border-radius: 7px; overflow: hidden; background: var(--bg-card-2); }
+    .rpt-shot img { width: 100%; height: 220px; object-fit: cover; object-position: top center; display: block; cursor: zoom-in; }
+    .rpt-shot-cap { padding: .45rem .65rem; font-size: .72rem; color: var(--text-3); border-top: 1px solid var(--border); }
+    .rpt-tbl { width: 100%; border-collapse: collapse; font-size: .8rem; }
+    .rpt-tbl th, .rpt-tbl td { padding: .4rem .6rem; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .rpt-tbl th { background: var(--bg-card-2); color: var(--text-3); font-weight: 600; text-transform: uppercase; font-size: .67rem; letter-spacing: .8px; }
+    .rpt-tbl tr.hi td { background: rgba(220, 68, 68, 0.04); }
+    .rpt-tbl .mono { font-family: 'JetBrains Mono', monospace; font-size: .72rem; }
+    .rpt-callout {
+      padding: .55rem .8rem; background: var(--bg-card-2); border-left: 3px solid var(--orange);
+      border-radius: 0 5px 5px 0; font-size: .85rem; margin: .3rem 0;
+    }
+    .rpt-callout.red { border-left-color: var(--red); }
+    .rpt-callout.green { border-left-color: var(--green); }
+    .rpt-callout.muted { border-left-color: var(--border-strong); color: var(--text-3); }
+    .rpt-bullet { margin: .4rem 0 .4rem 1rem; font-size: .87rem; }
+    .rpt-bullet li { margin-bottom: .3rem; line-height: 1.5; }
+    .rpt-code {
+      font-family: 'JetBrains Mono', monospace; font-size: .72rem; line-height: 1.5;
+      background: var(--bg-card-2); border: 1px solid var(--border); border-radius: 5px;
+      padding: .55rem .7rem; white-space: pre-wrap; word-break: break-all;
+      max-height: 280px; overflow-y: auto;
+    }
+
+    /* Print / PDF stylesheet — single condensed flow */
+    @media print {
+      body, html { background: white !important; color: #1a1a1a !important; }
+      .rail, .topbar, .topbar-right, .topbar-left { display: none !important; }
+      .app, .main, .content { display: block !important; max-width: none !important; padding: 0 !important; margin: 0 !important; grid-template-columns: 1fr !important; }
+      .rpt { max-width: none; padding: 0; font-size: 10.5pt; }
+      .rpt h1 { font-size: 18pt; margin-top: 0; }
+      .rpt h2 { font-size: 11pt; page-break-after: avoid; border-top-color: #ccc; }
+      .rpt-shot img { height: 130px; }
+      .rpt-shot, .rpt-tbl, .kpis, .rpt-shot-grid { page-break-inside: avoid; }
+      .kpi { box-shadow: none !important; }
+      a { color: inherit !important; text-decoration: none !important; }
+      .panel, .panel-body { box-shadow: none !important; border: 1px solid #ddd !important; }
+    }
+  </style>
 </head>
 <body>
 
@@ -26,62 +75,82 @@
         </nav>
       </div>
       <div class="topbar-right">
-        <a href="report.html" class="btn btn-primary" id="report-link">Generate briefing</a>
+        <button class="btn btn-ghost" id="btn-print">
+          <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print / PDF
+        </button>
       </div>
     </header>
 
     <div class="content">
+      <article class="rpt">
 
-      <div class="page-head">
-        <div>
-          <div style="display:flex;align-items:center;gap:.55rem;margin-bottom:.4rem">
-            <span class="mono" id="bundle-id" style="font-size:.78rem;color:var(--text-3)">—</span>
-            <span class="badge" id="bundle-state">—</span>
+        <div class="page-head">
+          <div>
+            <div style="display:flex;align-items:center;gap:.55rem;margin-bottom:.4rem;flex-wrap:wrap">
+              <span class="mono" id="bundle-id" style="font-size:.78rem;color:var(--text-3)">—</span>
+              <span class="badge" id="bundle-state">—</span>
+              <span class="badge" id="cloak-badge" style="display:none">Cloaking detected</span>
+            </div>
+            <h1 id="ev-domain">—</h1>
+            <p id="ev-summary">Loading bundle…</p>
           </div>
-          <h1 id="ev-domain">—</h1>
-          <p id="ev-summary">—</p>
         </div>
-      </div>
 
-      <div class="kpis">
-        <div class="kpi"><div class="kpi-label">Screenshots</div><div class="kpi-value" id="kpi-shots">—</div><div class="kpi-trend">PNG captures</div></div>
-        <div class="kpi orange"><div class="kpi-label">Hidden links</div><div class="kpi-value" id="kpi-hacklinks">—</div><div class="kpi-trend">rendered + JS-diff</div></div>
-        <div class="kpi gold"><div class="kpi-label">DOM dumps</div><div class="kpi-value" id="kpi-doms">—</div><div class="kpi-trend">HTML snapshots</div></div>
-        <div class="kpi"><div class="kpi-label">Bundle size</div><div class="kpi-value" id="kpi-size">—</div><div class="kpi-trend">on disk</div></div>
-      </div>
-
-      <div class="grid-2-1 row-gap">
-        <section class="panel">
-          <div class="panel-head"><h3>Screenshots</h3><span class="meta" id="ss-count">—</span></div>
-          <div class="panel-body" id="ss-host"><div class="loading-spinner">Loading…</div></div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head"><h3>Bundle metadata</h3></div>
-          <div class="panel-body">
-            <dl class="kv" id="meta-list"><dt>—</dt><dd>Loading…</dd></dl>
-          </div>
-        </section>
-      </div>
-
-      <section class="panel row-gap">
-        <div class="panel-head">
-          <h3>Detected hacklinks</h3>
-          <span class="meta" id="hl-count">—</span>
+        <!-- KPI'lar -->
+        <div class="kpis">
+          <div class="kpi red"><div class="kpi-label">Hidden links</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-trend">total unique URLs</div></div>
+          <div class="kpi orange"><div class="kpi-label">In DOM</div><div class="kpi-value" id="kpi-rendered">—</div><div class="kpi-trend">CSS-hidden anchors</div></div>
+          <div class="kpi gold"><div class="kpi-label">JS-injected</div><div class="kpi-value" id="kpi-jsdiff">—</div><div class="kpi-trend">added after page load</div></div>
+          <div class="kpi"><div class="kpi-label">Injection scripts</div><div class="kpi-value" id="kpi-scripts">—</div><div class="kpi-trend">external loaders</div></div>
         </div>
-        <div id="hl-host"><div class="loading-spinner">Loading…</div></div>
-      </section>
 
-      <section class="panel row-gap">
-        <div class="panel-head">
-          <h3>DOM dumps</h3>
-          <select id="dom-select" style="padding:.4rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem"></select>
-        </div>
-        <div class="panel-body">
-          <pre id="dom-body" class="code" style="margin:0;padding:.85rem;font-size:.72rem;background:var(--bg-card-2);border-radius:6px;max-height:500px;overflow:auto;line-height:1.4">Pick a DOM file above</pre>
-        </div>
-      </section>
+        <!-- Findings -->
+        <h2>1. Findings</h2>
+        <ul class="rpt-bullet" id="findings-list"><li>Loading…</li></ul>
 
+        <!-- Captured page -->
+        <h2>2. Captured pages <span class="meta" id="cap-meta"></span></h2>
+        <div class="rpt-shot-grid" id="ss-host"><div class="loading-spinner">Loading…</div></div>
+
+        <!-- Cloaking -->
+        <h2>3. Cloaking analysis <span class="meta" id="cloak-meta"></span></h2>
+        <div id="cloak-body" style="font-size:.85rem">Loading…</div>
+
+        <!-- Hidden links table -->
+        <h2>4. Detected hidden links <span class="meta" id="hl-meta"></span></h2>
+        <div id="hl-body"><div class="loading-spinner">Loading…</div></div>
+
+        <!-- Injection scripts -->
+        <h2>5. Injection scripts</h2>
+        <div id="scripts-body" style="font-size:.85rem">—</div>
+
+        <!-- DOM dumps -->
+        <h2>6. DOM dumps
+          <select id="dom-select" class="meta" style="padding:.3rem .55rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:.78rem;margin-left:.5rem"></select>
+        </h2>
+        <pre id="dom-body" class="rpt-code">Pick a DOM file above</pre>
+
+        <!-- Remediation -->
+        <h2>7. Remediation playbook</h2>
+        <ol class="rpt-bullet">
+          <li><strong>Locate the injection</strong> — search the site's footer / header / sidebar templates for the absolutely-positioned hidden link cluster (typical CSS: <span class="mono">position:absolute;left:-9999px</span>, <span class="mono">opacity:0;height:0</span>, or <span class="mono">display:none</span>). The DOM excerpt in Section 6 shows the exact lines.</li>
+          <li><strong>Audit recently modified files</strong> — look for backdoor PHP web-shells under <span class="mono">/wp-content/</span>, <span class="mono">/admin/</span>, or template directories. Disable any out-of-date CMS plugins.</li>
+          <li><strong>Rotate credentials</strong> — change all CMS administrator passwords, FTP/SSH keys. If possible, redeploy from a known-clean backup.</li>
+          <li><strong>Verify closure</strong> — reply to the AbuseRadar notification email; AbuseRadar re-renders the page within 12 hours and confirms.</li>
+        </ol>
+
+        <!-- Hosting & registrar -->
+        <h2>8. Hosting &amp; registrar <span class="meta">automatic WHOIS / IP lookup</span></h2>
+        <div id="hosting-body" style="font-size:.85rem"><div class="loading-spinner">Looking up…</div></div>
+
+        <!-- Bundle metadata / appendix -->
+        <h2>9. Appendix — integrity</h2>
+        <table class="rpt-tbl">
+          <tbody id="meta-rows"><tr><td colspan="2">Loading…</td></tr></tbody>
+        </table>
+
+      </article>
     </div>
   </main>
 </div>
@@ -96,126 +165,236 @@ if (!domain) {
   document.querySelector(".content").innerHTML = '<div class="error-banner">Missing ?domain= parameter. <a href="evidence.html">Back to vault</a></div>';
 } else {
   document.getElementById("crumb-domain").textContent = domain;
-  document.getElementById("report-link").href = `report.html?domain=${encodeURIComponent(domain)}`;
+  document.getElementById("btn-print").addEventListener("click", () => window.print());
   loadAll();
 }
 
+function el(id) { return document.getElementById(id); }
+
+const captionFor = (n) => {
+  const lower = (n || "").toLowerCase();
+  if (lower.includes("googlebot_mobile") || lower.includes("mobile")) return "Googlebot Mobile UA — what mobile crawlers see";
+  if (lower.includes("googlebot")) return "Googlebot Desktop UA — what search engines see";
+  if (lower.includes("normal")) return "Normal browser UA — what a regular visitor sees";
+  return "Captured page";
+};
+
 async function loadAll() {
-  // Bundle meta
+  let bundle = null, hl = null;
+
+  // Bundle metadata
   try {
-    const b = await AR.get(`/evidence/${encodeURIComponent(domain)}`);
-    document.getElementById("ev-domain").textContent = domain;
-    document.getElementById("bundle-id").textContent = b.bundle_id;
-    document.getElementById("bundle-state").innerHTML = b.has_analysis
-      ? '<span class="badge red">Confirmed breach</span>'
-      : '<span class="badge muted">DOM only</span>';
-    document.getElementById("ev-summary").textContent =
-      `${b.hacklink_count} hidden links across ${b.screenshots} screenshots and ${b.dom_files} DOM dumps. Captured ${AR.fmt.relative(b.captured_at)}.`;
+    bundle = await AR.get(`/evidence/${encodeURIComponent(domain)}`);
+    el("ev-domain").textContent = domain;
+    el("bundle-id").textContent = bundle.bundle_id;
+  } catch (e) {
+    document.querySelector(".content").innerHTML = `<div class="error-banner">Bundle not found for ${AR.escapeHtml(domain)}. <a href="evidence.html">Back to vault</a></div>`;
+    return;
+  }
 
-    document.getElementById("kpi-shots").textContent = b.screenshots;
-    document.getElementById("kpi-hacklinks").textContent = b.hacklink_count;
-    document.getElementById("kpi-doms").textContent = b.dom_files;
-    document.getElementById("kpi-size").textContent = AR.fmt.bytes(b.size_bytes);
+  // Hacklinks data
+  try {
+    hl = await AR.get(`/evidence/${encodeURIComponent(domain)}/hacklinks`);
+  } catch (e) {
+    hl = { rendered_hacklinks: [], js_diff_hacklinks: [], raw_hacklinks: [], injection_scripts: [], cloaking_detected: false, cloaking_evidence: [] };
+  }
 
-    // Meta list
-    document.getElementById("meta-list").innerHTML = `
-      <dt>Bundle</dt><dd><span class="mono">${AR.escapeHtml(b.bundle_id)}</span></dd>
-      <dt>Domain</dt><dd>${AR.escapeHtml(b.domain)}</dd>
-      <dt>Captured</dt><dd>${AR.fmt.date(b.captured_at)}</dd>
-      <dt>Screenshots</dt><dd>${b.screenshots}</dd>
-      <dt>DOM dumps</dt><dd>${b.dom_files}</dd>
-      <dt>Hacklinks</dt><dd>${b.hacklink_count}</dd>
-      <dt>Size on disk</dt><dd>${AR.fmt.bytes(b.size_bytes)}</dd>
-      <dt>C2 URLs</dt><dd>${(b.c2_urls || []).length ? (b.c2_urls.map(u => `<span class="mono" style="font-size:.72rem;color:var(--red)">${AR.escapeHtml(u)}</span>`).join("<br>")) : "—"}</dd>
+  const total = bundle.hacklink_count || 0;
+  const rendered = (hl.rendered_hacklinks || []).length;
+  const jsdiff = (hl.js_diff_hacklinks || []).length;
+  const raw = (hl.raw_hacklinks || []).length;
+  const scriptCount = (hl.injection_scripts || []).length;
+
+  // Severity + state
+  const sev = total > 50 ? "Critical" : total > 10 ? "High" : total > 0 ? "Medium" : (hl.cloaking_detected ? "Suspicious" : "Informational");
+  const stateBadge = total > 0 ? '<span class="badge red">Verified breach</span>'
+    : hl.cloaking_detected ? '<span class="badge red">Cloaking detected</span>'
+    : '<span class="badge muted">DOM only</span>';
+  el("bundle-state").outerHTML = stateBadge.replace('id="bundle-state"', '');
+
+  if (hl.cloaking_detected) {
+    const cb = el("cloak-badge");
+    if (cb) {
+      cb.style.display = "inline-flex";
+      cb.className = "badge red";
+    }
+  }
+
+  // Summary
+  el("ev-summary").innerHTML = total > 0
+    ? `<strong>${total}</strong> hidden link${total===1?"":"s"} detected on <span class="mono">${AR.escapeHtml(domain)}</span>. Severity: <strong>${sev}</strong>. Captured ${AR.fmt.date(bundle.captured_at)}. The TLS certificate of the host is unaffected — the server-side content is the compromised vector.`
+    : hl.cloaking_detected
+      ? `No hidden links extracted, but <strong>cloaking signals were observed</strong> — the page renders different content to search-engine bots than to ordinary browsers. Captured ${AR.fmt.date(bundle.captured_at)}.`
+      : `No injection signals observed in this capture. Captured ${AR.fmt.date(bundle.captured_at)}.`;
+
+  // KPI
+  el("kpi-total").textContent = total;
+  el("kpi-rendered").textContent = rendered;
+  el("kpi-jsdiff").textContent = jsdiff;
+  el("kpi-scripts").textContent = scriptCount;
+
+  // Findings — only what we actually observed
+  const findings = [];
+  if (rendered) findings.push(`<strong>${rendered} hidden anchor tag${rendered===1?"":"s"}</strong> rendered into the page DOM with hidden CSS (typical: <span class="mono">position:absolute;left:-9999px</span>, <span class="mono">opacity:0</span>, or <span class="mono">display:none</span>).`);
+  if (jsdiff) findings.push(`<strong>${jsdiff} additional link${jsdiff===1?"":"s"}</strong> dynamically injected via JavaScript after page load — absent from the raw HTML response, only present in the rendered DOM.`);
+  if (raw && !rendered) findings.push(`<strong>${raw} hidden link${raw===1?"":"s"}</strong> embedded directly in the server-rendered HTML — server-side template / plugin compromise.`);
+  if (scriptCount) {
+    const c2List = (hl.injection_scripts || []).flatMap(s => s.decoded_c2_urls || []);
+    if (c2List.length) findings.push(`<strong>${scriptCount} injection script${scriptCount===1?"":"s"}</strong> with decoded C2 endpoint${c2List.length===1?"":"s"}: ${c2List.slice(0,3).map(u => '<span class="mono" style="color:var(--red)">'+AR.escapeHtml(u)+'</span>').join(', ')}.`);
+    else findings.push(`<strong>${scriptCount} injection script${scriptCount===1?"":"s"}</strong> identified — see Section 5.`);
+  }
+  if (hl.cloaking_detected) findings.push(`<strong>Cloaking detected</strong> — different content served to crawler vs. browser (${(hl.cloaking_evidence||[]).length} signal${(hl.cloaking_evidence||[]).length===1?"":"s"}, see Section 3).`);
+  if (!findings.length) findings.push("No injection signals observed in this capture.");
+  el("findings-list").innerHTML = findings.map(f => `<li>${f}</li>`).join("");
+
+  // Captured page screenshots
+  const shotNames = bundle.screenshot_names || [];
+  el("cap-meta").textContent = shotNames.length ? `${shotNames.length} captures · click for full-size` : "no screenshots";
+  if (!shotNames.length) {
+    el("ss-host").innerHTML = '<div class="empty-state">No screenshots in bundle.</div>';
+  } else {
+    el("ss-host").innerHTML = shotNames.map((n, i) => `
+      <figure class="rpt-shot">
+        <a href="/api/evidence/${encodeURIComponent(domain)}/screenshot/${i}" target="_blank">
+          <img src="/api/evidence/${encodeURIComponent(domain)}/screenshot/${i}" alt="${AR.escapeHtml(n)}">
+        </a>
+        <div class="rpt-shot-cap">${AR.escapeHtml(captionFor(n))} · <span class="mono">${AR.escapeHtml(n)}</span></div>
+      </figure>
+    `).join("");
+  }
+
+  // Cloaking
+  if (hl.cloaking_detected) {
+    const evList = hl.cloaking_evidence || [];
+    el("cloak-meta").innerHTML = '· <span style="color:var(--red)">DETECTED</span>';
+    el("cloak-body").innerHTML = `
+      <div class="rpt-callout red">The page serves different content to search-engine bots than to ordinary visitors. This is a textbook cloaking pattern used to launder ranking signal toward illicit landing pages.</div>
+      ${evList.length ? `<ul class="rpt-bullet">${evList.map(e => `<li>${AR.escapeHtml(e)}</li>`).join("")}</ul>` : ""}
     `;
-
-    // Screenshots
-    const ssHost = document.getElementById("ss-host");
-    AR.setText("ss-count", `${b.screenshots} files`);
-    if (!b.screenshots) {
-      AR.showEmpty("ss-host", "No screenshots in this bundle.");
-    } else {
-      ssHost.innerHTML = (b.screenshot_names || []).map((n, i) => `
-        <figure style="margin:0 0 1.2rem">
-          <img src="/api/evidence/${encodeURIComponent(domain)}/screenshot/${i}" alt="${AR.escapeHtml(n)}" style="width:100%;border-radius:8px;border:1px solid var(--border)">
-          <figcaption style="font-size:.72rem;color:var(--text-4);margin-top:.3rem;text-align:center">${AR.escapeHtml(n)}</figcaption>
-        </figure>
-      `).join("");
-    }
-
-    // DOM dropdown
-    const sel = document.getElementById("dom-select");
-    sel.innerHTML = (b.dom_names || []).map(n => `<option value="${AR.escapeHtml(n)}">${AR.escapeHtml(n)}</option>`).join("") || '<option>—</option>';
-    sel.addEventListener("change", () => loadDom(sel.value));
-    if ((b.dom_names || []).length) loadDom(b.dom_names[0]);
-  } catch (e) {
-    AR.toast("Bundle: " + e.message, "error");
-    document.getElementById("ev-summary").textContent = "Error: " + e.message;
+  } else {
+    el("cloak-meta").textContent = "· not detected";
+    el("cloak-body").innerHTML = `<div class="rpt-callout green">Page rendered identically to all probed user agents (normal browser, Googlebot desktop, Googlebot mobile).</div>`;
   }
 
-  // Hacklinks
-  try {
-    const data = await AR.get(`/evidence/${encodeURIComponent(domain)}/hacklinks`);
-    const rendered = data.rendered_hacklinks || [];
-    const jsdiff = data.js_diff_hacklinks || [];
-    const scripts = data.injection_scripts || [];
+  // Hidden links — TÜM hacklink'ler tek tabloda (rendered + js_diff + raw_html)
+  const allLinks = [];
+  for (const x of (hl.rendered_hacklinks || [])) allLinks.push({...x, _src: "rendered"});
+  for (const x of (hl.js_diff_hacklinks || [])) allLinks.push({...x, _src: "js_inject"});
+  for (const x of (hl.raw_hacklinks || [])) allLinks.push({...x, _src: "raw_html"});
+  const seenH = new Set();
+  const dedup = [];
+  for (const l of allLinks) {
+    const h = l.href || "";
+    if (!h || seenH.has(h)) continue;
+    seenH.add(h);
+    dedup.push(l);
+  }
+  dedup.sort((a, b) => (b.score || 0) - (a.score || 0));
 
-    AR.setText("hl-count", `${rendered.length} rendered · ${jsdiff.length} JS-diff · ${scripts.length} scripts`);
-
-    let html = "";
-    if (rendered.length) {
-      html += `<div style="padding:.8rem 1.1rem;border-bottom:1px solid var(--border);font-weight:600;color:var(--text)">Rendered DOM hacklinks (${rendered.length})</div>`;
-      html += `<table class="tbl"><thead><tr><th class="right">Score</th><th>Anchor</th><th>URL</th><th>Hiding</th></tr></thead><tbody>`;
-      html += rendered.slice(0, 50).map(h => `
-        <tr>
-          <td class="right strong" style="color:var(--orange)">${h.score || 0}</td>
-          <td><span class="mono" style="font-size:.74rem">${AR.escapeHtml(AR.fmt.truncate(h.text || "—", 50))}</span></td>
-          <td><span class="mono" style="font-size:.72rem;color:var(--text-3)">${AR.escapeHtml(AR.fmt.truncate(h.href || "", 60))}</span></td>
-          <td><span style="font-size:.72rem;color:var(--text-4)">${AR.escapeHtml(h.hiding_method || "—")}</span></td>
+  if (!dedup.length) {
+    el("hl-body").innerHTML = '<div class="empty-state">No hidden links detected.</div>';
+    el("hl-meta").textContent = "0 unique URLs";
+  } else {
+    const shown = dedup.slice(0, 200);
+    const rows = shown.map(l => {
+      const score = l.score || 0;
+      const reasons = (l.reasons || l.detection_reasons || []).join(", ") || (l.hiding_method || l.method || "—");
+      const scoreColor = score >= 80 ? "var(--red)" : score >= 40 ? "var(--orange)" : "var(--text-3)";
+      return `
+        <tr class="${score >= 50 ? 'hi' : ''}">
+          <td style="text-align:right;color:${scoreColor}" class="strong">${score}</td>
+          <td><span class="mono">${AR.escapeHtml(AR.fmt.truncate(l.text || l.anchor_text || "—", 32))}</span></td>
+          <td><span class="mono">${AR.escapeHtml(AR.fmt.truncate(l.href || "", 60))}</span></td>
+          <td><span style="font-size:.7rem;color:var(--text-3)">${AR.escapeHtml(l._src)}</span></td>
+          <td><span style="font-size:.7rem;color:var(--text-4)">${AR.escapeHtml(AR.fmt.truncate(reasons, 30))}</span></td>
         </tr>
-      `).join("");
-      html += `</tbody></table>`;
-    }
-    if (jsdiff.length) {
-      html += `<div style="padding:.8rem 1.1rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-weight:600;color:var(--text)">JS-injected hacklinks (${jsdiff.length})</div>`;
-      html += `<table class="tbl"><thead><tr><th>URL</th><th>Method</th></tr></thead><tbody>`;
-      html += jsdiff.slice(0, 30).map(h => `
-        <tr><td><span class="mono" style="font-size:.72rem">${AR.escapeHtml(h.href || "")}</span></td><td><span class="mono" style="font-size:.72rem;color:var(--text-3)">${AR.escapeHtml(h.method || "—")}</span></td></tr>
-      `).join("");
-      html += `</tbody></table>`;
-    }
-    if (scripts.length) {
-      html += `<div style="padding:.8rem 1.1rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);font-weight:600;color:var(--text)">Injection scripts (${scripts.length})</div>`;
-      html += scripts.map(s => `
-        <div style="padding:.7rem 1.1rem;border-bottom:1px solid var(--border);font-size:.78rem">
-          ${(s.decoded_c2_urls && s.decoded_c2_urls.length) ? `<div style="color:var(--red);font-weight:600">⚠ Decoded C2 URLs:</div><div class="mono" style="font-size:.72rem;margin-top:.3rem">${s.decoded_c2_urls.map(u => AR.escapeHtml(u)).join("<br>")}</div>` : ""}
-          ${s.src ? `<div style="margin-top:.4rem;color:var(--text-3)">Source: <span class="mono">${AR.escapeHtml(s.src)}</span></div>` : ""}
-        </div>
-      `).join("");
-    }
-
-    if (!html) {
-      AR.showEmpty("hl-host", "No hacklinks detected.");
-    } else {
-      document.getElementById("hl-host").innerHTML = html;
-    }
-  } catch (e) {
-    if (e.message.includes("404")) {
-      AR.showEmpty("hl-host", "No hacklinks analysis available for this bundle.");
-    } else {
-      AR.showError("hl-host", e.message);
-    }
+      `;
+    }).join("");
+    el("hl-body").innerHTML = `
+      <table class="rpt-tbl">
+        <thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor</th><th>URL</th><th style="width:80px">Source</th><th style="width:160px">Hiding / reasons</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+      <div style="font-size:.7rem;color:var(--text-4);margin-top:.4rem">
+        Sources: <span class="mono">rendered</span> = found in Playwright DOM with hidden CSS · <span class="mono">js_inject</span> = added by JavaScript after page load · <span class="mono">raw_html</span> = embedded in raw server response.
+      </div>
+    `;
+    el("hl-meta").textContent = `${dedup.length} unique URL${dedup.length===1?"":"s"} ${dedup.length > 200 ? "(showing first 200)" : ""}`;
   }
+
+  // Injection scripts
+  const scripts = hl.injection_scripts || [];
+  if (!scripts.length) {
+    el("scripts-body").innerHTML = '<div class="rpt-callout green">No external injection scripts identified in this capture.</div>';
+  } else {
+    el("scripts-body").innerHTML = scripts.map(s => {
+      const c2 = (s.decoded_c2_urls || []).slice(0, 8);
+      return `
+        <div class="rpt-callout red" style="margin-bottom:.5rem">
+          <div><strong>Script source:</strong> <span class="mono">${AR.escapeHtml(s.src || s.url || "(inline)")}</span></div>
+          ${c2.length ? `<div style="margin-top:.3rem"><strong>Decoded C2 endpoint${c2.length===1?"":"s"}:</strong><br>${c2.map(u => '<span class="mono" style="color:var(--red)">' + AR.escapeHtml(u) + '</span>').join('<br>')}</div>` : ""}
+          ${s.snippet ? `<pre class="rpt-code" style="margin-top:.4rem;max-height:160px">${AR.escapeHtml(s.snippet.slice(0, 800))}</pre>` : ""}
+        </div>
+      `;
+    }).join("");
+  }
+
+  // DOM dumps
+  const sel = el("dom-select");
+  sel.innerHTML = (bundle.dom_names || []).map(n => `<option value="${AR.escapeHtml(n)}">${AR.escapeHtml(n)}</option>`).join("") || '<option>—</option>';
+  sel.addEventListener("change", () => loadDom(sel.value));
+  if ((bundle.dom_names || []).length) loadDom(bundle.dom_names[0]);
+  else el("dom-body").textContent = "No DOM dumps in bundle.";
+
+  // Hosting & registrar
+  loadHosting(domain);
+
+  // Appendix
+  el("meta-rows").innerHTML = `
+    <tr><th style="width:32%">Bundle ID</th><td class="mono">${AR.escapeHtml(bundle.bundle_id)}</td></tr>
+    <tr><th>Domain</th><td class="mono">${AR.escapeHtml(bundle.domain)}</td></tr>
+    <tr><th>Capture timestamp</th><td>${AR.fmt.date(bundle.captured_at)}</td></tr>
+    <tr><th>Screenshots</th><td>${bundle.screenshots}</td></tr>
+    <tr><th>DOM dumps</th><td>${bundle.dom_files}</td></tr>
+    <tr><th>Bundle size</th><td>${AR.fmt.bytes(bundle.size_bytes)}</td></tr>
+    <tr><th>Egress / VPN</th><td>VPN-TR (Istanbul) · fallback chain TR → US → host</td></tr>
+    <tr><th>Methodology</th><td>AbuseRadar v1.4 — <a href="../research.html" style="color:var(--teal)">research.abuseradar.org</a></td></tr>
+  `;
 }
 
 async function loadDom(name) {
-  const body = document.getElementById("dom-body");
+  const body = el("dom-body");
   body.textContent = "Loading…";
   try {
     const txt = await AR.get(`/evidence/${encodeURIComponent(domain)}/dom/${encodeURIComponent(name)}`);
     body.textContent = txt;
   } catch (e) {
     body.textContent = "Error: " + e.message;
+  }
+}
+
+async function loadHosting(d) {
+  try {
+    const h = await AR.get(`/hosting/${encodeURIComponent(d)}`);
+    if (!h || h.error) {
+      el("hosting-body").innerHTML = '<div class="rpt-callout muted">Hosting lookup not available for this domain.</div>';
+      return;
+    }
+    el("hosting-body").innerHTML = `
+      <table class="rpt-tbl">
+        <tbody>
+          <tr><th style="width:32%">IP address</th><td class="mono">${AR.escapeHtml(h.ip || "—")}</td></tr>
+          <tr><th>ASN</th><td class="mono">${AR.escapeHtml(h.asn || "—")}</td></tr>
+          <tr><th>Hosting provider</th><td>${AR.escapeHtml(h.hosting_provider || h.provider || "—")}</td></tr>
+          <tr><th>Cloudflare-fronted</th><td>${h.cloudflare_protected ? "Yes" : "No"}</td></tr>
+          <tr><th>Registrar</th><td>${AR.escapeHtml(h.registrar || "—")}</td></tr>
+          <tr><th>Abuse email (hosting)</th><td class="mono">${AR.escapeHtml(h.abuse_email || "—")}</td></tr>
+          <tr><th>Abuse email (registrar)</th><td class="mono">${AR.escapeHtml(h.registrar_abuse_email || "—")}</td></tr>
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    el("hosting-body").innerHTML = `<div class="rpt-callout muted">Hosting lookup failed: ${AR.escapeHtml(e.message)}</div>`;
   }
 }
 </script>
