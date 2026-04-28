@@ -12,9 +12,27 @@ logger = logging.getLogger(__name__)
 # Gizli LINK'leri tespit et + sayfanın üstüne BANNER ekle (sayfa yapısını BOZMA)
 # Eski yaklaşım her hidden element'i görünür yapıyordu → site iskeleti bozuluyor.
 # Yeni yaklaşım: sadece <a> anchor'ları analiz et, banner ile özetle.
-REVEAL_HIDDEN_JS = r"""() => {
+REVEAL_HIDDEN_JS = r"""(externalLinks) => {
+    // Banner JS — iki kaynaktan gelen hidden link bilgisini birleştirir:
+    //   (a) externalLinks: backend'in zaten tespit ettiği hacklink listesi
+    //       (raw_hacklinks + js_diff_hacklinks, anchor metni dolu)
+    //   (b) DOM tarama: backend'in kaçırdığı CSS-bazlı hidden anchor'lar
     const hidden = [];
     const seen = new Set();
+    // Backend'in tespit ettiği link'leri öncelikli ekle (anchor metni dolu, güvenilir)
+    if (Array.isArray(externalLinks)) {
+        externalLinks.forEach(l => {
+            const href = l.href || "";
+            if (!href || seen.has(href)) return;
+            seen.add(href);
+            hidden.push({
+                href: href,
+                text: (l.text || l.anchor_text || "").trim().slice(0, 80),
+                title: (l.title || "").trim().slice(0, 80),
+                reasons: (l.reasons || l.detection_reasons || []).join(", ") || (l.hiding_method || l.method || "backend-detected")
+            });
+        });
+    }
     // Site'nin kendi domain'ini bul (same-domain filter için)
     const siteHost = (location.hostname || '').replace(/^www\./, '').toLowerCase();
     const isInternal = (url) => {
@@ -23,6 +41,7 @@ REVEAL_HIDDEN_JS = r"""() => {
             return h === siteHost || h.endsWith('.' + siteHost) || siteHost.endsWith('.' + h);
         } catch { return false; }
     };
+    // (b) DOM tarama: backend'in kaçırdıkları için ek tarama
     document.querySelectorAll('a[href]').forEach(a => {
         const href = a.href || '';
         if (!href || seen.has(href)) return;
@@ -177,8 +196,10 @@ async def collect_evidence(
         logger.warning(f"[{domain}] [{prefix}] User screenshot hatası: {e}")
 
     # 2. Gizli linkleri görünür yap + screenshot (her sayfa için ayrı)
+    # Backend'in tespit ettiği hidden link'leri parametre olarak geç (CSS-tespit kaçırırsa yedek)
     try:
-        revealed = await page.evaluate(REVEAL_HIDDEN_JS)
+        ext_links = (analysis or {}).get("raw_hacklinks", []) + (analysis or {}).get("js_diff_hacklinks", [])
+        revealed = await page.evaluate(REVEAL_HIDDEN_JS, ext_links)
         if revealed > 0:
             await page.screenshot(
                 path=str(screenshots_dir / f"{prefix}_hidden-revealed.png"),
