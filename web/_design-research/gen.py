@@ -2,8 +2,16 @@
 """Gemini Nano Banana image generator. Usage: gen.py <out.png> <aspect> <prompt>"""
 import sys, os, json, base64, urllib.request, pathlib
 
-key_line = next(l for l in pathlib.Path('/Users/muratkara/Report/seospamwatch/.env').read_text().splitlines() if l.startswith('GEMINI_API_KEY='))
-KEY = key_line.split('=', 1)[1].strip()
+# Find .env walking up from this file's location (project root has .env)
+_root = pathlib.Path(__file__).resolve().parent
+while _root != _root.parent and not (_root / ".env").exists():
+    _root = _root.parent
+KEY = os.getenv("GEMINI_API_KEY") or next(
+    (l.split("=", 1)[1].strip() for l in (_root / ".env").read_text().splitlines() if l.startswith("GEMINI_API_KEY=")),
+    "",
+)
+if not KEY:
+    print("GEMINI_API_KEY not set (env or .env)"); sys.exit(1)
 
 out, ar, prompt = sys.argv[1], sys.argv[2], sys.argv[3]
 url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent"
