@@ -94,6 +94,7 @@ async def detect_cloaking(url: str, domain: str, evidence_dir: str | None = None
                     )
                     final_url = page.url
 
+                    html = await page.content()
                     response_data = {
                         "status_code": resp.status if resp else 0,
                         "final_url": final_url,
@@ -101,6 +102,7 @@ async def detect_cloaking(url: str, domain: str, evidence_dir: str | None = None
                         "body_length": len(body_text),
                         "link_count": link_count,
                         "gambling_keywords": _count_gambling(body_text),
+                        "html": html,  # full HTML for hacklink extraction
                     }
                     result.responses[ua_name] = response_data
 

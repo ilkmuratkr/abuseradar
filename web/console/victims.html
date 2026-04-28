@@ -117,12 +117,21 @@ function renderTable() {
 
   const rows = items.map(v => {
     const domain = AR.fmt.domain(v.url);
-    // verified state
-    const verified = !v.last_crawl
-      ? AR.badge("Pending verification", "muted")
-      : v.verified === true
-        ? AR.badge("Verified breach", "red")
-        : AR.badge("Crawled · clean", "green");
+    // verified state — crawl_status ile birlikte
+    let verified;
+    if (!v.last_crawl) {
+      verified = AR.badge("Pending verification", "muted");
+    } else if (v.crawl_status === "compromised") {
+      verified = AR.badge("Verified breach", "red");
+    } else if (v.crawl_status === "cloaking_detected") {
+      verified = AR.badge("Cloaking detected", "red");
+    } else if (v.crawl_status === "unreachable") {
+      verified = AR.badge("Crawl failed", "orange");
+    } else if (v.verified === true) {
+      verified = AR.badge("Verified breach", "red");
+    } else {
+      verified = AR.badge("Crawled · clean", "green");
+    }
     return `
       <tr>
         <td>

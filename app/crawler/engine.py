@@ -200,7 +200,56 @@ async def crawl_and_analyze(
         logger.error(f"[{domain}] Playwright hatası: {e}")
         result["error"] = f"playwright: {e}"
 
-    result["status"] = "completed" if result["total_hacklinks"] > 0 else "clean"
+    # ═══ KATMAN 4: Cloaking probe (Googlebot UA pass) ═══
+    # Aynı URL'yi 3 farklı UA ile çekip içerik farklarına bak.
+    # Cloaking varsa hacklink çıkaramamış olsak bile **bu site compromise**.
+    result["cloaking_detected"] = False
+    result["cloaking_evidence"] = []
+    try:
+        from .cloaking import detect_cloaking
+
+        cloak = await detect_cloaking(url, domain, evidence_dir=result.get("evidence_path"))
+        result["cloaking_detected"] = cloak.is_cloaking
+        result["cloaking_evidence"] = cloak.evidence
+
+        # Googlebot UA'nın gördüğü HTML'den hacklink çıkar (varsa)
+        bot_resp = cloak.responses.get("googlebot", {}) or {}
+        bot_html = bot_resp.get("html", "")
+        if bot_html:
+            bot_hacklinks = extract_hacklinks_from_html(bot_html, domain)
+            existing_hrefs = {hl.get("href") for hl in result["raw_hacklinks"] + result["rendered_hacklinks"] + result["js_diff_hacklinks"]}
+            for hl in bot_hacklinks:
+                href = hl.get("href")
+                if href and href not in existing_hrefs:
+                    hl["source"] = "cloaking_googlebot"
+                    result["raw_hacklinks"].append(hl)
+                    existing_hrefs.add(href)
+            # Total güncelle
+            all_hrefs = set()
+            for hl in result["raw_hacklinks"] + result["rendered_hacklinks"] + result["js_diff_hacklinks"]:
+                all_hrefs.add(hl.get("href", ""))
+            result["total_hacklinks"] = len(all_hrefs)
+
+        if cloak.is_cloaking:
+            logger.warning(
+                f"[{domain}] ⚠️ Cloaking sinyal: {len(cloak.evidence)} kanıt — "
+                f"site Googlebot'a farklı içerik gösteriyor"
+            )
+    except Exception as e:
+        logger.warning(f"[{domain}] Cloaking probe hatası: {e}")
+
+    # ═══ STATUS LOGIC ═══
+    if result["total_hacklinks"] > 0:
+        result["status"] = "compromised"
+    elif result["cloaking_detected"]:
+        # Hidden link çıkaramadık ama Googlebot'a farklı sayfa = injection
+        result["status"] = "cloaking_detected"
+    elif result.get("http_code") and result["http_code"] < 400:
+        # Erişildi, hiçbir şey bulunmadı = gerçek temiz
+        result["status"] = "clean"
+    else:
+        # Hiç erişilemedi (timeout, block, DNS) — temiz değil, bilinmiyor
+        result["status"] = "unreachable"
     logger.info(
         f"[{domain}] Crawl tamamlandı: {result['total_hacklinks']} hacklink, "
         f"durum={result['status']}"
@@ -225,8 +274,13 @@ async def save_crawl_results(crawl_result: dict):
             await session.flush()
 
         site.last_crawled_at = datetime.utcnow()
-        site.injection_verified = crawl_result["total_hacklinks"] > 0
-        site.status = "infected" if site.injection_verified else "clean"
+        # Injection verified: ya hacklink bulundu ya cloaking tespit edildi
+        site.injection_verified = (
+            crawl_result.get("total_hacklinks", 0) > 0
+            or bool(crawl_result.get("cloaking_detected"))
+        )
+        # Status: status logic sonucundaki açık metni kullan
+        site.status = crawl_result.get("status", "clean")
 
         # Hacklink'leri kaydet
         all_hacklinks = (
