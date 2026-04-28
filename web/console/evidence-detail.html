@@ -105,9 +105,9 @@
 
         <!-- KPI'lar -->
         <div class="kpis">
-          <div class="kpi red"><div class="kpi-label">Hidden links</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-trend">total unique URLs</div></div>
-          <div class="kpi orange"><div class="kpi-label">In DOM</div><div class="kpi-value" id="kpi-rendered">—</div><div class="kpi-trend">CSS-hidden anchors</div></div>
-          <div class="kpi gold"><div class="kpi-label">JS-injected</div><div class="kpi-value" id="kpi-jsdiff">—</div><div class="kpi-trend">added after page load</div></div>
+          <div class="kpi red"><div class="kpi-label">Total hacklinks</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-trend">external + spam URLs</div></div>
+          <div class="kpi orange"><div class="kpi-label">HTML injection</div><div class="kpi-value" id="kpi-raw">—</div><div class="kpi-trend">in server raw response</div></div>
+          <div class="kpi gold"><div class="kpi-label">JS injection</div><div class="kpi-value" id="kpi-jsdiff">—</div><div class="kpi-trend">added by malicious script</div></div>
           <div class="kpi"><div class="kpi-label">Injection scripts</div><div class="kpi-value" id="kpi-scripts">—</div><div class="kpi-trend">external loaders</div></div>
         </div>
 
@@ -221,10 +221,9 @@ async function loadAll() {
     hl = { rendered_hacklinks: [], js_diff_hacklinks: [], raw_hacklinks: [], injection_scripts: [], cloaking_detected: false, cloaking_evidence: [] };
   }
 
-  const total = bundle.hacklink_count || 0;
-  const rendered = (hl.rendered_hacklinks || []).length;
-  const jsdiff = (hl.js_diff_hacklinks || []).length;
-  const raw = (hl.raw_hacklinks || []).length;
+  const raw = (hl.raw_hacklinks || []).filter(l => l.href).length;
+  const jsdiff = (hl.js_diff_hacklinks || []).filter(l => l.href).length;
+  const total = raw + jsdiff;
   const scriptCount = (hl.injection_scripts || []).length;
 
   // Severity + state
@@ -251,15 +250,14 @@ async function loadAll() {
 
   // KPI
   el("kpi-total").textContent = total;
-  el("kpi-rendered").textContent = rendered;
+  el("kpi-raw").textContent = raw;
   el("kpi-jsdiff").textContent = jsdiff;
   el("kpi-scripts").textContent = scriptCount;
 
-  // Findings — only what we actually observed
+  // Findings — kaynak odaklı (HTML injection vs. JS injection)
   const findings = [];
-  if (rendered) findings.push(`<strong>${rendered} hidden anchor tag${rendered===1?"":"s"}</strong> rendered into the page DOM with hidden CSS (typical: <span class="mono">position:absolute;left:-9999px</span>, <span class="mono">opacity:0</span>, or <span class="mono">display:none</span>).`);
-  if (jsdiff) findings.push(`<strong>${jsdiff} additional link${jsdiff===1?"":"s"}</strong> dynamically injected via JavaScript after page load — absent from the raw HTML response, only present in the rendered DOM.`);
-  if (raw && !rendered) findings.push(`<strong>${raw} hidden link${raw===1?"":"s"}</strong> embedded directly in the server-rendered HTML — server-side template / plugin compromise.`);
+  if (raw) findings.push(`<strong>${raw} hidden link${raw===1?"":"s"}</strong> embedded directly in the server raw HTML response → <strong>template / theme / plugin compromise</strong> (server-side file modified).`);
+  if (jsdiff) findings.push(`<strong>${jsdiff} additional link${jsdiff===1?"":"s"}</strong> injected by JavaScript after page load → <strong>JS injection</strong> (malicious script loaded externally or embedded inline).`);
   if (scriptCount) {
     const c2List = (hl.injection_scripts || []).flatMap(s => s.decoded_c2_urls || []);
     if (c2List.length) findings.push(`<strong>${scriptCount} injection script${scriptCount===1?"":"s"}</strong> with decoded C2 endpoint${c2List.length===1?"":"s"}: ${c2List.slice(0,3).map(u => '<span class="mono" style="color:var(--red)">'+AR.escapeHtml(u)+'</span>').join(', ')}.`);
@@ -298,73 +296,60 @@ async function loadAll() {
     el("cloak-body").innerHTML = `<div class="rpt-callout green">Page rendered identically to all probed user agents (normal browser, Googlebot desktop, Googlebot mobile).</div>`;
   }
 
-  // Hidden links — TÜM hacklink'ler tek tabloda (rendered + js_diff + raw_html)
-  // FILTER: site'nin kendi domain'ine giden link'ler internal navigation, hacklink değil — atla
-  // SCORE FALLBACK: js_inject'te score yok ama domain spam keyword'üne uyuyorsa score ata
-  const SPAM_KW = /casino|bahis|escort|porn|bonus|sex|bet[a-z]*\.|deneme|gambl|slot|onwin|grandpasha|backlinks|hacklink|พน|บา|สล/i;
-  const compromisedDomain = (domain || "").toLowerCase().replace(/^www\./, "");
-  const isSelf = (url) => {
-    try {
-      const h = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
-      return h === compromisedDomain;
-    } catch { return false; }
-  };
-  const inferScore = (url, anchor, given) => {
-    if (given && given > 0) return given;
-    const text = ((anchor || "") + " " + (url || "")).toLowerCase();
-    if (SPAM_KW.test(text)) return 100;
-    return given || 0;
-  };
+  // ═══ Kaynak odaklı rapor ═══
+  // İki net bölüm:
+  //   A) HTML/server-side injection — raw_hacklinks (server raw response'da hidden link var)
+  //   B) JavaScript injection — js_diff_hacklinks (rendered DOM'da var, raw'da yok)
+  // rendered_hacklinks GÖRÜNTÜLENMEZ — site'nin kendi hidden nav menu'sünü içerir, gürültü.
+  const rawList = (hl.raw_hacklinks || []).filter(l => l.href);
+  const jsList = (hl.js_diff_hacklinks || []).filter(l => l.href);
 
-  const allLinks = [];
-  for (const x of (hl.rendered_hacklinks || [])) allLinks.push({...x, _src: "rendered"});
-  for (const x of (hl.js_diff_hacklinks || [])) allLinks.push({...x, _src: "js_inject"});
-  for (const x of (hl.raw_hacklinks || [])) allLinks.push({...x, _src: "raw_html"});
-  const seenH = new Set();
-  const dedup = [];
-  let internalSkipped = 0;
-  for (const l of allLinks) {
-    const h = l.href || "";
-    if (!h || seenH.has(h)) continue;
-    seenH.add(h);
-    if (isSelf(h)) { internalSkipped++; continue; }  // site'nin kendi nav'ı
-    // Score fallback (özellikle js_inject için)
-    l.score = inferScore(h, l.text || l.anchor_text, l.score);
-    dedup.push(l);
-  }
-  dedup.sort((a, b) => (b.score || 0) - (a.score || 0));
-
-  if (!dedup.length) {
-    el("hl-body").innerHTML = '<div class="empty-state">No hidden links detected.</div>';
-    el("hl-meta").textContent = "0 unique URLs";
-  } else {
-    const shown = dedup.slice(0, 200);
-    const rows = shown.map(l => {
+  function renderHackTable(items, kind, sourceInfo) {
+    if (!items.length) {
+      return `<div class="rpt-callout muted">No ${kind} hacklinks detected.</div>`;
+    }
+    const sorted = [...items].sort((a, b) => (b.score || 0) - (a.score || 0));
+    const rows = sorted.slice(0, 200).map(l => {
       const score = l.score || 0;
       const reasons = (l.reasons || l.detection_reasons || []).join(", ") || (l.hiding_method || l.method || "—");
       const scoreColor = score >= 80 ? "var(--red)" : score >= 40 ? "var(--orange)" : "var(--text-3)";
       return `
         <tr class="${score >= 50 ? 'hi' : ''}">
-          <td style="text-align:right;color:${scoreColor}" class="strong">${score}</td>
+          <td style="text-align:right;color:${scoreColor}" class="strong">${score || "—"}</td>
           <td><span class="mono">${AR.escapeHtml(AR.fmt.truncate(l.text || l.anchor_text || "—", 32))}</span></td>
           <td><span class="mono">${AR.escapeHtml(AR.fmt.truncate(l.href || "", 60))}</span></td>
-          <td><span style="font-size:.7rem;color:var(--text-3)">${AR.escapeHtml(l._src)}</span></td>
-          <td><span style="font-size:.7rem;color:var(--text-4)">${AR.escapeHtml(AR.fmt.truncate(reasons, 30))}</span></td>
+          <td><span style="font-size:.7rem;color:var(--text-4)">${AR.escapeHtml(AR.fmt.truncate(reasons, 40))}</span></td>
         </tr>
       `;
     }).join("");
-    el("hl-body").innerHTML = `
+    return `
+      ${sourceInfo ? `<div class="rpt-callout red" style="margin-bottom:.5rem">${sourceInfo}</div>` : ""}
       <table class="rpt-tbl">
-        <thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor</th><th>URL</th><th style="width:80px">Source</th><th style="width:160px">Hiding / reasons</th></tr></thead>
+        <thead><tr><th style="width:55px;text-align:right">Score</th><th>Anchor</th><th>URL</th><th style="width:200px">Hiding / reasons</th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
-      <div style="font-size:.7rem;color:var(--text-4);margin-top:.4rem">
-        Sources: <span class="mono">rendered</span> = found in Playwright DOM with hidden CSS · <span class="mono">js_inject</span> = added by JavaScript after page load · <span class="mono">raw_html</span> = embedded in raw server response.
-      </div>
+      ${items.length > 200 ? `<div style="font-size:.7rem;color:var(--text-4);margin-top:.4rem">Showing first 200 of ${items.length}</div>` : ""}
     `;
-    const noteInternal = internalSkipped > 0 ? ` · ${internalSkipped} internal nav link${internalSkipped===1?"":"s"} excluded` : "";
-    el("hl-meta").textContent = `${dedup.length} external hacklink${dedup.length===1?"":"s"}${noteInternal} ${dedup.length > 200 ? "(showing first 200)" : ""}`;
   }
+
+  // Injection script kaynağı (JS bölümü için header)
+  const scripts = hl.injection_scripts || [];
+  const scriptSrcs = scripts.map(s => s.src || s.url).filter(Boolean);
+  const jsSourceInfo = scripts.length
+    ? `<strong>Injected by:</strong> ${scriptSrcs.length ? scriptSrcs.map(u => '<span class="mono">' + AR.escapeHtml(u) + '</span>').join(", ") : "(inline script)"}`
+    : (jsList.length ? `<strong>Source:</strong> JavaScript-injected (script source not isolated — see DOM dumps)` : "");
+
+  el("hl-body").innerHTML = `
+    <div style="margin-bottom:1.4rem">
+      <div style="font-weight:600;margin-bottom:.4rem;color:var(--text)">A. HTML / server-side injection <span style="font-size:.74rem;font-weight:400;color:var(--text-3)">— ${rawList.length} link${rawList.length===1?"":"s"} embedded in raw server response (template / theme / plugin compromise)</span></div>
+      ${renderHackTable(rawList, "HTML-injected")}
+    </div>
+    <div>
+      <div style="font-weight:600;margin-bottom:.4rem;color:var(--text)">B. JavaScript injection <span style="font-size:.74rem;font-weight:400;color:var(--text-3)">— ${jsList.length} link${jsList.length===1?"":"s"} added by JS after page load (absent from raw HTML)</span></div>
+      ${renderHackTable(jsList, "JS-injected", jsSourceInfo)}
+    </div>
+  `;
+  el("hl-meta").textContent = `${rawList.length} HTML + ${jsList.length} JS = ${rawList.length + jsList.length} external hacklinks`;
 
   // Injection scripts
   const scripts = hl.injection_scripts || [];
