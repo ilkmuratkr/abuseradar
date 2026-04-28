@@ -58,7 +58,11 @@ async def _zeptomail_send(
         "Authorization": token,
     }
 
-    async with httpx.AsyncClient(timeout=20.0) as client:
+    # trust_env=False → HTTP_PROXY/HTTPS_PROXY env varlarını yoksay.
+    # Mail gönderimi VPN üzerinden GİTMEMELİ — Zenlayer/Mullvad IP'sinden
+    # mail atmak ZeptoMail nezdinde fraud sinyali, alıcı tarafında reputation
+    # zararı yapar. Doğrudan host network ile ZeptoMail'e bağlan.
+    async with httpx.AsyncClient(timeout=20.0, trust_env=False) as client:
         r = await client.post(settings.zeptomail_endpoint, json=payload, headers=headers)
 
     if r.status_code >= 400:
