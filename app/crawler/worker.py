@@ -13,7 +13,7 @@ import traceback
 import redis.asyncio as aioredis
 
 from config import settings
-from crawler.engine import crawl_with_fallback
+from crawler.engine import crawl_site
 
 logging.basicConfig(
     level=logging.INFO,
@@ -36,7 +36,7 @@ async def process_job(r, url: str):
     logger.info(f"[{domain}] Crawl başlıyor: {url}")
     await update_status(r, domain, "running", url=url)
     try:
-        result = await crawl_with_fallback(url)
+        result = await crawl_site(url)
         # save to DB (sites + detected_hacklinks)
         try:
             from crawler.engine import save_crawl_results
@@ -52,12 +52,15 @@ async def process_job(r, url: str):
             egress=result.get("egress"),
             http_code=result.get("http_code"),
             total_hacklinks=result.get("total_hacklinks", 0),
+            pages_crawled=result.get("pages_crawled", 0),
+            unique_scripts=len(result.get("unique_scripts", {})),
             evidence_path=result.get("evidence_path"),
             error=result.get("error"),
         )
         logger.info(
-            f"[{domain}] Crawl tamamlandı — egress={result.get('egress')}, "
-            f"hacklinks={result.get('total_hacklinks', 0)}"
+            f"[{domain}] Multi-page crawl tamamlandı — pages={result.get('pages_crawled')}, "
+            f"hacklinks={result.get('total_hacklinks', 0)}, "
+            f"scripts={len(result.get('unique_scripts', {}))}"
         )
     except Exception as e:
         logger.error(f"[{domain}] Crawl hatası: {e}\n{traceback.format_exc()}")

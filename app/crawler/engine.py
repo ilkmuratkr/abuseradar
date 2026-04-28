@@ -1,9 +1,11 @@
 """Ana crawl engine - site analizi orkestratörü."""
 
 import asyncio
+import json
 import logging
 from datetime import datetime
-from urllib.parse import urlparse
+from pathlib import Path
+from urllib.parse import urljoin, urlparse
 
 import httpx
 from playwright.async_api import async_playwright
@@ -21,6 +23,8 @@ from .html_analyzer import (
 )
 
 logger = logging.getLogger(__name__)
+
+MAX_PAGES_PER_SITE = 10  # multi-page crawl limit
 
 
 async def get_known_spam_domains() -> set[str]:
@@ -270,6 +274,245 @@ async def crawl_and_analyze(
     )
 
     return result
+
+
+# ═══════════════════════════════════════════════════════════════════
+# MULTI-PAGE CRAWL — page discovery + aggregate
+# ═══════════════════════════════════════════════════════════════════
+
+
+def _is_same_site(href: str, domain: str) -> bool:
+    """URL site'nin kendi domain'inde mi? (alt-domain dahil)"""
+    try:
+        h = (urlparse(href).hostname or "").lower().replace("www.", "")
+        d = (domain or "").lower().replace("www.", "")
+        return h == d or h.endswith("." + d) or d.endswith("." + h)
+    except Exception:
+        return False
+
+
+async def discover_pages(homepage_url: str, domain: str, max_pages: int = MAX_PAGES_PER_SITE) -> list[str]:
+    """Homepage'den internal link'ler + sitemap.xml — max_pages'e kadar URL listesi."""
+    pages = [homepage_url]
+    seen = {homepage_url.rstrip("/")}
+
+    # 1. Homepage'den internal link'ler
+    try:
+        async with httpx.AsyncClient(
+            timeout=15.0, follow_redirects=True,
+            headers={"User-Agent": settings.crawl_user_agent},
+            proxy="socks5h://vpn-tr:1080", trust_env=False,
+        ) as client:
+            r = await client.get(homepage_url)
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(r.text, "lxml")
+            for a in soup.find_all("a", href=True):
+                href = urljoin(homepage_url, a["href"])
+                # Internal mi?
+                if not _is_same_site(href, domain):
+                    continue
+                # Fragment'i temizle, query bırak
+                clean = href.split("#")[0].rstrip("/")
+                if clean in seen or not clean.startswith("http"):
+                    continue
+                # PDF / image atla
+                if any(clean.lower().endswith(x) for x in (".pdf", ".jpg", ".png", ".jpeg", ".gif", ".zip", ".doc", ".xls")):
+                    continue
+                pages.append(href)
+                seen.add(clean)
+                if len(pages) >= max_pages:
+                    break
+    except Exception as e:
+        logger.warning(f"[{domain}] Internal link discovery hatası: {e}")
+
+    # 2. sitemap.xml — daha fazla yer varsa doldur
+    if len(pages) < max_pages:
+        for sitemap_url in (f"https://{domain}/sitemap.xml", f"https://{domain}/sitemap_index.xml"):
+            try:
+                async with httpx.AsyncClient(
+                    timeout=15.0, follow_redirects=True,
+                    headers={"User-Agent": settings.crawl_user_agent},
+                    proxy="socks5h://vpn-tr:1080", trust_env=False,
+                ) as client:
+                    r = await client.get(sitemap_url)
+                    if r.status_code != 200:
+                        continue
+                    from bs4 import BeautifulSoup
+                    soup = BeautifulSoup(r.text, "xml")
+                    for loc in soup.find_all("loc"):
+                        url = loc.get_text().strip()
+                        clean = url.split("#")[0].rstrip("/")
+                        if clean in seen or not _is_same_site(url, domain):
+                            continue
+                        if any(clean.lower().endswith(x) for x in (".pdf", ".jpg", ".png", ".jpeg", ".gif", ".zip")):
+                            continue
+                        pages.append(url)
+                        seen.add(clean)
+                        if len(pages) >= max_pages:
+                            break
+                if len(pages) >= max_pages:
+                    break
+            except Exception:
+                pass
+
+    logger.info(f"[{domain}] Discovered {len(pages)} pages (homepage + internal + sitemap)")
+    return pages[:max_pages]
+
+
+async def crawl_site(homepage_url: str, max_pages: int = MAX_PAGES_PER_SITE) -> dict:
+    """Multi-page crawl: anasayfa + internal links + sitemap (max N sayfa).
+
+    Her sayfayı crawl_with_fallback ile çek, sonuçları aggregate et:
+    - Unique injection scripts (hangi script hangi sayfada yüklü)
+    - Hacklinks per source script
+    - Total unique hacklinks
+    - Cloaking signal (en az bir sayfada varsa)
+    """
+    domain = urlparse(homepage_url).hostname or ""
+    pages = await discover_pages(homepage_url, domain, max_pages)
+
+    aggregate = {
+        "url": homepage_url,
+        "domain": domain,
+        "pages_crawled": 0,
+        "pages_attempted": len(pages),
+        "page_results": [],          # [{url, raw_count, js_count, http_code, scripts, status}]
+        "unique_scripts": {},        # {src: {src, decoded_c2_urls, pages: [url1,...]}}
+        "raw_hacklinks": [],
+        "js_diff_hacklinks": [],
+        "rendered_hacklinks": [],
+        "injection_scripts": [],
+        "total_hacklinks": 0,
+        "cloaking_detected": False,
+        "cloaking_evidence": [],
+        "evidence_path": None,
+        "status": "pending",
+        "http_code": None,
+        "egress": None,
+    }
+
+    seen_raw = set()
+    seen_js = set()
+    seen_rendered = set()
+
+    for idx, page_url in enumerate(pages, start=1):
+        logger.info(f"[{domain}] Page {idx}/{len(pages)}: {page_url}")
+        try:
+            r = await crawl_with_fallback(page_url, domain=domain)
+        except Exception as e:
+            logger.error(f"[{domain}] Page {idx} crawl exception: {e}")
+            continue
+
+        # İlk sayfa için (homepage), evidence_path ve egress'i agregate'e al
+        if idx == 1:
+            aggregate["evidence_path"] = r.get("evidence_path")
+            aggregate["egress"] = r.get("egress")
+            aggregate["http_code"] = r.get("http_code")
+
+        # Page summary
+        page_scripts = r.get("injection_scripts", []) or []
+        aggregate["page_results"].append({
+            "url": page_url,
+            "raw_count": len(r.get("raw_hacklinks", []) or []),
+            "js_count": len(r.get("js_diff_hacklinks", []) or []),
+            "rendered_count": len(r.get("rendered_hacklinks", []) or []),
+            "http_code": r.get("http_code"),
+            "scripts": [s.get("src", "(inline)") for s in page_scripts],
+            "status": r.get("status"),
+            "egress": r.get("egress"),
+            "cloaking": bool(r.get("cloaking_detected")),
+        })
+        aggregate["pages_crawled"] += 1
+
+        # Aggregate scripts (unique src bazlı)
+        for s in page_scripts:
+            src = s.get("src") or s.get("url") or "(inline)"
+            if src not in aggregate["unique_scripts"]:
+                aggregate["unique_scripts"][src] = {
+                    "src": src,
+                    "decoded_c2_urls": list(set(s.get("decoded_c2_urls", []) or [])),
+                    "pages": [],
+                    "snippet": s.get("snippet"),
+                }
+            if page_url not in aggregate["unique_scripts"][src]["pages"]:
+                aggregate["unique_scripts"][src]["pages"].append(page_url)
+            # C2 URL'leri merge
+            for u in (s.get("decoded_c2_urls") or []):
+                if u not in aggregate["unique_scripts"][src]["decoded_c2_urls"]:
+                    aggregate["unique_scripts"][src]["decoded_c2_urls"].append(u)
+
+        # Hacklinks dedup
+        for hl in (r.get("raw_hacklinks", []) or []):
+            h = hl.get("href")
+            if h and h not in seen_raw:
+                seen_raw.add(h)
+                hl["_page"] = page_url
+                aggregate["raw_hacklinks"].append(hl)
+        for hl in (r.get("js_diff_hacklinks", []) or []):
+            h = hl.get("href")
+            if h and h not in seen_js:
+                seen_js.add(h)
+                hl["_page"] = page_url
+                aggregate["js_diff_hacklinks"].append(hl)
+        for hl in (r.get("rendered_hacklinks", []) or []):
+            h = hl.get("href")
+            if h and h not in seen_rendered:
+                seen_rendered.add(h)
+                aggregate["rendered_hacklinks"].append(hl)
+
+        # Cloaking
+        if r.get("cloaking_detected"):
+            aggregate["cloaking_detected"] = True
+            for ev in (r.get("cloaking_evidence") or []):
+                if ev not in aggregate["cloaking_evidence"]:
+                    aggregate["cloaking_evidence"].append(ev)
+
+    aggregate["injection_scripts"] = list(aggregate["unique_scripts"].values())
+    # Total = raw ∪ js (rendered redundant)
+    aggregate["total_hacklinks"] = len(aggregate["raw_hacklinks"]) + len(aggregate["js_diff_hacklinks"])
+
+    # Status
+    if aggregate["total_hacklinks"] > 0:
+        aggregate["status"] = "compromised"
+    elif aggregate["cloaking_detected"]:
+        aggregate["status"] = "cloaking_detected"
+    elif aggregate["http_code"] and aggregate["http_code"] < 400:
+        aggregate["status"] = "clean"
+    else:
+        aggregate["status"] = "unreachable"
+
+    logger.info(
+        f"[{domain}] Multi-page crawl tamamlandı: {aggregate['pages_crawled']}/{aggregate['pages_attempted']} sayfa, "
+        f"{aggregate['total_hacklinks']} hacklink, {len(aggregate['unique_scripts'])} unique script, "
+        f"durum={aggregate['status']}"
+    )
+
+    # Aggregate kanıt: evidence/{domain}/analysis/aggregate.json
+    try:
+        out_dir = Path(settings.evidence_path) / domain / "analysis"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        agg_clean = {k: v for k, v in aggregate.items() if k not in ("rendered_hacklinks",)}
+        (out_dir / "aggregate.json").write_text(
+            json.dumps(agg_clean, indent=2, default=str), encoding="utf-8"
+        )
+        # hacklinks.json'i de aggregate ile güncel tut
+        (out_dir / "hacklinks.json").write_text(
+            json.dumps({
+                "raw_hacklinks": aggregate["raw_hacklinks"],
+                "js_diff_hacklinks": aggregate["js_diff_hacklinks"],
+                "rendered_hacklinks": aggregate["rendered_hacklinks"],
+                "injection_scripts": aggregate["injection_scripts"],
+                "cloaking_detected": aggregate["cloaking_detected"],
+                "cloaking_evidence": aggregate["cloaking_evidence"],
+                "total_hacklinks": aggregate["total_hacklinks"],
+                "pages_crawled": aggregate["pages_crawled"],
+                "page_results": aggregate["page_results"],
+            }, indent=2, default=str), encoding="utf-8"
+        )
+    except Exception as e:
+        logger.warning(f"[{domain}] aggregate.json yazma hatası: {e}")
+
+    return aggregate
 
 
 async def save_crawl_results(crawl_result: dict):

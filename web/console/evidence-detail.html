@@ -105,10 +105,10 @@
 
         <!-- KPI'lar -->
         <div class="kpis">
-          <div class="kpi red"><div class="kpi-label">Total hacklinks</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-trend">external + spam URLs</div></div>
+          <div class="kpi red"><div class="kpi-label">Total hacklinks</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-trend">unique external URLs</div></div>
           <div class="kpi orange"><div class="kpi-label">HTML injection</div><div class="kpi-value" id="kpi-raw">—</div><div class="kpi-trend">in server raw response</div></div>
           <div class="kpi gold"><div class="kpi-label">JS injection</div><div class="kpi-value" id="kpi-jsdiff">—</div><div class="kpi-trend">added by malicious script</div></div>
-          <div class="kpi"><div class="kpi-label">Injection scripts</div><div class="kpi-value" id="kpi-scripts">—</div><div class="kpi-trend">external loaders</div></div>
+          <div class="kpi"><div class="kpi-label">Pages / Scripts</div><div class="kpi-value" id="kpi-pages">—</div><div class="kpi-trend"><span id="kpi-scripts">—</span> unique injection scripts</div></div>
         </div>
 
         <!-- Findings -->
@@ -251,7 +251,9 @@ async function loadAll() {
       : `No injection signals observed in this capture. Captured ${AR.fmt.date(bundle.captured_at)}.`;
 
   // KPI
-  // (KPI'lar rawList/jsList hesaplandıktan sonra güncellenecek — aşağıda set edilir)
+  // Pages crawled (aggregate metric)
+  const pagesCrawled = (hl.pages_crawled !== undefined) ? hl.pages_crawled : 1;
+  el("kpi-pages").textContent = pagesCrawled;
   el("kpi-scripts").textContent = scriptCount;
 
   // Findings — rawList/jsList hesaplandıktan sonra üretilir; aşağıda yapılır
@@ -411,14 +413,49 @@ async function loadAll() {
   } else {
     el("scripts-body").innerHTML = scripts.map(s => {
       const c2 = (s.decoded_c2_urls || []).slice(0, 8);
+      const pageList = (s.pages || []).slice(0, 6);
+      const pageCount = (s.pages || []).length;
       return `
         <div class="rpt-callout red" style="margin-bottom:.5rem">
           <div><strong>Script source:</strong> <span class="mono">${AR.escapeHtml(s.src || s.url || "(inline)")}</span></div>
+          ${pageCount ? `<div style="margin-top:.3rem;font-size:.78rem;color:var(--text-3)"><strong>Loaded on ${pageCount} page${pageCount===1?"":"s"}:</strong><br>${pageList.map(p => '<span class="mono" style="font-size:.7rem">' + AR.escapeHtml(p) + '</span>').join('<br>')}${pageCount > 6 ? '<br><em>...and ' + (pageCount-6) + ' more</em>' : ''}</div>` : ""}
           ${c2.length ? `<div style="margin-top:.3rem"><strong>Decoded C2 endpoint${c2.length===1?"":"s"}:</strong><br>${c2.map(u => '<span class="mono" style="color:var(--red)">' + AR.escapeHtml(u) + '</span>').join('<br>')}</div>` : ""}
           ${s.snippet ? `<pre class="rpt-code" style="margin-top:.4rem;max-height:160px">${AR.escapeHtml(s.snippet.slice(0, 800))}</pre>` : ""}
         </div>
       `;
     }).join("");
+  }
+
+  // Crawled pages summary (yeni bölüm — aggregate.json'daki page_results)
+  const pageResults = hl.page_results || [];
+  if (pageResults.length > 1) {
+    const pagesHtml = `
+      <h2 style="margin-top:1.4rem">Pages crawled <span class="meta">${pageResults.length} pages explored, max ${10}</span></h2>
+      <table class="rpt-tbl">
+        <thead><tr><th>Page URL</th><th class="right">Raw hacklinks</th><th class="right">JS hacklinks</th><th class="right">Scripts</th><th>Status</th></tr></thead>
+        <tbody>
+          ${pageResults.map(p => `
+            <tr>
+              <td><span class="mono" style="font-size:.7rem">${AR.escapeHtml(AR.fmt.truncate(p.url, 60))}</span></td>
+              <td class="right">${p.raw_count || 0}</td>
+              <td class="right">${p.js_count || 0}</td>
+              <td class="right">${(p.scripts || []).length}</td>
+              <td>${AR.statusBadge(p.status || "?")}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+    // Inject between hidden links and scripts
+    const hlSec = document.querySelector("h2:nth-of-type(4)");
+    // Daha güvenli: scripts-body öncesine
+    const sb = el("scripts-body");
+    if (sb && !document.getElementById("pages-summary")) {
+      const wrap = document.createElement("div");
+      wrap.id = "pages-summary";
+      wrap.innerHTML = pagesHtml;
+      sb.parentNode.insertBefore(wrap, sb.previousElementSibling || sb);
+    }
   }
 
   // DOM dumps
