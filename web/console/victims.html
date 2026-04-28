@@ -149,8 +149,11 @@ function renderTable() {
           <button class="btn-link crawl-btn" data-domain="${AR.escapeHtml(domain)}" data-url="${AR.escapeHtml(v.url)}" style="margin-right:.4rem">
             Crawl
           </button>
-          <button class="btn-link mail-btn" data-domain="${AR.escapeHtml(domain)}" data-url="${AR.escapeHtml(v.url)}">
+          <button class="btn-link mail-btn" data-domain="${AR.escapeHtml(domain)}" data-url="${AR.escapeHtml(v.url)}" style="margin-right:.4rem">
             Mail
+          </button>
+          <button class="btn-link site-del-btn" data-domain="${AR.escapeHtml(domain)}" style="color:var(--red)">
+            Delete
           </button>
         </td>
       </tr>
@@ -168,6 +171,23 @@ function renderTable() {
   // Mail butonlarını bağla
   document.querySelectorAll(".mail-btn").forEach(btn => {
     btn.addEventListener("click", () => openMailModal(btn.dataset.domain));
+  });
+
+  // Site delete butonları
+  document.querySelectorAll(".site-del-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const d = btn.dataset.domain;
+      if (!confirm(`Delete site ${d}?\n\nThis removes:\n- Site row\n- All detected hacklinks\n- All saved contacts\n- All notification records\n\nBacklink CSV intake rows are KEPT (source of truth). Evidence files are KEPT (use Evidence → Delete to remove those separately).\n\nCannot be undone.`)) return;
+      btn.disabled = true; btn.textContent = "Deleting…";
+      try {
+        await AR.del(`/sites/${encodeURIComponent(d)}`);
+        AR.toast(`${d} removed`, "success");
+        loadVictims();
+      } catch (e) {
+        AR.toast(e.message, "error");
+        btn.disabled = false; btn.textContent = "Delete";
+      }
+    });
   });
 
   // Crawl butonlarını bağla

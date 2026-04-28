@@ -118,15 +118,32 @@ async function loadC2() {
         <td><span style="font-size:.78rem;color:var(--text-3)">${AR.escapeHtml(c.hosting_provider || "—")}</span></td>
         <td>${c.cloudflare_protected ? AR.badge("CF", "orange") : "—"}</td>
         <td><span style="font-size:.74rem;color:var(--text-4)">${AR.fmt.relative(c.first_seen)}</span></td>
+        <td class="right"><button class="btn-link c2-del-btn" data-domain="${AR.escapeHtml(c.domain)}" style="color:var(--red)">Delete</button></td>
       </tr>
     `).join("");
 
     host.innerHTML = `
       <table class="tbl">
-        <thead><tr><th>Domain</th><th>Role</th><th>Status</th><th>IP</th><th>Hosting</th><th>CF</th><th>First seen</th></tr></thead>
+        <thead><tr><th>Domain</th><th>Role</th><th>Status</th><th>IP</th><th>Hosting</th><th>CF</th><th>First seen</th><th></th></tr></thead>
         <tbody>${rows}</tbody>
       </table>
     `;
+
+    document.querySelectorAll(".c2-del-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const d = btn.dataset.domain;
+        if (!confirm(`Delete C2 domain ${d}?\n\nThis removes the registry entry. Existing complaints/notifications referencing this domain are kept.`)) return;
+        btn.disabled = true; btn.textContent = "Deleting…";
+        try {
+          await AR.del(`/c2/${encodeURIComponent(d)}`);
+          AR.toast(`${d} removed`, "success");
+          loadC2();
+        } catch (e) {
+          AR.toast(e.message, "error");
+          btn.disabled = false; btn.textContent = "Delete";
+        }
+      });
+    });
 
     targetSelect.innerHTML = r.c2_domains
       .map(c => `<option value="${AR.escapeHtml(c.domain)}">${AR.escapeHtml(c.domain)}</option>`)

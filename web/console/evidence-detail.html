@@ -79,6 +79,10 @@
           <svg viewBox="0 0 24 24"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
           Print / PDF
         </button>
+        <button class="btn btn-ghost" id="btn-delete" style="color:var(--red)">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg>
+          Delete bundle
+        </button>
       </div>
     </header>
 
@@ -166,6 +170,16 @@ if (!domain) {
 } else {
   document.getElementById("crumb-domain").textContent = domain;
   document.getElementById("btn-print").addEventListener("click", () => window.print());
+  document.getElementById("btn-delete").addEventListener("click", async () => {
+    if (!confirm(`Delete bundle for ${domain}?\n\nFilesystem files (screenshots, DOM dumps, analysis) will be removed.\nDetected hacklink rows will be cleaned from DB.\nSite verification status will reset to 'pending'.\n\nThis cannot be undone.`)) return;
+    try {
+      await AR.del(`/evidence/${encodeURIComponent(domain)}`);
+      AR.toast(`${domain} bundle deleted`, "success");
+      setTimeout(() => location.href = "evidence.html", 1200);
+    } catch (e) {
+      AR.toast(e.message, "error");
+    }
+  });
   loadAll();
 }
 

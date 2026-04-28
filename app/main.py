@@ -963,6 +963,93 @@ async def evidence_dom_content(domain: str, name: str):
     return PlainTextResponse(content)
 
 
+@app.delete("/evidence/{domain}")
+async def delete_evidence(domain: str):
+    """Bundle'ı sil — filesystem + DB cleanup.
+
+    - /data/evidence/{domain}/ klasörünü tamamen siler
+    - sites.last_crawled_at, injection_verified, status sıfırlanır (site row kalır)
+    - DetectedHacklink rows site_id'ye göre silinir
+    """
+    import shutil
+    from pathlib import Path
+
+    safe = domain.strip().replace("/", "").replace("..", "")
+    if not safe:
+        raise HTTPException(400, "domain gerekli")
+
+    # 1. Filesystem
+    bundle_dir = Path(settings.evidence_path) / safe
+    fs_removed = False
+    if bundle_dir.exists() and bundle_dir.is_dir():
+        shutil.rmtree(str(bundle_dir))
+        fs_removed = True
+
+    # 2. DB cleanup
+    async with async_session() as session:
+        site_q = await session.execute(select(Site).where(Site.domain == safe))
+        site = site_q.scalar_one_or_none()
+        if site:
+            # Bağlı hacklink'leri sil
+            from sqlalchemy import delete
+            await session.execute(
+                delete(DetectedHacklink).where(DetectedHacklink.site_id == site.id)
+            )
+            site.last_crawled_at = None
+            site.injection_verified = False
+            site.status = "pending"
+            await session.commit()
+
+    return {"deleted": True, "domain": safe, "filesystem": fs_removed}
+
+
+@app.delete("/c2/{domain}")
+async def delete_c2(domain: str):
+    """C2 domain'i sil."""
+    from sqlalchemy import delete
+    safe = domain.strip().lower()
+    async with async_session() as session:
+        result = await session.execute(
+            delete(C2Domain).where(C2Domain.domain == safe)
+        )
+        await session.commit()
+        if result.rowcount == 0:
+            raise HTTPException(404, f"{safe} bulunamadı")
+    return {"deleted": True, "domain": safe}
+
+
+@app.delete("/sites/{domain}")
+async def delete_site(domain: str):
+    """Mağdur site kaydını ve bağlı her şeyi sil (cascade).
+
+    - DetectedHacklink, Notification, Contact, Site siler
+    - Backlink rows DOKUNULMAZ (CSV intake source-of-truth)
+    - Filesystem evidence DOKUNULMAZ (DELETE /evidence/{domain} ayrı)
+    """
+    from sqlalchemy import delete
+    safe = domain.strip().lower()
+
+    async with async_session() as session:
+        site_q = await session.execute(select(Site).where(Site.domain == safe))
+        site = site_q.scalar_one_or_none()
+        if not site:
+            raise HTTPException(404, f"{safe} bulunamadı")
+
+        await session.execute(
+            delete(Notification).where(Notification.site_id == site.id)
+        )
+        await session.execute(
+            delete(Contact).where(Contact.site_id == site.id)
+        )
+        await session.execute(
+            delete(DetectedHacklink).where(DetectedHacklink.site_id == site.id)
+        )
+        await session.delete(site)
+        await session.commit()
+
+    return {"deleted": True, "domain": safe}
+
+
 # ═══════════════════════════════════════════════════════════════
 # SYSTEM
 # ═══════════════════════════════════════════════════════════════

@@ -67,7 +67,10 @@ async function load() {
         <td class="right strong" style="color:var(--orange)">${b.hacklink_count}</td>
         <td>${b.has_analysis ? AR.badge("Analysed", "green") : AR.badge("DOM only", "muted")}</td>
         <td><span style="font-size:.74rem;color:var(--text-3)">${AR.fmt.relative(b.captured_at)}</span></td>
-        <td class="right"><a href="evidence-detail.html?domain=${encodeURIComponent(b.domain)}" class="btn-link">Open →</a></td>
+        <td class="right" style="white-space:nowrap">
+          <a href="evidence-detail.html?domain=${encodeURIComponent(b.domain)}" class="btn-link" style="margin-right:.5rem">Open</a>
+          <button class="btn-link ev-del-btn" data-domain="${AR.escapeHtml(b.domain)}" style="color:var(--red)">Delete</button>
+        </td>
       </tr>
     `).join("");
 
@@ -77,6 +80,22 @@ async function load() {
         <tbody>${rows}</tbody>
       </table>
     `;
+
+    document.querySelectorAll(".ev-del-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const d = btn.dataset.domain;
+        if (!confirm(`Delete bundle for ${d}?\n\nFilesystem files will be removed (screenshots, DOM dumps, analysis).\nDB hacklink rows will be cleaned.\nSite verification status will reset.\n\nThis cannot be undone.`)) return;
+        btn.disabled = true; btn.textContent = "Deleting…";
+        try {
+          await AR.del(`/evidence/${encodeURIComponent(d)}`);
+          AR.toast(`${d} bundle deleted`, "success");
+          load();
+        } catch (e) {
+          AR.toast(e.message, "error");
+          btn.disabled = false; btn.textContent = "Delete";
+        }
+      });
+    });
   } catch (e) {
     AR.showError("ev-host", e.message);
   }
