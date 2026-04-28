@@ -54,6 +54,8 @@
       .kpi { box-shadow: none !important; }
       a { color: inherit !important; text-decoration: none !important; }
       .panel, .panel-body { box-shadow: none !important; border: 1px solid #ddd !important; }
+      /* Operator-only rows (egress, bundle size) → IT raporunda gizlensin */
+      .op-only { display: none !important; }
     }
   </style>
 </head>
@@ -141,8 +143,14 @@
           <li><strong>Locate the injection</strong> — search the site's footer / header / sidebar templates for the absolutely-positioned hidden link cluster (typical CSS: <span class="mono">position:absolute;left:-9999px</span>, <span class="mono">opacity:0;height:0</span>, or <span class="mono">display:none</span>). The DOM excerpt in Section 6 shows the exact lines.</li>
           <li><strong>Audit recently modified files</strong> — look for backdoor PHP web-shells under <span class="mono">/wp-content/</span>, <span class="mono">/admin/</span>, or template directories. Disable any out-of-date CMS plugins.</li>
           <li><strong>Rotate credentials</strong> — change all CMS administrator passwords, FTP/SSH keys. If possible, redeploy from a known-clean backup.</li>
-          <li><strong>Verify closure</strong> — reply to the AbuseRadar notification email; AbuseRadar re-renders the page within 12 hours and confirms.</li>
+          <li><strong>Verify closure</strong> — reply to <span class="mono">team@abuseradar.org</span> (or the original notification email). AbuseRadar re-renders the page within 12 hours and confirms.</li>
         </ol>
+        <div class="rpt-callout muted" style="margin-top:.5rem">
+          <strong>Contact:</strong> &nbsp;
+          From: <span class="mono">research@abuseradar.org</span> &nbsp;·&nbsp;
+          Reply-To: <span class="mono">team@abuseradar.org</span> &nbsp;·&nbsp;
+          Abuse: <span class="mono">abuse@abuseradar.org</span>
+        </div>
 
         <!-- Hosting & registrar -->
         <h2>8. Hosting &amp; registrar <span class="meta">automatic WHOIS / IP lookup</span></h2>
@@ -291,16 +299,37 @@ async function loadAll() {
   }
 
   // Hidden links — TÜM hacklink'ler tek tabloda (rendered + js_diff + raw_html)
+  // FILTER: site'nin kendi domain'ine giden link'ler internal navigation, hacklink değil — atla
+  // SCORE FALLBACK: js_inject'te score yok ama domain spam keyword'üne uyuyorsa score ata
+  const SPAM_KW = /casino|bahis|escort|porn|bonus|sex|bet[a-z]*\.|deneme|gambl|slot|onwin|grandpasha|backlinks|hacklink|พน|บา|สล/i;
+  const compromisedDomain = (domain || "").toLowerCase().replace(/^www\./, "");
+  const isSelf = (url) => {
+    try {
+      const h = new URL(url).hostname.toLowerCase().replace(/^www\./, "");
+      return h === compromisedDomain;
+    } catch { return false; }
+  };
+  const inferScore = (url, anchor, given) => {
+    if (given && given > 0) return given;
+    const text = ((anchor || "") + " " + (url || "")).toLowerCase();
+    if (SPAM_KW.test(text)) return 100;
+    return given || 0;
+  };
+
   const allLinks = [];
   for (const x of (hl.rendered_hacklinks || [])) allLinks.push({...x, _src: "rendered"});
   for (const x of (hl.js_diff_hacklinks || [])) allLinks.push({...x, _src: "js_inject"});
   for (const x of (hl.raw_hacklinks || [])) allLinks.push({...x, _src: "raw_html"});
   const seenH = new Set();
   const dedup = [];
+  let internalSkipped = 0;
   for (const l of allLinks) {
     const h = l.href || "";
     if (!h || seenH.has(h)) continue;
     seenH.add(h);
+    if (isSelf(h)) { internalSkipped++; continue; }  // site'nin kendi nav'ı
+    // Score fallback (özellikle js_inject için)
+    l.score = inferScore(h, l.text || l.anchor_text, l.score);
     dedup.push(l);
   }
   dedup.sort((a, b) => (b.score || 0) - (a.score || 0));
@@ -333,7 +362,8 @@ async function loadAll() {
         Sources: <span class="mono">rendered</span> = found in Playwright DOM with hidden CSS · <span class="mono">js_inject</span> = added by JavaScript after page load · <span class="mono">raw_html</span> = embedded in raw server response.
       </div>
     `;
-    el("hl-meta").textContent = `${dedup.length} unique URL${dedup.length===1?"":"s"} ${dedup.length > 200 ? "(showing first 200)" : ""}`;
+    const noteInternal = internalSkipped > 0 ? ` · ${internalSkipped} internal nav link${internalSkipped===1?"":"s"} excluded` : "";
+    el("hl-meta").textContent = `${dedup.length} external hacklink${dedup.length===1?"":"s"}${noteInternal} ${dedup.length > 200 ? "(showing first 200)" : ""}`;
   }
 
   // Injection scripts
@@ -363,16 +393,17 @@ async function loadAll() {
   // Hosting & registrar
   loadHosting(domain);
 
-  // Appendix
+  // Appendix — operator-only metadata (egress/methodology) print mode'da gizlenir.
+  // IT departmanı / hosting'e giden raporda görünmez.
   el("meta-rows").innerHTML = `
     <tr><th style="width:32%">Bundle ID</th><td class="mono">${AR.escapeHtml(bundle.bundle_id)}</td></tr>
     <tr><th>Domain</th><td class="mono">${AR.escapeHtml(bundle.domain)}</td></tr>
     <tr><th>Capture timestamp</th><td>${AR.fmt.date(bundle.captured_at)}</td></tr>
     <tr><th>Screenshots</th><td>${bundle.screenshots}</td></tr>
     <tr><th>DOM dumps</th><td>${bundle.dom_files}</td></tr>
-    <tr><th>Bundle size</th><td>${AR.fmt.bytes(bundle.size_bytes)}</td></tr>
-    <tr><th>Egress / VPN</th><td>VPN-TR (Istanbul) · fallback chain TR → US → host</td></tr>
-    <tr><th>Methodology</th><td>AbuseRadar v1.4 — <a href="../research.html" style="color:var(--teal)">research.abuseradar.org</a></td></tr>
+    <tr class="op-only"><th>Bundle size</th><td>${AR.fmt.bytes(bundle.size_bytes)}</td></tr>
+    <tr class="op-only"><th>Egress / VPN</th><td>VPN-TR (Istanbul) · fallback chain TR → US → host</td></tr>
+    <tr><th>Verification</th><td>AbuseRadar Research · <a href="https://abuseradar.org/research.html" style="color:var(--teal)">abuseradar.org</a></td></tr>
   `;
 }
 
