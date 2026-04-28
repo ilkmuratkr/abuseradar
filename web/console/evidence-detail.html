@@ -351,8 +351,7 @@ async function loadAll() {
   `;
   el("hl-meta").textContent = `${rawList.length} HTML + ${jsList.length} JS = ${rawList.length + jsList.length} external hacklinks`;
 
-  // Injection scripts
-  const scripts = hl.injection_scripts || [];
+  // Injection scripts (üstte 'scripts' zaten tanımlı — re-use)
   if (!scripts.length) {
     el("scripts-body").innerHTML = '<div class="rpt-callout green">No external injection scripts identified in this capture.</div>';
   } else {
