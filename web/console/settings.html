@@ -101,7 +101,8 @@ async function loadHealth() {
       ["Database (PostgreSQL)", h.db],
       ["Cache (Redis)", h.redis],
       ["Gemini API key", h.gemini_key],
-      ["Resend API key", h.resend_key],
+      ["ZeptoMail token", h.zeptomail_token],
+      ["Mail From", h.email_from],
     ];
     document.getElementById("health-rows").innerHTML = rows.map(([k, v]) => `
       <tr>
@@ -143,7 +144,7 @@ async function loadIntegrations() {
     const h = await AR.get("/health/detailed");
     const items = [
       { name: "Gemini · classifier & vision", status: h.gemini_key === "set" ? "connected" : "missing" },
-      { name: "Resend · outbound email", status: h.resend_key === "set" ? "connected" : "missing" },
+      { name: "ZeptoMail · outbound email", status: h.zeptomail_token === "set" ? "connected" : "missing" },
       { name: "Cloudflare abuse · OpenClaw", status: "automated" },
       { name: "Google Safe Browsing", status: "public" },
     ];

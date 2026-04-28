@@ -66,7 +66,10 @@ async def health_detailed():
         out["redis"] = f"error: {e}"
 
     out["gemini_key"] = "set" if settings.gemini_api_key and not settings.gemini_api_key.startswith("your_") else "missing"
-    out["resend_key"] = "set" if settings.resend_api_key and not settings.resend_api_key.startswith("your_") else "missing"
+    tok = (settings.zeptomail_token or "").strip()
+    out["zeptomail_token"] = "set" if tok and "your_token" not in tok.lower() else "missing"
+    out["email_from"] = settings.email_from
+    out["email_reply_to"] = settings.email_reply_to
 
     return out
 

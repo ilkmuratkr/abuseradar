@@ -1,8 +1,9 @@
-"""Email gönderim - Resend API entegrasyonu."""
+"""Email gönderim - Zoho ZeptoMail REST API entegrasyonu."""
 
 import logging
 from datetime import datetime, timedelta
 
+import httpx
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -12,6 +13,58 @@ from models.database import Contact, Notification, Site, async_session
 from .language import get_language, get_subject, render_template
 
 logger = logging.getLogger(__name__)
+
+
+async def _zeptomail_send(
+    *,
+    to_email: str,
+    to_name: str | None,
+    subject: str,
+    text_body: str,
+) -> dict:
+    """ZeptoMail REST API çağrısı."""
+    token = settings.zeptomail_token.strip()
+    if not token:
+        return {"id": "simulated", "status": "simulated"}
+
+    if not token.lower().startswith("zoho-enczapikey "):
+        token = f"Zoho-enczapikey {token}"
+
+    payload = {
+        "from": {
+            "address": settings.email_from,
+            "name": settings.email_from_name,
+        },
+        "to": [
+            {
+                "email_address": {
+                    "address": to_email,
+                    "name": to_name or to_email.split("@")[0],
+                }
+            }
+        ],
+        "reply_to": [
+            {
+                "address": settings.email_reply_to,
+                "name": settings.email_reply_to_name,
+            }
+        ],
+        "subject": subject,
+        "textbody": text_body,
+    }
+    headers = {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": token,
+    }
+
+    async with httpx.AsyncClient(timeout=20.0) as client:
+        r = await client.post(settings.zeptomail_endpoint, json=payload, headers=headers)
+
+    if r.status_code >= 400:
+        raise RuntimeError(f"ZeptoMail HTTP {r.status_code}: {r.text}")
+    data = r.json()
+    return {"id": (data.get("data") or [{}])[0].get("message_id", "unknown"), "status": "sent"}
 
 
 async def send_alert(
@@ -59,21 +112,14 @@ async def send_alert(
             report_url=report_url,
         )
 
-        # Resend API ile gönder
+        # ZeptoMail API ile gönder
         try:
-            if not settings.resend_api_key or settings.resend_api_key == "your_resend_api_key_here":
-                logger.warning("Resend API key ayarlanmamış, email simüle ediliyor")
-                result = {"id": "simulated", "status": "simulated"}
-            else:
-                import resend
-                resend.api_key = settings.resend_api_key
-                result = resend.Emails.send({
-                    "from": settings.email_from,
-                    "to": contact.email,
-                    "reply_to": settings.email_reply_to,
-                    "subject": subject,
-                    "text": body,
-                })
+            result = await _zeptomail_send(
+                to_email=contact.email,
+                to_name=None,
+                subject=subject,
+                text_body=body,
+            )
 
             # Notification kaydı
             if notif:

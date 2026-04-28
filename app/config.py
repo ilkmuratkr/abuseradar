@@ -9,9 +9,14 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/0"
 
     gemini_api_key: str = ""
-    resend_api_key: str = ""
-    email_from: str = "alerts@abuseradar.org"
-    email_reply_to: str = "alerts@abuseradar.org"
+
+    # ZeptoMail (transactional email)
+    zeptomail_token: str = ""  # "Zoho-enczapikey ..." veya sadece token
+    zeptomail_endpoint: str = "https://api.zeptomail.eu/v1.1/email"
+    email_from: str = "research@abuseradar.org"
+    email_from_name: str = "AbuseRadar Research"
+    email_reply_to: str = "team@abuseradar.org"
+    email_reply_to_name: str = "AbuseRadar Team"
 
     project_name: str = "AbuseRadar"
     report_base_url: str = "https://abuseradar.org/report"

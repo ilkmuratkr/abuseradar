@@ -167,21 +167,19 @@ AbuseRadar Research Team
 """
 
     try:
-        import resend
-        if settings.resend_api_key and settings.resend_api_key != "your_resend_api_key_here":
-            resend.api_key = settings.resend_api_key
-            result = resend.Emails.send({
-                "from": settings.email_from,
-                "to": abuse_email,
-                "reply_to": settings.email_reply_to,
-                "subject": subject,
-                "text": body,
-            })
-            logger.info(f"[{domain}] Hosting abuse raporu gonderildi → {abuse_email}")
-            return {"status": "sent", "to": abuse_email}
-        else:
-            logger.warning(f"[{domain}] Resend API key yok, simule ediliyor")
+        from notifier.sender import _zeptomail_send
+
+        result = await _zeptomail_send(
+            to_email=abuse_email,
+            to_name=None,
+            subject=subject,
+            text_body=body,
+        )
+        if result.get("status") == "simulated":
+            logger.warning(f"[{domain}] ZeptoMail token yok, simule ediliyor")
             return {"status": "simulated", "to": abuse_email, "subject": subject}
+        logger.info(f"[{domain}] Hosting abuse raporu gonderildi → {abuse_email}")
+        return {"status": "sent", "to": abuse_email, "message_id": result.get("id")}
     except Exception as e:
         logger.error(f"[{domain}] Hosting abuse raporu hatasi: {e}")
         return {"status": "error", "reason": str(e)}
