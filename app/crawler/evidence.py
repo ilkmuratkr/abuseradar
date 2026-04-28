@@ -15,9 +15,19 @@ logger = logging.getLogger(__name__)
 REVEAL_HIDDEN_JS = r"""() => {
     const hidden = [];
     const seen = new Set();
+    // Site'nin kendi domain'ini bul (same-domain filter için)
+    const siteHost = (location.hostname || '').replace(/^www\./, '').toLowerCase();
+    const isInternal = (url) => {
+        try {
+            const h = new URL(url, location.href).hostname.toLowerCase().replace(/^www\./, '');
+            return h === siteHost || h.endsWith('.' + siteHost) || siteHost.endsWith('.' + h);
+        } catch { return false; }
+    };
     document.querySelectorAll('a[href]').forEach(a => {
         const href = a.href || '';
         if (!href || seen.has(href)) return;
+        // Site'nin kendi link'leri = nav/menu/dropdown — banner'a ATLA
+        if (isInternal(href)) return;
         const s = window.getComputedStyle(a);
         const rect = a.getBoundingClientRect();
         const cssHidden = (s.display === 'none' || s.visibility === 'hidden' || parseFloat(s.opacity) === 0);
