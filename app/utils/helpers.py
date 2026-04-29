@@ -80,37 +80,63 @@ def is_subdomain_of(host: str, root: str) -> bool:
     return h == r or h.endswith("." + r)
 
 
+def _suffix_of(domain: str) -> str:
+    """tldextract ile gerçek public suffix'i (örn. 'com.tr', 'co.uk') döndür.
+
+    Domain'in sonuna eşleşen efektif TLD; substring eşleşmesi yapmaz.
+    """
+    if not domain:
+        return ""
+    raw = domain.strip().lower()
+    if "://" in raw:
+        try:
+            raw = urlparse(raw).hostname or ""
+        except Exception:
+            raw = ""
+    return _extract(raw).suffix or ""
+
+
 def detect_country_from_domain(domain: str) -> str | None:
-    """Domain TLD'sinden ülke kodu çıkar."""
-    country_tlds = {
-        ".br": "BR", ".pt": "PT", ".mz": "MZ", ".ao": "AO",
-        ".mx": "MX", ".ar": "AR", ".co": "CO", ".cl": "CL",
-        ".pe": "PE", ".ve": "VE", ".ec": "EC",
-        ".tr": "TR",
-        ".th": "TH",
-        ".in": "IN",
-        ".ng": "NG",
-        ".lk": "LK",
-        ".fr": "FR", ".sn": "SN", ".ci": "CI",
-        ".de": "DE", ".at": "AT",
-        ".uk": "GB", ".au": "AU",
+    """Domain'in public suffix'inden ülke kodu çıkar."""
+    suffix = _suffix_of(domain)
+    if not suffix:
+        return None
+    # Hem 'com.tr' gibi multi-part hem '.tr' gibi tek-part suffix'ler için
+    # son segmenti ülke kodu olarak değerlendir.
+    last = suffix.rsplit(".", 1)[-1]
+
+    country_map = {
+        "br": "BR", "pt": "PT", "mz": "MZ", "ao": "AO",
+        "mx": "MX", "ar": "AR", "co": "CO", "cl": "CL",
+        "pe": "PE", "ve": "VE", "ec": "EC",
+        "tr": "TR",
+        "th": "TH",
+        "in": "IN",
+        "ng": "NG",
+        "lk": "LK",
+        "fr": "FR", "sn": "SN", "ci": "CI",
+        "de": "DE", "at": "AT",
+        "uk": "GB", "au": "AU",
     }
-    for tld, country in country_tlds.items():
-        if tld in domain:
-            return country
-    return None
+    return country_map.get(last)
 
 
 def detect_language_from_domain(domain: str) -> str:
-    """Domain TLD'sinden dil çıkar."""
-    lang_tlds = {
-        ".br": "pt", ".pt": "pt", ".mz": "pt", ".ao": "pt",
-        ".mx": "es", ".ar": "es", ".co": "es", ".cl": "es",
-        ".pe": "es", ".ve": "es", ".ec": "es",
-        ".tr": "tr",
-        ".fr": "fr", ".sn": "fr", ".ci": "fr",
+    """Domain'in public suffix'inden dil çıkar (default 'en')."""
+    suffix = _suffix_of(domain)
+    if not suffix:
+        return "en"
+    last = suffix.rsplit(".", 1)[-1]
+
+    lang_map = {
+        "br": "pt", "pt": "pt", "mz": "pt", "ao": "pt",
+        "mx": "es", "ar": "es", "co": "es", "cl": "es",
+        "pe": "es", "ve": "es", "ec": "es", "es": "es",
+        "tr": "tr",
+        "fr": "fr", "sn": "fr", "ci": "fr",
+        "de": "de", "at": "de",
+        "it": "it",
+        "ru": "ru",
+        "cn": "zh",
     }
-    for tld, lang in lang_tlds.items():
-        if tld in domain:
-            return lang
-    return "en"
+    return lang_map.get(last, "en")
