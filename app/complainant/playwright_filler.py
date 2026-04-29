@@ -24,15 +24,19 @@ EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 async def _new_page(playwright, *, vpn_proxy: str | None = None):
-    """VPN-US SOCKS proxy üzerinden Chromium başlat."""
+    """VPN-US SOCKS proxy üzerinden Chromium başlat.
+
+    Default: vpn-us:1080 (Mullvad WA). vpn-tr Google bot-detection'a
+    takılıyor, vpn-us daha temiz route. Sunucu IP'si asla kullanılmaz.
+    """
     launch_args = [
         "--no-sandbox",
         "--disable-dev-shm-usage",
         "--disable-gpu",
     ]
-    proxy = None
-    if vpn_proxy:
-        proxy = {"server": vpn_proxy}
+    # Default VPN-US (Mullvad). Override ile vpn-tr seçilebilir.
+    proxy_server = vpn_proxy or os.environ.get("PLAYWRIGHT_PROXY", "socks5://vpn-us:1080")
+    proxy = {"server": proxy_server} if proxy_server else None
     browser = await playwright.chromium.launch(headless=True, args=launch_args, proxy=proxy)
     context = await browser.new_context(
         viewport={"width": 1280, "height": 900},
