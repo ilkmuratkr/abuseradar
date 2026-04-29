@@ -234,6 +234,9 @@ async def crawl_and_analyze(
     except Exception as e:
         logger.error(f"[{domain}] Playwright hatası: {e}")
         result["error"] = f"playwright: {e}"
+        # Playwright fail/timeout — JS injection yakalanamadı.
+        # Raw HTML temiz olsa bile 'clean' diyemeyiz; ayrı flag.
+        result["rendered_failed"] = True
 
     # ═══ KATMAN 4: Cloaking probe (Googlebot UA pass) ═══
     # Aynı URL'yi 3 farklı UA ile çekip içerik farklarına bak.
@@ -293,8 +296,12 @@ async def crawl_and_analyze(
     elif result["cloaking_detected"]:
         # Hidden link çıkaramadık ama Googlebot'a farklı sayfa = injection
         result["status"] = "cloaking_detected"
+    elif result.get("rendered_failed"):
+        # Playwright timeout/fail — JS injection görmemiş olabiliriz.
+        # Raw HTML temiz görünüyor olsa bile 'clean' diyemeyiz.
+        result["status"] = "rendered_unverified"
     elif result.get("http_code") and result["http_code"] < 400:
-        # Erişildi, hiçbir şey bulunmadı = gerçek temiz
+        # Erişildi, Playwright başarılı, hiçbir şey bulunmadı = gerçek temiz
         result["status"] = "clean"
     else:
         # Hiç erişilemedi (timeout, block, DNS) — temiz değil, bilinmiyor
@@ -514,11 +521,19 @@ async def crawl_site(homepage_url: str, max_pages: int = MAX_PAGES_PER_SITE) -> 
     else:
         aggregate["total_hacklinks"] = rendered_total
 
-    # Status
+    # Status — multi-page wrapper.
+    # Eğer en az bir sayfada Playwright fail varsa rendered tarama eksik;
+    # 'clean' diyemeyiz, ne 'unreachable' (raw aldıysak); ayrı status.
+    any_rendered_failed = any(
+        p.get("status") == "rendered_unverified"
+        for p in aggregate.get("page_results", [])
+    )
     if aggregate["total_hacklinks"] > 0:
         aggregate["status"] = "compromised"
     elif aggregate["cloaking_detected"]:
         aggregate["status"] = "cloaking_detected"
+    elif any_rendered_failed:
+        aggregate["status"] = "rendered_unverified"
     elif aggregate["http_code"] and aggregate["http_code"] < 400:
         aggregate["status"] = "clean"
     else:
