@@ -39,6 +39,24 @@
         <div class="kpi gold"><div class="kpi-label">Avg followups</div><div class="kpi-value" id="kpi-avg-followups">—</div><div class="kpi-trend">per case</div></div>
       </div>
 
+      <!-- Attacker target discovery — DB'den şikayet edilebilecek domain'ler -->
+      <section class="panel" style="margin-bottom:1.2rem">
+        <div class="panel-head">
+          <h3>Attacker targets — discover &amp; complain</h3>
+          <span class="meta" id="targets-meta">—</span>
+        </div>
+        <div class="panel-body">
+          <div style="display:flex;gap:.6rem;align-items:center;margin-bottom:.6rem;font-size:.85rem">
+            <label>min victims:
+              <input type="number" id="min-count" value="2" min="1" style="width:60px;padding:.3rem .5rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:4px;color:var(--text);margin-left:.3rem">
+            </label>
+            <button id="refresh-targets" class="btn">Discover</button>
+            <span style="font-size:.78rem;color:var(--text-dim)">DB'de en az N kurban sitede gözlemlenen unique target_domain'ler</span>
+          </div>
+          <div id="targets-host" style="overflow-x:auto"><div class="loading-spinner">…</div></div>
+        </div>
+      </section>
+
       <section class="panel">
         <div class="panel-body" style="display:flex;gap:.7rem;flex-wrap:wrap">
           <select id="f-platform" style="padding:.5rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.85rem">
@@ -161,6 +179,78 @@ async function load() {
 document.getElementById("f-platform").addEventListener("change", load);
 document.getElementById("f-status").addEventListener("change", load);
 load();
+
+// =============================================
+// Attacker targets — discover + run complaint chain
+// =============================================
+async function loadTargets() {
+  const minCount = parseInt(document.getElementById("min-count").value || 2);
+  const host = document.getElementById("targets-host");
+  host.innerHTML = '<div class="loading-spinner">Loading targets…</div>';
+  try {
+    const r = await AR.get(`/complain/discover-targets?min_count=${minCount}&limit=100`);
+    document.getElementById("targets-meta").textContent = `${r.count} unique targets`;
+    if (!r.count) {
+      host.innerHTML = '<div class="empty-state">No targets found. Run more crawls first.</div>';
+      return;
+    }
+    host.innerHTML = `
+      <table class="tbl">
+        <thead><tr><th>target_domain</th><th class="right">victims</th><th class="right">links</th><th></th></tr></thead>
+        <tbody>${r.targets.map(t => `
+          <tr>
+            <td><span class="strong mono">${AR.escapeHtml(t.target_domain)}</span></td>
+            <td class="right">${t.victim_count}</td>
+            <td class="right">${t.link_count}</td>
+            <td class="right">
+              <button class="btn-link run-chain-btn" data-target="${AR.escapeHtml(t.target_domain)}" data-victims="${t.victim_count}" data-links="${t.link_count}">Run chain →</button>
+            </td>
+          </tr>`).join("")}
+        </tbody>
+      </table>
+    `;
+    document.querySelectorAll(".run-chain-btn").forEach(btn => {
+      btn.addEventListener("click", () => triggerChain(btn.dataset.target, parseInt(btn.dataset.victims), parseInt(btn.dataset.links), btn));
+    });
+  } catch (e) {
+    host.innerHTML = `<div class="callout orange">${AR.escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function triggerChain(targetDomain, victimCount, linkCount, btn) {
+  if (!confirm(
+    `Run complaint chain for "${targetDomain}"?\n\n` +
+    `Will trigger:\n` +
+    `  • Cloudflare abuse (form via OpenClaw + mail) — only if behind CF\n` +
+    `  • Hosting abuse (form + mail to abuse@…)\n` +
+    `  • Registrar abuse (form + mail)\n` +
+    `  • Google Safe Browsing report\n\n` +
+    `${victimCount} victim sites, ${linkCount} hacklinks observed.\n\n` +
+    `This sends REAL complaints to upstream providers. Continue?`
+  )) return;
+
+  btn.disabled = true;
+  btn.textContent = "Running…";
+  try {
+    const result = await AR.post(`/complain/target/${encodeURIComponent(targetDomain)}`, {
+      affected_gov_sites: [],
+      hacklink_count: linkCount,
+      enable_form: true,
+      enable_mail: true,
+    });
+    btn.textContent = "✓ Done";
+    btn.style.color = "var(--green)";
+    AR.toast(`Chain done: ${Object.keys(result.complaints || {}).length} complaints filed`, "success");
+    setTimeout(() => load(), 1200);  // alttaki listeyi yenile
+  } catch (e) {
+    btn.textContent = "✗ Failed";
+    btn.style.color = "var(--red)";
+    AR.toast(e.message, "error");
+  }
+}
+
+document.getElementById("refresh-targets").addEventListener("click", loadTargets);
+loadTargets();
 </script>
 </body>
 </html>
