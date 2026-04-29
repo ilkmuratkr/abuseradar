@@ -104,45 +104,48 @@ def _pick_top_keyword(raw_links: list[dict], js_links: list[dict]) -> tuple[str 
 
     Aynı öncelik grubunda en yüksek skorlu anchor kazanır.
     """
+    # (display_keyword, eşleşme listesi)
+    # display_keyword → mail'e yazılan kısa, net arama terimi
+    # eşleşme listesi → bu grubun anchor text'lerinde geçen tüm formlar
     priority_groups = [
-        ("deneme bonusu", "deneme"),
-        ("casino", "kasino"),
-        ("porno", "porn"),
-        ("escort", "eskort"),
+        ("deneme bonusu", ["deneme bonusu", "deneme"]),
+        ("casino", ["casino", "kasino"]),
+        ("porno", ["porno", "porn"]),
+        ("escort", ["escort", "eskort"]),
     ]
 
     tagged = [(l, "raw") for l in raw_links] + [(l, "js") for l in js_links]
 
-    def _best_match(predicates) -> tuple[str | None, str]:
+    def _has_match(predicates) -> str | None:
+        """Bu predicate'lardan biri herhangi bir anchor'da geçiyorsa,
+        o anchor'un kaynağını ('raw' veya 'js') döndür. Yoksa None."""
+        # Skor sıralı en güçlü matchin source'unu seç
         candidates = []
         for link, src in tagged:
-            text = (link.get("text") or "").strip()
-            if not text or len(text) < 3 or len(text) > 60:
+            text = (link.get("text") or "").strip().lower()
+            if not text or len(text) > 200:
                 continue
-            low = text.lower()
-            if any(p in low for p in predicates):
-                candidates.append((link.get("score", 0) or 0, text, src))
+            if any(p in text for p in predicates):
+                candidates.append((link.get("score", 0) or 0, src))
         if candidates:
             candidates.sort(key=lambda x: x[0], reverse=True)
-            _, text, src = candidates[0]
-            return text, src
-        return None, ""
+            return candidates[0][1]
+        return None
 
-    # 1-4. Öncelik grupları
-    for group in priority_groups:
-        text, src = _best_match(group)
-        if text:
-            return text, src
+    # 1-4. Öncelik grupları — match varsa kısa display_keyword döner
+    for display_kw, predicates in priority_groups:
+        src = _has_match(predicates)
+        if src:
+            return display_kw, src
 
-    # 5. Diğer kategori keyword'leri (bahis, slot, 1xbet, viagra, vs.)
-    other = set()
-    for s in CATEGORY_KEYWORDS.values():
-        other.update(s)
-    text, src = _best_match(other)
-    if text:
-        return text, src
+    # 5. Diğer kategori keyword'leri — match olan ilk keyword'ü kısa döndür
+    for cat, kws in CATEGORY_KEYWORDS.items():
+        for kw in kws:
+            src = _has_match([kw])
+            if src:
+                return kw, src
 
-    # 6. Fallback: ilk uzun anchor
+    # 6. Fallback: ilk uzun anchor (anchor text'in kendisi)
     for link, src in tagged:
         text = (link.get("text") or "").strip()
         if text and 5 <= len(text) <= 60:
