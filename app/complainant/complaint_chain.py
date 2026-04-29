@@ -181,20 +181,14 @@ async def run_chain_for_target(
                 hacklink_count=hacklink_count, report_url=report_url,
             )))
 
-    # 3. Registrar
-    if meta.get("registrar_abuse_email"):
-        if enable_mail:
-            mail_steps.append(("registrar_mail", lambda: hosting_mod.report_to_hosting(
-                domain=target_domain, abuse_email=meta["registrar_abuse_email"],
-                issue_type="takeover", evidence_summary=summary, report_url=report_url,
-            )))
-        if enable_form:
-            form_steps.append(("registrar_form", lambda: openclaw.report_registrar_form(
-                target_domain=target_domain, registrar=meta.get("registrar", ""),
-                abuse_email=meta.get("registrar_abuse_email", ""),
-                target_role="SEO spam infrastructure",
-                affected_gov_sites=affected_str, report_url=report_url,
-            )))
+    # 3. Registrar (sadece mail — registrar başına farklı abuse formu olduğu için
+    # Playwright generic form-fill yok. Mail kanalı ICANN RAA §3.18 obligation
+    # tetikleyici, yeterli.)
+    if meta.get("registrar_abuse_email") and enable_mail:
+        mail_steps.append(("registrar_mail", lambda: hosting_mod.report_to_hosting(
+            domain=target_domain, abuse_email=meta["registrar_abuse_email"],
+            issue_type="takeover", evidence_summary=summary, report_url=report_url,
+        )))
 
     # 4. Google Safe Browsing
     if enable_form:
