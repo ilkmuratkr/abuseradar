@@ -218,49 +218,61 @@ def describe_category(language: str, category: str) -> str:
 
 
 def get_complaint_block(language: str) -> str:
-    """Mail'de tek satır profesyonel ipucu — detay raporda.
+    """Mail'de tek satır profesyonel ipucu — CF adresi açık, detay raporda.
 
-    URL/marka adı vermeyiz; spam görünümünü düşürür ve daha kurumsal durur.
+    Saldırgan altyapısı çoğunlukla CF arkasında olduğundan tek somut adres
+    olarak abuse.cloudflare.com gösteriliyor; diğer sağlayıcılar (registrar,
+    hosting, Google SB) raporda Section 7'de listeli.
     """
     blocks = {
         "en": (
-            "\nThe report also documents the upstream providers behind the attacker "
-            "infrastructure and the appropriate abuse-reporting channels for each.\n"
+            "\nThe attacker infrastructure typically sits behind Cloudflare; an abuse "
+            "report at abuse.cloudflare.com is usually the most effective first step. "
+            "Other upstream providers and reporting channels are documented in the report.\n"
         ),
         "tr": (
-            "\nSaldırgan altyapısının arkasındaki sağlayıcılar ve her biri için uygun "
-            "şikayet kanalları raporda ayrıntılı olarak belgelenmiştir.\n"
+            "\nSaldırgan altyapısı çoğunlukla Cloudflare arkasındadır; "
+            "abuse.cloudflare.com üzerinden açılan bir şikayet genellikle en etkili "
+            "ilk adımdır. Diğer sağlayıcılar ve şikayet kanalları raporda belgelenmiştir.\n"
         ),
         "pt": (
-            "\nO relatório também documenta os provedores upstream por trás da "
-            "infraestrutura atacante e os canais apropriados de denúncia de abuso.\n"
+            "\nA infraestrutura atacante geralmente está atrás do Cloudflare; "
+            "uma denúncia em abuse.cloudflare.com costuma ser o primeiro passo mais eficaz. "
+            "Os demais provedores e canais estão documentados no relatório.\n"
         ),
         "es": (
-            "\nEl informe también documenta los proveedores upstream detrás de la "
-            "infraestructura del atacante y los canales adecuados de denuncia de abuso.\n"
+            "\nLa infraestructura del atacante suele estar detrás de Cloudflare; "
+            "una denuncia en abuse.cloudflare.com suele ser el primer paso más eficaz. "
+            "Los demás proveedores y canales están documentados en el informe.\n"
         ),
         "fr": (
-            "\nLe rapport documente également les fournisseurs en amont de "
-            "l'infrastructure de l'attaquant ainsi que les canaux de signalement appropriés.\n"
+            "\nL'infrastructure de l'attaquant est souvent derrière Cloudflare ; "
+            "un signalement via abuse.cloudflare.com est généralement la première "
+            "étape la plus efficace. Les autres fournisseurs et canaux figurent dans le rapport.\n"
         ),
         "de": (
-            "\nDer Bericht dokumentiert zudem die Upstream-Anbieter hinter der "
-            "Angreifer-Infrastruktur sowie die jeweils passenden Abuse-Meldekanäle.\n"
+            "\nDie Angreifer-Infrastruktur befindet sich häufig hinter Cloudflare; "
+            "eine Meldung über abuse.cloudflare.com ist meist der wirkungsvollste erste Schritt. "
+            "Weitere Anbieter und Meldekanäle sind im Bericht dokumentiert.\n"
         ),
         "it": (
-            "\nIl rapporto documenta inoltre i provider upstream dietro "
-            "l'infrastruttura dell'aggressore e i canali appropriati di segnalazione.\n"
+            "\nL'infrastruttura dell'aggressore è spesso dietro Cloudflare; "
+            "una segnalazione tramite abuse.cloudflare.com è di solito il primo passo più efficace. "
+            "Altri provider e canali di segnalazione sono documentati nel rapporto.\n"
         ),
         "ru": (
-            "\nВ отчёте также задокументированы вышестоящие провайдеры за инфраструктурой "
-            "злоумышленника и соответствующие каналы для подачи жалоб.\n"
+            "\nИнфраструктура злоумышленника часто находится за Cloudflare; "
+            "жалоба через abuse.cloudflare.com обычно становится наиболее эффективным первым шагом. "
+            "Остальные провайдеры и каналы — в отчёте.\n"
         ),
         "ar": (
-            "\nيوثّق التقرير أيضاً مزودي الخدمة الذين تقف خلف بنية المهاجم التحتية، "
-            "إلى جانب قنوات الإبلاغ عن الإساءة المناسبة لكل منهم.\n"
+            "\nغالباً ما تكون بنية المهاجم خلف Cloudflare؛ تقديم بلاغ عبر "
+            "abuse.cloudflare.com عادةً ما يكون الخطوة الأولى الأكثر فاعلية. "
+            "أما باقي مزودي الخدمة وقنوات الإبلاغ فمذكورون في التقرير.\n"
         ),
         "zh": (
-            "\n报告还记录了攻击者基础设施背后的上游服务提供商,以及针对每一方的适当滥用举报渠道。\n"
+            "\n攻击者基础设施通常位于 Cloudflare 之后;通过 abuse.cloudflare.com 提交滥用报告 "
+            "通常是最有效的第一步。其他上游服务商和举报渠道在报告中详细列出。\n"
         ),
     }
     return blocks.get(language, blocks["en"])
