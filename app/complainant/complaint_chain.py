@@ -91,93 +91,93 @@ async def run_chain_for_target(
         f"Injection method: {injection_method}"
     )
 
-    tasks: dict[str, asyncio.Task] = {}
+    # OpenClaw 'main' agent için session lock contention engelleyebilmek için
+    # form görevleri SIRAYLA çalıştırılır. Mail görevleri (ZeptoMail) form'a
+    # paralel — onlarda lock yok.
+    form_steps: list[tuple[str, callable]] = []
+    mail_steps: list[tuple[str, callable]] = []
 
-    # 1. Cloudflare — sadece CF arkasındaysa
+    # 1. Cloudflare
     if meta.get("is_cloudflare"):
         if enable_form:
-            tasks["cloudflare_form"] = asyncio.create_task(_safe(openclaw.report_cloudflare(
+            form_steps.append(("cloudflare_form", lambda: openclaw.report_cloudflare(
                 target_domain=target_domain,
                 target_role="SEO spam destination (gambling/casino)",
                 affected_gov_sites=affected_str,
                 injection_method=injection_method,
                 affected_count=len(affected_gov_sites) or 1,
                 first_seen=datetime.utcnow().strftime("%Y-%m-%d"),
+                report_url=report_url,
             )))
         if enable_mail:
-            tasks["cloudflare_mail"] = asyncio.create_task(_safe(hosting_mod.report_to_hosting(
-                domain=target_domain,
-                abuse_email="abuse@cloudflare.com",
-                issue_type="takeover",
-                evidence_summary=summary,
-                report_url=report_url,
+            mail_steps.append(("cloudflare_mail", lambda: hosting_mod.report_to_hosting(
+                domain=target_domain, abuse_email="abuse@cloudflare.com",
+                issue_type="takeover", evidence_summary=summary, report_url=report_url,
             )))
 
-    # 2. Hosting (CF arkasındaysa CF zaten gerçek hosting'i gizliyor — yine de IP varsa dene)
+    # 2. Hosting (CF arkasında değilse)
     if meta.get("abuse_email") and not meta.get("is_cloudflare"):
         if enable_mail:
-            tasks["hosting_mail"] = asyncio.create_task(_safe(hosting_mod.report_to_hosting(
-                domain=target_domain,
-                abuse_email=meta["abuse_email"],
-                issue_type="takeover",
-                evidence_summary=summary,
-                report_url=report_url,
+            mail_steps.append(("hosting_mail", lambda: hosting_mod.report_to_hosting(
+                domain=target_domain, abuse_email=meta["abuse_email"],
+                issue_type="takeover", evidence_summary=summary, report_url=report_url,
             )))
         if enable_form:
-            tasks["hosting_form"] = asyncio.create_task(_safe(openclaw.report_hosting_form(
+            form_steps.append(("hosting_form", lambda: openclaw.report_hosting_form(
                 target_domain=target_domain,
                 hosting_provider=meta.get("hosting_provider", ""),
                 abuse_email=meta.get("abuse_email", ""),
-                ip=meta.get("ip", ""),
-                asn=meta.get("asn", ""),
+                ip=meta.get("ip", ""), asn=meta.get("asn", ""),
                 injection_method=injection_method,
-                hacklink_count=hacklink_count,
-                report_url=report_url,
+                hacklink_count=hacklink_count, report_url=report_url,
             )))
 
-    # 3. Registrar — her durumda dene
+    # 3. Registrar
     if meta.get("registrar_abuse_email"):
         if enable_mail:
-            tasks["registrar_mail"] = asyncio.create_task(_safe(hosting_mod.report_to_hosting(
-                domain=target_domain,
-                abuse_email=meta["registrar_abuse_email"],
-                issue_type="takeover",
-                evidence_summary=summary,
-                report_url=report_url,
+            mail_steps.append(("registrar_mail", lambda: hosting_mod.report_to_hosting(
+                domain=target_domain, abuse_email=meta["registrar_abuse_email"],
+                issue_type="takeover", evidence_summary=summary, report_url=report_url,
             )))
         if enable_form:
-            tasks["registrar_form"] = asyncio.create_task(_safe(openclaw.report_registrar_form(
-                target_domain=target_domain,
-                registrar=meta.get("registrar", ""),
+            form_steps.append(("registrar_form", lambda: openclaw.report_registrar_form(
+                target_domain=target_domain, registrar=meta.get("registrar", ""),
                 abuse_email=meta.get("registrar_abuse_email", ""),
                 target_role="SEO spam infrastructure",
-                affected_gov_sites=affected_str,
-                report_url=report_url,
+                affected_gov_sites=affected_str, report_url=report_url,
             )))
 
-    # 4. Google Safe Browsing (her zaman opsiyonel)
+    # 4. Google Safe Browsing
     if enable_form:
-        tasks["google_sb"] = asyncio.create_task(_safe(openclaw.report_google_safebrowsing(
-            target_url=f"https://{target_domain}/",
-            domain=target_domain,
+        form_steps.append(("google_sb", lambda: openclaw.report_google_safebrowsing(
+            target_url=f"https://{target_domain}/", domain=target_domain,
         )))
 
-    # 5. ICANN compliance — registrar varsa direkt ekle (chain'in başında
-    # registrar mail/form gönderilmiş kabul edilir; ICANN paralel gider).
+    # 5. ICANN
     if enable_form and meta.get("registrar"):
-        tasks["icann"] = asyncio.create_task(_safe(openclaw.report_icann(
-            target_domain=target_domain,
-            registrar=meta.get("registrar", ""),
+        form_steps.append(("icann", lambda: openclaw.report_icann(
+            target_domain=target_domain, registrar=meta.get("registrar", ""),
             registrar_abuse_email=meta.get("registrar_abuse_email", ""),
             report_date=datetime.utcnow().strftime("%Y-%m-%d"),
             affected_count=len(affected_gov_sites) or 1,
         )))
 
-    # Tüm şikayetleri paralel bekle
     results: dict[str, dict] = {}
-    for name, task in tasks.items():
+
+    # Mail görevleri paralel (ZeptoMail, lock yok)
+    if mail_steps:
+        mail_tasks = [asyncio.create_task(_safe(fn())) for _, fn in mail_steps]
+        for (name, _), tsk in zip(mail_steps, mail_tasks):
+            try:
+                results[name] = await tsk
+            except Exception as e:
+                results[name] = {"status": "error", "reason": str(e)}
+
+    # Form görevleri SIRAYLA — OpenClaw main agent session lock için
+    for name, fn in form_steps:
+        logger.info(f"[{target_domain}] form step başlıyor: {name}")
         try:
-            results[name] = await task
+            results[name] = await _safe(fn())
         except Exception as e:
             results[name] = {"status": "error", "reason": str(e)}
 
