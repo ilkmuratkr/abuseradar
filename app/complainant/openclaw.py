@@ -114,6 +114,7 @@ async def _send_to_openclaw(task_text: str, task_name: str, timeout: int = DEFAU
     try:
         proc = await asyncio.create_subprocess_exec(
             *cmd,
+            stdin=asyncio.subprocess.DEVNULL,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
         )
@@ -125,27 +126,53 @@ async def _send_to_openclaw(task_text: str, task_name: str, timeout: int = DEFAU
             logger.error(f"OpenClaw timeout: {task_name} ({timeout}s)")
             return {"status": "timeout", "task_name": task_name}
 
-        out = (stdout or b"").decode(errors="replace").strip()
-        err = (stderr or b"").decode(errors="replace").strip()
+        # OpenClaw --json envelope'u stderr'e yazıyor. stdout genelde boş.
+        # Önce stderr'i, sonra stdout'u tek bir 'out' string'ine birleştir.
+        stdout_str = (stdout or b"").decode(errors="replace").strip()
+        stderr_str = (stderr or b"").decode(errors="replace").strip()
+        out = stderr_str if stderr_str else stdout_str
+        err = stdout_str  # debug için
 
         if proc.returncode != 0:
-            logger.warning(f"OpenClaw exit={proc.returncode} task={task_name}: {err[:300]}")
-            return {"status": "failed", "exit": proc.returncode, "stderr": err[:500], "stdout": out[:500]}
+            logger.warning(f"OpenClaw exit={proc.returncode} task={task_name}: {out[:300]}")
+            return {"status": "failed", "exit": proc.returncode, "stderr": out[:500], "stdout": err[:500]}
 
         # OpenClaw --json output formatı:
         # Outer JSON envelope { "data": { ..., "finalAssistantVisibleText": "<agent cevabı>" } }
-        # Agent'ın bizim istediğimiz JSON'u finalAssistantVisibleText içinde.
+        # Stderr'de envelope öncesinde diagnostic log satırları olabilir;
+        # son '{' ile başlayan blok'u parse et.
+        import re
         result_json: dict | None = None
         agent_text: str | None = None
+        envelope: dict | None = None
+
+        # 1. Direct parse
         try:
             envelope = json.loads(out)
-            data = envelope.get("data") if isinstance(envelope, dict) else None
-            agent_text = (
-                (data or {}).get("finalAssistantVisibleText")
-                or (data or {}).get("finalAssistantRawText")
-                or envelope.get("finalAssistantVisibleText") if isinstance(envelope, dict) else None
-            )
         except json.JSONDecodeError:
+            # 2. İçerik içindeki son JSON nesnesini bul — '{' ile başlayan
+            # ve dengeli kapanan en uzun parça.
+            last_brace = out.rfind("\n{")
+            if last_brace >= 0:
+                candidate = out[last_brace:].strip()
+                try:
+                    envelope = json.loads(candidate)
+                except json.JSONDecodeError:
+                    pass
+            if envelope is None and out.startswith("{"):
+                # Tek satırlık fallback
+                try:
+                    envelope = json.loads(out)
+                except json.JSONDecodeError:
+                    pass
+
+        if isinstance(envelope, dict):
+            data = envelope.get("data") if isinstance(envelope.get("data"), dict) else envelope
+            agent_text = (
+                data.get("finalAssistantVisibleText")
+                or data.get("finalAssistantRawText")
+            )
+        else:
             agent_text = out
 
         if agent_text:
