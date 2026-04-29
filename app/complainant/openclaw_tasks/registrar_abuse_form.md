@@ -45,6 +45,11 @@ appropriate action. Full evidence bundle:
 
   {report_url}
 
+This SEO-spam injection campaign has been independently documented since
+January 2025 (cside Research / Cyber Security News / SiemBiot / Joe Sandbox).
+The operator group rotates payload hostnames and registers throwaway
+destination domains, so per-domain takedowns alone are insufficient.
+
 — AbuseRadar Research ({reporter_email})
 ```
 

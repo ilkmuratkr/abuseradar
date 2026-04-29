@@ -49,8 +49,22 @@ by search engines. The role of {target_domain} in this pattern: {target_role}.
 Full technical bundle (screenshots, rendered DOM, file paths) — no sign-in:
   {report_url}
 
-We are not requesting any specific action — this is an evidence-backed notice
-so the case is visible to your acceptable-use review team. Reach us at
+This pattern has been independently documented since January 2025 by multiple
+security researchers and is widely reported in public sources, including:
+  - cside Research (original disclosure, Jan 2025):
+    https://cside.com/blog/government-and-university-websites-targeted-in-scriptapi-dev-client-side-attack
+  - Cyber Security News:
+    https://cybersecuritynews.com/javascript-attacks-targeting/
+  - SiemBiot.eu coverage:
+    https://siembiot.eu/en/cyber-security-news/new-javascript-attack-hijacking-government-and-university-websites/28021
+  - Joe Sandbox automated analysis:
+    https://www.joesandbox.com/analysis/1684428/0/html
+  - PublicWWW live footprint:
+    https://publicwww.com/websites/scriptapi.dev/
+
+The operator group has been active for over a year, rotating payload hostnames
+and increasingly hosting destination domains behind Cloudflare. We submit this
+report so the case is visible to your acceptable-use review team. Reach us at
 {reporter_email} for any follow-up.
 
 — AbuseRadar Research (abuseradar.org)

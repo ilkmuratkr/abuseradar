@@ -51,6 +51,9 @@ and assisted with remediation. Full technical bundle (no sign-in required):
 
   {report_url}
 
+The same SEO-spam injection pattern has been documented in public security
+research since January 2025 (cside, Cyber Security News, Joe Sandbox).
+
 This is a one-time, automated notice. Reach us at {reporter_email} for any
 follow-up.
 

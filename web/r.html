@@ -258,6 +258,27 @@ Thank you,
       </div>
     </div>
 
+    <!-- Public attribution & prior research -->
+    <h2 class="section">8. Public attribution &amp; prior research <span class="section-meta">independent corroboration</span></h2>
+    <div class="panel">
+      <div class="panel-pad">
+        <p>The injection pattern observed on this site is part of a long-running, publicly documented black-hat SEO campaign primarily attributed to the script host <span class="mono">scriptapi.dev</span> and a rotating set of payload variants. The campaign has been independently reported by multiple security researchers and tracked since early 2025; the operators iterate payload hostnames and increasingly hide their infrastructure behind <strong>Cloudflare</strong>, registering throwaway domains under low-friction registrars.</p>
+
+        <p style="margin-top:.7rem"><strong>Independent sources (chronological):</strong></p>
+        <ul class="play" style="margin-top:.4rem">
+          <li><strong>cside Research</strong> (Jan 2025) — original disclosure by Himanshu Anand. <a href="https://cside.com/blog/government-and-university-websites-targeted-in-scriptapi-dev-client-side-attack" target="_blank" rel="noopener">cside.com / scriptapi-dev-client-side-attack</a> · 500+ confirmed compromised sites incl. .gov / .edu, payload variants <span class="mono">smacr.js</span>, <span class="mono">en.tlu.js</span>, <span class="mono">sie.tlu.js</span>, <span class="mono">ppymca.js</span>, <span class="mono">pbsgc.js</span>.</li>
+          <li><strong>cside Domain Profile</strong> — <a href="https://cside.com/domains/scriptapi.dev" target="_blank" rel="noopener">cside.com/domains/scriptapi.dev</a></li>
+          <li><strong>Cyber Security News</strong> — <a href="https://cybersecuritynews.com/javascript-attacks-targeting/" target="_blank" rel="noopener">"New JavaScript Attack Hijacking Government and University Websites"</a></li>
+          <li><strong>SiemBiot.eu</strong> — <a href="https://siembiot.eu/en/cyber-security-news/new-javascript-attack-hijacking-government-and-university-websites/28021" target="_blank" rel="noopener">cyber-security-news / scriptapi.dev coverage</a></li>
+          <li><strong>Joe Sandbox</strong> automated analysis — <a href="https://www.joesandbox.com/analysis/1684428/0/html" target="_blank" rel="noopener">scriptapi.dev malware report</a></li>
+          <li><strong>PublicWWW</strong> live footprint — <a href="https://publicwww.com/websites/scriptapi.dev/" target="_blank" rel="noopener">publicwww.com/websites/scriptapi.dev</a> (live count of pages embedding the script)</li>
+          <li><strong>r/cybersecurity discussion</strong> — <a href="https://www.reddit.com/r/cybersecurity/comments/1i85lib/government_and_university_websites_targeted_in/" target="_blank" rel="noopener">community thread</a></li>
+        </ul>
+
+        <p style="margin-top:.8rem"><strong>What this means for upstream providers:</strong> the campaign is not a one-off. The same operator group has been actively iterating since January 2025; takedowns of one payload host or one destination domain are met with rotated subdomains under the same registrar/CDN footprint. Effective remediation requires upstream review of the recurring pattern, not just per-domain takedowns.</p>
+      </div>
+    </div>
+
     <!-- Footer / disclosure -->
     <div class="footer-disc">
       <h3 style="margin:0 0 .5rem;font-family:'Bitter',serif;font-size:1.05rem">About this disclosure</h3>

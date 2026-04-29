@@ -143,13 +143,24 @@ third-party content (typical SEO-spam infrastructure).
 
 {evidence_summary}
 
+This pattern is part of a long-running, publicly documented SEO-spam
+injection campaign tracked since January 2025 by independent researchers:
+
+  - cside Research (original disclosure):
+    https://cside.com/blog/government-and-university-websites-targeted-in-scriptapi-dev-client-side-attack
+  - Cyber Security News: https://cybersecuritynews.com/javascript-attacks-targeting/
+  - Joe Sandbox automated analysis: https://www.joesandbox.com/analysis/1684428/0/html
+  - PublicWWW live footprint: https://publicwww.com/websites/scriptapi.dev/
+
+The operators rotate payload hostnames and increasingly host destination
+domains behind major providers — per-domain takedowns alone are insufficient.
+
 This is forwarded to your abuse channel for review under your acceptable-use
 policy. We are not requesting any specific action — only that the case is
 visible to your team.
 {('Full technical bundle (no sign-in): ' + report_url) if report_url else ''}
 
-This is an automated, one-off notice. Reply to abuse@abuseradar.org if a
-follow-up is useful.
+Reply to abuse@abuseradar.org if a follow-up is useful.
 
 — AbuseRadar Research
 abuseradar.org
