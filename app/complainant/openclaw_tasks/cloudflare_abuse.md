@@ -1,47 +1,63 @@
-# Cloudflare Abuse Report Task
+# Cloudflare Abuse Report — Web Form
 
 ## Goal
-Go to https://abuse.cloudflare.com/ and submit an abuse report for the domain specified below.
+Open https://abuse.cloudflare.com/ and submit a factual, evidence-based abuse report. Use neutral language — no demands, no inflated numbers.
 
-## Domain to Report
-{target_domain}
+## Target
 
-## Report Details
-- **Category**: Phishing / Malware
-- **Your Name**: AbuseRadar Research Team
-- **Your Email**: {reporter_email}
-- **URLs**: https://{target_domain}
-
-## Description to Submit
-```
-SECURITY RESEARCH REPORT - SEO Spam Injection Infrastructure
-
-Domain: {target_domain}
-Role: {target_role}
-
-This domain is part of a large-scale SEO spam injection campaign that has compromised 500+ websites globally, including government (.gov) and educational (.edu) domains.
-
-The domain serves malicious JavaScript that injects hidden gambling/casino backlinks into compromised websites. The injected content is invisible to users but indexed by search engines.
-
-Affected government sites include:
-{affected_gov_sites}
-
-Technical evidence:
-- Injection method: {injection_method}
-- Script endpoint: {script_endpoint}
-- Number of affected sites: {affected_count}+
-- First observed: {first_seen}
-
-We request termination of Cloudflare services for this domain.
-```
+- **Domain:** {target_domain}
+- **Role observed:** {target_role}
+- **Reporter name:** AbuseRadar Research
+- **Reporter email:** {reporter_email}
+- **Affected (compromised) sites observed:** {affected_count}
+- **Sample affected sites:** {affected_gov_sites}
+- **Injection method:** {injection_method}
+- **First observed:** {first_seen}
+- **Public technical bundle:** {report_url}
 
 ## Steps
+
 1. Navigate to https://abuse.cloudflare.com/
-2. Select the appropriate abuse category
-3. Fill in reporter name and email
-4. Enter the domain URL
-5. Paste the description above into the description field
-6. If there is a CAPTCHA, solve it
-7. Submit the form
-8. Take a screenshot of the confirmation page
-9. Save the screenshot to /home/node/workspace/evidence/cloudflare_{target_domain}.png
+2. Select the abuse category that best matches:
+   - Prefer "Phishing" if the domain mimics a brand, otherwise "Other" / "Malware".
+   - Do NOT pick "Spam email" — this is web-spam, not email-spam.
+3. Fill the reporter fields with the values above.
+4. Enter the URL: `https://{target_domain}/`
+5. Paste the **Description** block below into the report description.
+6. If a CAPTCHA appears, solve it. If unsolvable, set `status=captcha_blocked` and stop.
+7. Submit. Capture the confirmation/ticket page screenshot to `/root/workspace/evidence/cloudflare_{target_domain}.png`.
+8. Return JSON: `{"status": "submitted" | "captcha_blocked" | "form_changed", "ticket_id": "<if shown>", "form_url": "<final url>"}`.
+
+## Description (paste verbatim)
+
+```
+AbuseRadar — Independent web-data observatory.
+
+The domain {target_domain} appears in our public-pages index as the destination of
+hidden third-party links injected into otherwise legitimate websites (typical
+SEO-spam injection pattern).
+
+Observed:
+  - Compromised host pages with anchors to this domain: {affected_count}
+  - Sample affected sites: {affected_gov_sites}
+  - Injection method: {injection_method}
+  - First observed: {first_seen}
+
+The hidden anchors are styled to be invisible to regular visitors but readable
+by search engines. The role of {target_domain} in this pattern: {target_role}.
+
+Full technical bundle (screenshots, rendered DOM, file paths) — no sign-in:
+  {report_url}
+
+We are not requesting any specific action — this is an evidence-backed notice
+so the case is visible to your acceptable-use review team. Reach us at
+{reporter_email} for any follow-up.
+
+— AbuseRadar Research (abuseradar.org)
+```
+
+## Constraints
+
+- Use only the official `abuse.cloudflare.com` form — never 3rd-party trackers.
+- No threats, no demands, no inflated counts. State only observed facts.
+- Time limit: 5 minutes per task.

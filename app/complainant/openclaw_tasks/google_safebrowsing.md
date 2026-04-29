@@ -1,24 +1,34 @@
-# Google Safe Browsing Report Task
+# Google Safe Browsing — Phishing/Malware Report
 
 ## Goal
-Report a malicious domain to Google Safe Browsing so Chrome shows a warning.
+Submit `{target_url}` to Google Safe Browsing as part of an SEO-spam injection campaign so Chrome and Search can flag it.
 
-## URL to Report
-{target_url}
+## Target
+
+- **URL to report:** {target_url}
+- **Domain:** {domain}
+- **Optional C2 endpoint observed:** {c2_endpoint}
 
 ## Steps
+
 1. Navigate to https://safebrowsing.google.com/safebrowsing/report_phish/
-2. Enter the URL: {target_url}
-3. In the additional information field, enter:
+2. Enter the URL: `{target_url}`
+3. Paste the **Additional details** block below.
+4. Solve the reCAPTCHA if present. If unsolvable, set `status=captcha_blocked`.
+5. Submit. Screenshot the confirmation to `/root/workspace/evidence/safebrowsing_{domain}.png`.
+6. Return JSON: `{"status": "submitted" | "captcha_blocked", "form_url": "<final url>"}`.
+
+## Additional details (paste verbatim)
 
 ```
-This domain serves malicious JavaScript used in a large-scale SEO spam 
-injection campaign. It has compromised 500+ websites including government 
-domains. The script injects hidden gambling backlinks into victim websites.
-C2 endpoint: {c2_endpoint}
-```
+Reported by AbuseRadar (abuseradar.org), an independent web-data observatory.
 
-4. Complete any CAPTCHA
-5. Submit the report
-6. Screenshot the confirmation
-7. Save to /home/node/workspace/evidence/safebrowsing_{domain}.png
+The domain {domain} appears as a destination for hidden anchors injected
+into legitimate websites via SEO-spam injection (gambling/casino landing
+pages). The anchors are styled to be invisible to users but readable by
+search engines, harming the host site's reputation and Google search quality.
+
+C2 endpoint observed (if any): {c2_endpoint}
+
+Reporter contact: abuse@abuseradar.org
+```
