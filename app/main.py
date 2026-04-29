@@ -1152,6 +1152,32 @@ async def mail_stats_contacts():
     }
 
 
+@app.get("/mail-log/recent")
+async def mail_log_recent(limit: int = 100, status: str | None = None):
+    """Son gönderim log'u (audit trail)."""
+    from models.database import MailLog
+
+    q = select(MailLog).order_by(MailLog.sent_at.desc()).limit(min(limit, 500))
+    if status:
+        q = q.where(MailLog.status == status)
+    async with async_session() as session:
+        rows = (await session.execute(q)).scalars().all()
+    return [
+        {
+            "id": r.id,
+            "to_email": r.to_email,
+            "to_email_domain": r.to_email_domain,
+            "recipient_provider": r.recipient_provider,
+            "subject": r.subject,
+            "language": r.language,
+            "status": r.status,
+            "error_message": r.error_message,
+            "sent_at": r.sent_at.isoformat() if r.sent_at else None,
+        }
+        for r in rows
+    ]
+
+
 @app.api_route("/public/unsubscribe", methods=["GET", "POST"])
 async def public_unsubscribe(request: Request):
     """RFC 8058 List-Unsubscribe one-click + manuel link.

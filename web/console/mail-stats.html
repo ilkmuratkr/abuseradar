@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mail stats — AbuseRadar Console</title>
+  <meta name="theme-color" content="#001016">
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+  <style>
+    .lim-row { display:grid; grid-template-columns: 110px 1fr 100px; gap:.7rem; align-items:center; padding:.55rem 0; border-bottom:1px solid var(--border); }
+    .lim-row:last-child { border-bottom:none; }
+    .lim-name { font-family:'JetBrains Mono', monospace; font-weight:600; font-size:.85rem; text-transform:capitalize; }
+    .lim-bar { height:8px; background:var(--bg-card-2); border-radius:4px; overflow:hidden; position:relative; }
+    .lim-bar-fill { height:100%; background:var(--green); transition:width .3s; }
+    .lim-bar-fill.warn { background:#f0a300; }
+    .lim-bar-fill.full { background:#e0392c; }
+    .lim-num { font-family:'JetBrains Mono', monospace; font-size:.85rem; text-align:right; font-weight:600; }
+    .log-table { width:100%; border-collapse:collapse; font-size:.83rem; }
+    .log-table th { text-align:left; padding:.6rem .7rem; font-weight:600; color:var(--text-dim); border-bottom:1px solid var(--border); font-size:.75rem; text-transform:uppercase; letter-spacing:.04em; }
+    .log-table td { padding:.55rem .7rem; border-bottom:1px solid var(--border); }
+    .log-table tr:last-child td { border-bottom:none; }
+    .log-status { display:inline-block; padding:.15rem .55rem; border-radius:10px; font-size:.72rem; font-weight:600; }
+    .log-status.sent { background:var(--green-soft); color:var(--green); }
+    .log-status.skipped, .log-status.skipped_daily_limit { background:rgba(240,163,0,.12); color:#f0a300; }
+    .log-status.error { background:rgba(224,57,44,.12); color:#e0392c; }
+    .log-status.simulated { background:rgba(120,120,120,.18); color:var(--text-dim); }
+    .log-prov { font-family:'JetBrains Mono', monospace; font-size:.78rem; color:var(--text-dim); }
+    .log-mail { font-family:'JetBrains Mono', monospace; font-size:.78rem; }
+    .log-time { font-family:'JetBrains Mono', monospace; font-size:.75rem; color:var(--text-dim); white-space:nowrap; }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="mail-stats"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><span class="current">Mail stats</span></nav>
+      </div>
+      <button class="icon-btn" id="refresh-btn" title="Refresh"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Mail stats &amp; rate limits</h1>
+          <p>Provider-bazlı günlük gönderim sayacı (warm-up). MX-tabanlı algılama ile her alıcının gerçek mail sağlayıcısı tespit edilir.</p>
+        </div>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-label">Sent (24h)</div><div class="kpi-value" id="kpi-sent">—</div><div class="kpi-trend">başarılı</div></div>
+        <div class="kpi orange"><div class="kpi-label">Skipped</div><div class="kpi-value" id="kpi-skipped">—</div><div class="kpi-trend">limit/dedup/unsub</div></div>
+        <div class="kpi"><div class="kpi-label">Errors</div><div class="kpi-value" id="kpi-errors">—</div><div class="kpi-trend">ZeptoMail rejected</div></div>
+        <div class="kpi green"><div class="kpi-label">Total log</div><div class="kpi-value" id="kpi-total">—</div><div class="kpi-trend">tüm kayıtlar</div></div>
+      </div>
+
+      <div class="grid-2-1 row-gap">
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Provider günlük limit (son 24 saat)</h3>
+            <span class="kbd-hint">Hafta 1 warm-up</span>
+          </div>
+          <div class="panel-pad" id="lim-host">
+            <div class="loading-spinner">Loading…</div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <h3>Tahmini havuz (kontaklar)</h3>
+            <span class="kbd-hint">MX scan</span>
+          </div>
+          <div class="panel-pad" id="contacts-host">
+            <div class="loading-spinner">Loading…</div>
+          </div>
+        </section>
+      </div>
+
+      <section class="panel" style="margin-top:1.2rem">
+        <div class="panel-head">
+          <h3>Son gönderimler</h3>
+          <select id="f-status" style="padding:.4rem .7rem;background:var(--bg-card-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:.82rem">
+            <option value="">All</option>
+            <option value="sent">Sent</option>
+            <option value="skipped_daily_limit">Skipped (limit)</option>
+            <option value="error">Error</option>
+          </select>
+        </div>
+        <div id="log-host" style="overflow-x:auto"><div class="loading-spinner" style="padding:1.4rem">Loading…</div></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="api.js"></script>
+<script src="console.js"></script>
+<script>
+const PROVIDER_ICONS = {
+  gmail: "✉", microsoft: "✉", yahoo: "✉", zoho: "✉",
+  fastmail: "✉", protonmail: "✉", apple: "✉", other: "✉", unknown: "?"
+};
+
+function pct(sent, limit) {
+  if (!limit) return 0;
+  return Math.min(100, Math.round((sent/limit)*100));
+}
+
+function escapeHtml(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+async function loadStats() {
+  try {
+    const data = await api.get("/mail-stats/today");
+    document.getElementById("kpi-sent").textContent = data.total.sent || 0;
+    const skipped = (data.total.skipped || 0) + (data.total.skipped_daily_limit || 0);
+    document.getElementById("kpi-skipped").textContent = skipped;
+    document.getElementById("kpi-errors").textContent = data.total.error || 0;
+    document.getElementById("kpi-total").textContent = Object.values(data.total).reduce((a,b)=>a+b,0);
+
+    const host = document.getElementById("lim-host");
+    const provs = Object.entries(data.by_provider).sort((a,b) => (b[1].sent||0) - (a[1].sent||0));
+    host.innerHTML = provs.map(([prov, info]) => {
+      const sent = info.sent || 0;
+      const lim = info.limit || 0;
+      const p = pct(sent, lim);
+      const cls = p >= 100 ? "full" : (p >= 80 ? "warn" : "");
+      return `<div class="lim-row">
+        <div class="lim-name">${escapeHtml(prov)}</div>
+        <div class="lim-bar"><div class="lim-bar-fill ${cls}" style="width:${p}%"></div></div>
+        <div class="lim-num">${sent}/${lim}</div>
+      </div>`;
+    }).join("");
+  } catch (e) {
+    document.getElementById("lim-host").innerHTML = `<div class="callout orange">Yüklenemedi: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function loadContacts() {
+  const host = document.getElementById("contacts-host");
+  try {
+    const data = await api.get("/mail-stats/contacts");
+    if (data.total_contacts === 0) {
+      host.innerHTML = `<div class="callout">Kontak DB'si boş — henüz <code>find_all_contacts</code> çalıştırılmadı. Pipeline kurban-bazlı contact extraction yapınca burada provider dağılımı görünür.</div>`;
+      return;
+    }
+    const provs = Object.entries(data.by_provider).sort((a,b) => b[1] - a[1]);
+    host.innerHTML = `
+      <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.6rem">
+        ${data.total_contacts} kontak / ${data.unique_domains_scanned} unique domain
+      </div>
+      ${provs.map(([prov, n]) => `
+        <div class="lim-row">
+          <div class="lim-name">${escapeHtml(prov)}</div>
+          <div class="lim-bar"><div class="lim-bar-fill" style="width:${Math.round(n/data.total_contacts*100)}%"></div></div>
+          <div class="lim-num">${n}</div>
+        </div>`).join("")}
+    `;
+  } catch (e) {
+    host.innerHTML = `<div class="callout orange">Yüklenemedi: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+async function loadLog() {
+  const host = document.getElementById("log-host");
+  const status = document.getElementById("f-status").value;
+  try {
+    const url = "/mail-log/recent?limit=100" + (status ? `&status=${status}` : "");
+    const rows = await api.get(url);
+    if (!rows.length) {
+      host.innerHTML = `<div class="callout" style="margin:1rem">Henüz mail logu yok.</div>`;
+      return;
+    }
+    host.innerHTML = `
+      <table class="log-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Recipient</th>
+            <th>Provider</th>
+            <th>Status</th>
+            <th>Subject</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => {
+            const dt = r.sent_at ? new Date(r.sent_at) : null;
+            const time = dt ? dt.toLocaleString('en-GB', {hour:'2-digit',minute:'2-digit',day:'2-digit',month:'short'}) : '—';
+            return `<tr>
+              <td><span class="log-time">${escapeHtml(time)}</span></td>
+              <td><span class="log-mail">${escapeHtml(r.to_email)}</span></td>
+              <td><span class="log-prov">${escapeHtml(r.recipient_provider || 'unknown')}</span></td>
+              <td><span class="log-status ${escapeHtml(r.status || '')}">${escapeHtml(r.status || '—')}</span></td>
+              <td>${escapeHtml((r.subject || '').slice(0,60))}</td>
+            </tr>`;
+          }).join("")}
+        </tbody>
+      </table>
+    `;
+  } catch (e) {
+    host.innerHTML = `<div class="callout orange" style="margin:1rem">Yüklenemedi: ${escapeHtml(e.message)}</div>`;
+  }
+}
+
+function refreshAll() {
+  loadStats();
+  loadContacts();
+  loadLog();
+}
+
+document.getElementById("refresh-btn").addEventListener("click", refreshAll);
+document.getElementById("f-status").addEventListener("change", loadLog);
+refreshAll();
+// auto-refresh stats her 30 saniyede
+setInterval(loadStats, 30000);
+</script>
+
+</body>
+</html>
