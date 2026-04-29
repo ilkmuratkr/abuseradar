@@ -1,21 +1,28 @@
-"""OpenClaw entegrasyonu - otonom form doldurma ve şikayet gönderme.
+"""OpenClaw entegrasyonu — browser-automation skill ile abuse formu doldurma.
 
-OpenClaw VPN-US SOCKS proxy üzerinden çıkar.
-Tüm form doldurma görevleri OpenClaw'a delege edilir.
+OpenClaw VPN-US SOCKS proxy üzerinden çıkar (anonim IP).
+LLM çağrıları da VPN-US üzerinden — sunucu IP'si dashboard'lara yansımaz.
+
+CLI: `openclaw agent --local --agent main -m "<task>" --json`
 """
 
+import asyncio
 import json
 import logging
+import os
+import shlex
 import subprocess
 from pathlib import Path
-from string import Template
 
 from config import settings
 
 logger = logging.getLogger(__name__)
 
 TASKS_DIR = Path(__file__).parent / "openclaw_tasks"
-OPENCLAW_CONTAINER = "openclaw"
+OPENCLAW_CONTAINER = os.environ.get("OPENCLAW_CONTAINER", "openclaw")
+
+# 5 dakikalık görev limiti (form doldurma + LLM call'ları + screenshot)
+DEFAULT_TIMEOUT_SEC = 300
 
 
 def _render_task(task_file: str, variables: dict) -> str:
@@ -23,223 +30,230 @@ def _render_task(task_file: str, variables: dict) -> str:
     template_path = TASKS_DIR / task_file
     if not template_path.exists():
         raise FileNotFoundError(f"Görev şablonu bulunamadı: {task_file}")
-
     content = template_path.read_text(encoding="utf-8")
-
     for key, value in variables.items():
         placeholder = "{" + key + "}"
         content = content.replace(placeholder, str(value))
-
     return content
 
 
-def _send_to_openclaw(task_text: str, task_name: str) -> dict:
-    """OpenClaw konteynerine görev gönder.
+async def _send_to_openclaw(task_text: str, task_name: str, timeout: int = DEFAULT_TIMEOUT_SEC) -> dict:
+    """OpenClaw agent'ına görev gönder (browser-automation skill aktif).
 
-    OpenClaw'un CLI veya API'si üzerinden görev verir.
+    `openclaw agent --local --agent main -m "<task>" --json --timeout 300`
     """
-    # Görev dosyasını workspace'e yaz
-    task_path = f"/home/node/workspace/tasks/active_{task_name}.md"
+    cmd = [
+        "docker", "exec", OPENCLAW_CONTAINER,
+        "openclaw", "agent",
+        "--local", "--agent", "main",
+        "--json", "--thinking", "medium",
+        "--timeout", str(timeout - 10),
+        "-m", task_text,
+    ]
 
     try:
-        # Görev dosyasını container'a yaz
-        write_cmd = [
-            "docker", "exec", OPENCLAW_CONTAINER,
-            "bash", "-c",
-            f"mkdir -p /home/node/workspace/tasks && cat > {task_path}",
-        ]
-        proc = subprocess.run(
-            write_cmd,
-            input=task_text,
-            capture_output=True,
-            text=True,
-            timeout=10,
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
         )
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.communicate()
+            logger.error(f"OpenClaw timeout: {task_name} ({timeout}s)")
+            return {"status": "timeout", "task_name": task_name}
+
+        out = (stdout or b"").decode(errors="replace").strip()
+        err = (stderr or b"").decode(errors="replace").strip()
 
         if proc.returncode != 0:
-            logger.error(f"OpenClaw görev yazma hatası: {proc.stderr}")
-            return {"status": "error", "reason": proc.stderr}
+            logger.warning(f"OpenClaw exit={proc.returncode} task={task_name}: {err[:300]}")
+            return {"status": "failed", "exit": proc.returncode, "stderr": err[:500], "stdout": out[:500]}
 
-        # OpenClaw CLI ile görevi çalıştır
-        exec_cmd = [
-            "docker", "exec", OPENCLAW_CONTAINER,
-            "openclaw", "run", task_path,
-        ]
-        result = subprocess.run(
-            exec_cmd,
-            capture_output=True,
-            text=True,
-            timeout=300,  # 5 dakika max (form doldurma + CAPTCHA)
-        )
+        # JSON içerik parse — son satırda olmalı
+        result_json: dict | None = None
+        for line in reversed(out.splitlines()):
+            line = line.strip()
+            if line.startswith("{"):
+                try:
+                    result_json = json.loads(line)
+                    break
+                except json.JSONDecodeError:
+                    continue
 
-        if result.returncode == 0:
-            logger.info(f"OpenClaw görevi tamamlandı: {task_name}")
-            return {"status": "completed", "output": result.stdout[:1000]}
-        else:
-            logger.warning(f"OpenClaw görevi başarısız: {task_name} → {result.stderr[:500]}")
-            return {"status": "failed", "error": result.stderr[:500]}
+        logger.info(f"OpenClaw tamamlandı: {task_name}")
+        return {
+            "status": "completed",
+            "task_name": task_name,
+            "result": result_json,
+            "raw_output": out[:1000] if not result_json else None,
+        }
 
-    except subprocess.TimeoutExpired:
-        logger.error(f"OpenClaw görevi timeout: {task_name}")
-        return {"status": "timeout", "reason": "5 dakika aşıldı"}
     except Exception as e:
-        logger.error(f"OpenClaw hatası: {e}")
-        return {"status": "error", "reason": str(e)}
+        logger.error(f"OpenClaw exec hatası {task_name}: {e}")
+        return {"status": "error", "reason": str(e), "task_name": task_name}
 
 
 async def report_cloudflare(
+    *,
     target_domain: str,
-    target_role: str,
-    reporter_email: str,
-    affected_gov_sites: str,
-    injection_method: str,
-    script_endpoint: str,
-    affected_count: int,
-    first_seen: str,
+    target_role: str = "SEO spam destination",
+    affected_gov_sites: str = "",
+    injection_method: str = "JS injection (hidden anchors)",
+    script_endpoint: str = "",
+    affected_count: int = 1,
+    first_seen: str = "",
+    reporter_email: str | None = None,
 ) -> dict:
     """Cloudflare abuse formunu OpenClaw ile doldur."""
     from .tracker import submit_complaint
 
-    # Duplicate kontrol
     check = await submit_complaint(
         target_domain=target_domain,
-        target_type="c2",
+        target_type="attacker",
         platform="cloudflare",
         platform_detail="abuse form",
     )
     if check["status"] == "already_exists":
-        logger.info(f"CF şikayet zaten var: {target_domain}")
         return check
 
-    task_text = _render_task("cloudflare_abuse.md", {
+    task = _render_task("cloudflare_abuse.md", {
         "target_domain": target_domain,
         "target_role": target_role,
-        "reporter_email": reporter_email,
-        "affected_gov_sites": affected_gov_sites,
+        "reporter_email": reporter_email or settings.email_reply_to or "abuse@abuseradar.org",
+        "affected_gov_sites": affected_gov_sites or "(see report bundle)",
         "injection_method": injection_method,
         "script_endpoint": script_endpoint,
         "affected_count": str(affected_count),
         "first_seen": first_seen,
     })
-
-    result = _send_to_openclaw(task_text, f"cf_{target_domain}")
-    return result
+    return await _send_to_openclaw(task, f"cf_{target_domain}")
 
 
-async def report_google_spam(
-    target_url: str,
-    domain: str,
-    extra_details: str = "",
-) -> dict:
-    """Google spam formunu OpenClaw ile doldur."""
+async def report_google_safebrowsing(*, target_url: str, domain: str, c2_endpoint: str = "") -> dict:
+    """Google Safe Browsing — bilinen attacker domain bildir."""
     from .tracker import submit_complaint
 
     check = await submit_complaint(
-        target_domain=domain,
-        target_type="spam",
-        platform="google_spam",
-        platform_detail="spam report form",
+        target_domain=domain, target_type="attacker",
+        platform="google_safebrowsing", platform_detail="safe browsing report",
     )
     if check["status"] == "already_exists":
         return check
 
-    task_text = _render_task("google_spam_report.md", {
-        "target_url": target_url,
-        "domain": domain,
-        "extra_details": extra_details,
+    task = _render_task("google_safebrowsing.md", {
+        "target_url": target_url, "domain": domain, "c2_endpoint": c2_endpoint,
     })
+    return await _send_to_openclaw(task, f"gsb_{domain}")
 
-    return _send_to_openclaw(task_text, f"gspam_{domain}")
 
-
-async def report_google_safebrowsing(
-    target_url: str,
-    domain: str,
-    c2_endpoint: str = "",
-) -> dict:
-    """Google Safe Browsing formunu OpenClaw ile doldur."""
+async def report_google_spam(*, target_url: str, domain: str, extra_details: str = "") -> dict:
+    """Google Search spam report."""
     from .tracker import submit_complaint
 
     check = await submit_complaint(
-        target_domain=domain,
-        target_type="c2",
-        platform="google_safebrowsing",
-        platform_detail="safe browsing report",
+        target_domain=domain, target_type="attacker",
+        platform="google_spam", platform_detail="spam report",
     )
     if check["status"] == "already_exists":
         return check
 
-    task_text = _render_task("google_safebrowsing.md", {
-        "target_url": target_url,
-        "domain": domain,
-        "c2_endpoint": c2_endpoint,
+    task = _render_task("google_spam_report.md", {
+        "target_url": target_url, "domain": domain, "extra_details": extra_details,
     })
+    return await _send_to_openclaw(task, f"gspam_{domain}")
 
-    return _send_to_openclaw(task_text, f"gsb_{domain}")
+
+async def report_hosting_form(
+    *,
+    target_domain: str,
+    hosting_provider: str,
+    abuse_email: str,
+    ip: str,
+    asn: str = "",
+    injection_method: str = "JS injection",
+    hacklink_count: int = 0,
+    report_url: str = "",
+    reporter_email: str | None = None,
+) -> dict:
+    """Hosting provider abuse formunu OpenClaw ile bul + doldur."""
+    from .tracker import submit_complaint
+
+    check = await submit_complaint(
+        target_domain=target_domain, target_type="attacker",
+        platform="hosting", platform_detail=hosting_provider or "unknown",
+    )
+    if check["status"] == "already_exists":
+        return check
+
+    task = _render_task("hosting_abuse_form.md", {
+        "target_domain": target_domain,
+        "hosting_provider": hosting_provider or "unknown",
+        "abuse_email": abuse_email or "",
+        "ip": ip,
+        "asn": asn,
+        "injection_method": injection_method,
+        "hacklink_count": str(hacklink_count),
+        "report_url": report_url,
+        "reporter_email": reporter_email or "abuse@abuseradar.org",
+    })
+    return await _send_to_openclaw(task, f"hosting_{target_domain}")
+
+
+async def report_registrar_form(
+    *,
+    target_domain: str,
+    registrar: str,
+    abuse_email: str,
+    target_role: str = "SEO spam infrastructure",
+    affected_gov_sites: str = "",
+    report_url: str = "",
+    reporter_email: str | None = None,
+) -> dict:
+    """Registrar abuse formunu OpenClaw ile bul + doldur."""
+    from .tracker import submit_complaint
+
+    check = await submit_complaint(
+        target_domain=target_domain, target_type="attacker",
+        platform="registrar", platform_detail=registrar or "unknown",
+    )
+    if check["status"] == "already_exists":
+        return check
+
+    task = _render_task("registrar_abuse_form.md", {
+        "target_domain": target_domain,
+        "registrar": registrar or "unknown",
+        "abuse_email": abuse_email or "",
+        "target_role": target_role,
+        "affected_gov_sites": affected_gov_sites or "(see report bundle)",
+        "report_url": report_url,
+        "reporter_email": reporter_email or "abuse@abuseradar.org",
+    })
+    return await _send_to_openclaw(task, f"registrar_{target_domain}")
 
 
 async def report_icann(
-    target_domain: str,
-    registrar: str,
-    registrar_abuse_email: str,
-    report_date: str,
-    affected_count: int,
+    *,
+    target_domain: str, registrar: str, registrar_abuse_email: str,
+    report_date: str = "", affected_count: int = 1,
 ) -> dict:
-    """ICANN DNS abuse formunu OpenClaw ile doldur."""
+    """ICANN compliance — registrar şikayetlere cevap vermediyse son çare."""
     from .tracker import submit_complaint
 
     check = await submit_complaint(
-        target_domain=target_domain,
-        target_type="c2",
-        platform="icann",
-        platform_detail="dns abuse complaint",
+        target_domain=target_domain, target_type="attacker",
+        platform="icann", platform_detail="dns abuse compliance",
     )
     if check["status"] == "already_exists":
         return check
 
-    task_text = _render_task("icann_abuse.md", {
+    task = _render_task("icann_abuse.md", {
         "target_domain": target_domain,
         "registrar": registrar,
         "registrar_abuse_email": registrar_abuse_email,
         "report_date": report_date,
         "affected_count": str(affected_count),
     })
-
-    return _send_to_openclaw(task_text, f"icann_{target_domain}")
-
-
-async def run_all_complaints_for_c2(c2_domain: str, evidence: dict) -> dict:
-    """Tek bir C2 domain için tüm şikayet formlarını doldur."""
-    results = {}
-
-    # 1. Cloudflare
-    results["cloudflare"] = await report_cloudflare(
-        target_domain=c2_domain,
-        target_role=evidence.get("role", "C2 panel"),
-        reporter_email=settings.email_from,
-        affected_gov_sites=evidence.get("gov_sites", ""),
-        injection_method=evidence.get("method", "JavaScript injection"),
-        script_endpoint=evidence.get("endpoint", ""),
-        affected_count=evidence.get("affected_count", 500),
-        first_seen=evidence.get("first_seen", ""),
-    )
-
-    # 2. Google Safe Browsing
-    results["safebrowsing"] = await report_google_safebrowsing(
-        target_url=f"https://{c2_domain}/",
-        domain=c2_domain,
-        c2_endpoint=evidence.get("endpoint", ""),
-    )
-
-    # 3. ICANN (registrar aksiyon almadıysa)
-    if evidence.get("registrar"):
-        results["icann"] = await report_icann(
-            target_domain=c2_domain,
-            registrar=evidence.get("registrar", ""),
-            registrar_abuse_email=evidence.get("registrar_abuse", ""),
-            report_date=evidence.get("report_date", ""),
-            affected_count=evidence.get("affected_count", 500),
-        )
-
-    logger.info(f"[{c2_domain}] Tüm şikayetler gönderildi: {results}")
-    return results
+    return await _send_to_openclaw(task, f"icann_{target_domain}")

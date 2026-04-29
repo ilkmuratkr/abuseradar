@@ -1079,6 +1079,110 @@ async def public_report_hosting(token: str):
         return {"error": str(e)}
 
 
+@app.post("/complain/target/{target_domain}")
+async def complain_target(target_domain: str, request: Request):
+    """Tek bir saldırgan target_domain için tüm şikayet zincirini tetikle.
+
+    Body (JSON, opsiyonel):
+      {
+        "affected_gov_sites": ["ulm.edu.pk", "..."],
+        "hacklink_count": 12,
+        "report_url": "https://abuseradar.org/r/.../...",
+        "enable_form": true,    # OpenClaw browser otomasyon
+        "enable_mail": true     # ZeptoMail abuse mail
+      }
+    """
+    from complainant.complaint_chain import run_chain_for_target
+
+    body: dict = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+
+    target_domain = (target_domain or "").strip().lower()
+    if not target_domain or "." not in target_domain:
+        raise HTTPException(400, "Invalid target_domain")
+
+    result = await run_chain_for_target(
+        target_domain=target_domain,
+        affected_gov_sites=body.get("affected_gov_sites") or [],
+        hacklink_count=int(body.get("hacklink_count") or 0),
+        injection_method=body.get("injection_method") or "JS injection (hidden anchors)",
+        report_url=body.get("report_url") or "",
+        enable_form=bool(body.get("enable_form", True)),
+        enable_mail=bool(body.get("enable_mail", True)),
+    )
+    return result
+
+
+@app.get("/complain/discover-targets")
+async def discover_complaint_targets(min_count: int = 2, limit: int = 50):
+    """DB'den şikayet edilebilecek target_domain'leri çıkar.
+
+    Kriter:
+      - DetectedHacklink tablosunda en az `min_count` defa görülmüş
+      - Major service değil (safe_domains)
+      - Eşsiz target_domain
+    """
+    from sqlalchemy import select, func as sa_func
+    from models.database import DetectedHacklink, Site
+    from utils.safe_domains import is_safe_domain
+
+    async with async_session() as session:
+        rows = (await session.execute(
+            select(
+                DetectedHacklink.target_domain,
+                sa_func.count(sa_func.distinct(DetectedHacklink.site_id)).label("victim_count"),
+                sa_func.count(DetectedHacklink.id).label("link_count"),
+            )
+            .where(DetectedHacklink.target_domain.isnot(None))
+            .group_by(DetectedHacklink.target_domain)
+            .having(sa_func.count(sa_func.distinct(DetectedHacklink.site_id)) >= min_count)
+            .order_by(sa_func.count(sa_func.distinct(DetectedHacklink.site_id)).desc())
+            .limit(limit)
+        )).all()
+
+    out = []
+    for r in rows:
+        td = (r.target_domain or "").strip().lower()
+        if not td or is_safe_domain(td):
+            continue
+        out.append({
+            "target_domain": td,
+            "victim_count": r.victim_count,
+            "link_count": r.link_count,
+        })
+    return {"count": len(out), "targets": out}
+
+
+@app.get("/complaints/log")
+async def complaints_log(limit: int = 200, target_domain: str | None = None):
+    """Tüm complaint kayıtları (audit trail). Frontend Complaints sayfasında listele."""
+    from models.database import Complaint
+
+    q = select(Complaint).order_by(Complaint.created_at.desc()).limit(min(limit, 1000))
+    if target_domain:
+        q = q.where(Complaint.target_domain == target_domain.strip().lower())
+    async with async_session() as session:
+        rows = (await session.execute(q)).scalars().all()
+    return [
+        {
+            "id": r.id,
+            "target_domain": r.target_domain,
+            "target_type": r.target_type,
+            "platform": r.platform,
+            "platform_detail": r.platform_detail,
+            "status": r.status,
+            "submitted_at": r.submitted_at.isoformat() if r.submitted_at else None,
+            "evidence_path": r.evidence_path,
+            "notes": (r.notes or "")[:200],
+            "created_at": r.created_at.isoformat() if r.created_at else None,
+        }
+        for r in rows
+    ]
+
+
 @app.get("/mail-stats/today")
 async def mail_stats_today():
     """Bugünkü gönderim istatistikleri — provider bazında.
