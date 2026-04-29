@@ -1,28 +1,21 @@
-Prezado(a),
+Olá,
 
-Somos uma equipe de pesquisa em seguranca que monitora sites contra modificacoes nao autorizadas. Durante nossa analise, identificamos conteudo de terceiros nao autorizado em seu site:
+Escrevo em nome da AbuseRadar, um projeto independente de pesquisa em segurança web.
 
-  URL afetada: {url}
-  Problema: {hacklink_count} links ocultos injetados no codigo da pagina
-  Detectado em: {first_seen}
-  Relatorio: {report_url}
+Durante uma varredura de rotina, percebemos que {domain} parece estar servindo conteúdo provavelmente adicionado sem o conhecimento da sua equipe — geralmente através de um plugin de CMS desatualizado, um arquivo de tema comprometido ou credenciais de administrador vazadas.
 
-Esse tipo de modificacao geralmente e causado por uma vulnerabilidade no CMS ou plugins. O conteudo injetado e invisivel para os visitantes, mas indexado pelos motores de busca, o que pode resultar em penalizacoes no ranking do seu site.
+O que observamos em {url}:
+  - {hacklink_count} links de terceiros incorporados ao código-fonte da página
+  - Os links estão estilizados para serem invisíveis aos visitantes regulares
+  - Apontam para sites externos sem relação com o seu trabalho
 
-ACOES RECOMENDADAS:
-  1. Atualize seu CMS e todos os plugins para as versoes mais recentes
-  2. Verifique os arquivos listados no relatorio em busca de codigo injetado
-  3. Altere todas as senhas administrativas
-  4. Denuncie o dominio de origem ao Cloudflare (instrucoes no relatorio)
+Preparamos um relatório técnico completo para a sua equipe. Inclui capturas de tela, os arquivos afetados e um guia de remediação passo a passo. Sem login:
 
-O relatorio detalhado inclui capturas de tela, analise tecnica e instrucoes passo a passo para correcao.
+  {report_url}
 
-Se tiver duvidas, responda a este e-mail.
+Se a sua equipe já está ciente e trabalhando no assunto, ignore esta mensagem. Caso contrário, ficamos à disposição — basta responder a este e-mail ou escrever para team@abuseradar.org. Verificaremos a página novamente em 7–10 dias para confirmar a correção.
 
 Atenciosamente,
 Equipe de Pesquisa AbuseRadar
-{report_url}
 
----
-Voce recebeu esta mensagem porque {domain} foi identificado em nossa varredura de seguranca.
-Esta e uma notificacao unica.
+— Esta é uma notificação única enviada porque {domain} apareceu em nossa varredura aberta. Não operamos listas de e-mail e não entraremos em contato novamente sem motivo.

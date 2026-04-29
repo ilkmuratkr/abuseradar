@@ -1,28 +1,21 @@
 Hello,
 
-We are a security research team that monitors websites for unauthorized modifications. During our analysis, we identified unauthorized third-party content on your website:
+I'm writing from AbuseRadar, an independent web security research project.
 
-  Affected URL: {url}
-  Issue: {hacklink_count} hidden links injected into page source
-  First detected: {first_seen}
-  Report: {report_url}
+During a routine scan we noticed that {domain} appears to be serving content that was very likely added without your team's knowledge — usually through an outdated CMS plugin, a compromised template file, or leaked admin credentials.
 
-This type of modification is typically caused by a vulnerability in your CMS or plugins. The injected content is invisible to visitors but indexed by search engines, which may result in search ranking penalties for your site.
+What we observed on {url}:
+  - {hacklink_count} third-party links embedded in the page source
+  - The links are styled to be invisible to regular visitors
+  - They point to external sites unrelated to your work
 
-RECOMMENDED ACTIONS:
-  1. Update your CMS and all plugins to the latest versions
-  2. Review the files listed in the report for injected code
-  3. Change all administrative passwords
-  4. Report the source domain to Cloudflare (instructions in report)
+We've prepared a full technical report for your team. It includes screenshots, the affected files, and a step-by-step remediation guide. No login required:
 
-The detailed report includes screenshots, technical analysis, and step-by-step remediation instructions.
+  {report_url}
 
-If you have questions, reply to this email.
+If your team is already aware and working on this, please ignore this message. Otherwise we're happy to help — just reply, or write to team@abuseradar.org. We'll re-check the page in 7–10 days and confirm the fix.
 
-Best regards,
-AbuseRadar Research Team
-{report_url}
+Kind regards,
+AbuseRadar Research
 
----
-You received this because {domain} was identified in our security scan.
-This is a one-time notification.
+— This is a one-time notification sent because {domain} surfaced in our open-source scan. We do not run mailing lists and will not contact you again about this finding without a reason.

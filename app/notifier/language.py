@@ -6,7 +6,7 @@ from utils.helpers import detect_language_from_domain
 
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 
-AVAILABLE_LANGUAGES = {"en", "pt", "es", "tr", "fr"}
+AVAILABLE_LANGUAGES = {"en", "tr", "pt", "es", "fr", "de", "it", "ru", "ar", "zh"}
 
 
 def get_language(domain: str, csv_language: str | None = None) -> str:
@@ -53,12 +53,17 @@ def render_template(language: str, **kwargs) -> str:
 
 
 def get_subject(language: str, domain: str) -> str:
-    """Dile göre email konusu."""
+    """Dile göre email konusu — 'human' ton, spam tetik kelimeleri azaltılmış."""
     subjects = {
-        "en": f"Security notice for {domain} - unauthorized content detected",
-        "pt": f"Aviso de seguranca para {domain} - conteudo nao autorizado detectado",
-        "es": f"Aviso de seguridad para {domain} - contenido no autorizado detectado",
-        "tr": f"{domain} icin guvenlik bildirimi - yetkisiz icerik tespit edildi",
-        "fr": f"Avis de securite pour {domain} - contenu non autorise detecte",
+        "en": f"A finding on {domain} — quick note from AbuseRadar",
+        "tr": f"{domain} sitesinde bir bulgu — AbuseRadar'dan kısa not",
+        "pt": f"Algo encontrado em {domain} — uma nota rápida da AbuseRadar",
+        "es": f"Algo detectado en {domain} — una nota breve de AbuseRadar",
+        "fr": f"Un constat sur {domain} — note rapide d'AbuseRadar",
+        "de": f"Ein Befund zu {domain} — kurze Notiz von AbuseRadar",
+        "it": f"Un riscontro su {domain} — breve nota da AbuseRadar",
+        "ru": f"Замечание по {domain} — короткое сообщение от AbuseRadar",
+        "ar": f"ملاحظة بشأن {domain} — رسالة قصيرة من AbuseRadar",
+        "zh": f"关于 {domain} 的一项发现 — AbuseRadar 简要通知",
     }
     return subjects.get(language, subjects["en"])

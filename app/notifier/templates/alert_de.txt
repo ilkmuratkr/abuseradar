@@ -1,0 +1,21 @@
+Guten Tag,
+
+ich schreibe Ihnen im Namen von AbuseRadar, einem unabhängigen Forschungsprojekt für Web-Sicherheit.
+
+Bei einer Routine-Analyse ist uns aufgefallen, dass {domain} Inhalte ausliefert, die sehr wahrscheinlich ohne Wissen Ihres Teams hinzugefügt wurden — üblicherweise durch ein veraltetes CMS-Plugin, eine kompromittierte Template-Datei oder geleakte Administrator-Zugangsdaten.
+
+Was wir auf {url} beobachtet haben:
+  - {hacklink_count} fremde Links, die im Seitenquelltext eingebettet sind
+  - Die Links sind so gestaltet, dass sie für reguläre Besucher unsichtbar sind
+  - Sie verweisen auf externe Seiten, die nichts mit Ihrer Tätigkeit zu tun haben
+
+Wir haben einen vollständigen technischen Bericht für Ihr Team vorbereitet. Er enthält Screenshots, die betroffenen Dateien und eine schrittweise Anleitung zur Behebung. Kein Login erforderlich:
+
+  {report_url}
+
+Wenn Ihr Team bereits Bescheid weiß und daran arbeitet, ignorieren Sie diese Nachricht bitte. Andernfalls helfen wir gerne — antworten Sie einfach auf diese E-Mail oder schreiben Sie an team@abuseradar.org. Wir prüfen die Seite in 7–10 Tagen erneut und bestätigen die Korrektur.
+
+Mit freundlichen Grüßen,
+AbuseRadar Forschungsteam
+
+— Dies ist eine einmalige Benachrichtigung, gesendet, weil {domain} in unserem offenen Scan auftauchte. Wir betreiben keine Verteilerlisten und werden uns nicht erneut grundlos melden.

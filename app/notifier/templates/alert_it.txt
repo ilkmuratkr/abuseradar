@@ -1,0 +1,21 @@
+Salve,
+
+vi scrivo a nome di AbuseRadar, un progetto indipendente di ricerca in sicurezza web.
+
+Durante una scansione di routine, abbiamo notato che {domain} sembra servire contenuto molto probabilmente aggiunto all'insaputa del vostro team — di solito attraverso un plugin CMS obsoleto, un file di template compromesso o credenziali amministrative trapelate.
+
+Cosa abbiamo osservato su {url}:
+  - {hacklink_count} link di terze parti incorporati nel codice sorgente della pagina
+  - I link sono stilizzati per essere invisibili ai visitatori regolari
+  - Puntano a siti esterni non correlati alla vostra attività
+
+Abbiamo preparato un rapporto tecnico completo per il vostro team. Include screenshot, i file interessati e una guida passo passo per la rimozione. Non è richiesto alcun login:
+
+  {report_url}
+
+Se il vostro team è già al corrente e ci sta lavorando, ignorate questo messaggio. Altrimenti siamo a disposizione — basta rispondere a questa e-mail o scrivere a team@abuseradar.org. Ricontrolleremo la pagina in 7–10 giorni e confermeremo la correzione.
+
+Cordiali saluti,
+Team di ricerca AbuseRadar
+
+— Questa è una notifica unica inviata perché {domain} è emerso nella nostra scansione aperta. Non gestiamo liste di distribuzione e non vi ricontatteremo senza motivo.

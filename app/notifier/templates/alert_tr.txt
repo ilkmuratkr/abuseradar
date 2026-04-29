@@ -1,28 +1,21 @@
 Merhaba,
 
-Web sitelerini yetkisiz degisikliklere karsi izleyen bir guvenlik arastirma ekibiyiz. Analizimiz sirasinda sitenizde yetkisiz ucuncu taraf icerik tespit ettik:
+Bağımsız bir web güvenlik araştırma projesi olan AbuseRadar adına yazıyorum.
 
-  Etkilenen URL: {url}
-  Sorun: Sayfa koduna {hacklink_count} adet gizli link enjekte edilmis
-  Tespit tarihi: {first_seen}
-  Rapor: {report_url}
+Rutin bir taramada {domain} adresinin, ekibinizin haberi olmadan eklendiğini düşündüğümüz içerikler sunduğunu fark ettik. Bu tür içerikler genellikle güncel olmayan bir CMS eklentisi, ele geçirilmiş bir tema dosyası veya sızdırılmış yönetici parolaları ile ekleniyor.
 
-Bu tur degisiklikler genellikle CMS veya eklentilerdeki bir guvenlik acigi nedeniyle olusur. Enjekte edilen icerik ziyaretciler icin gorunmezdir ancak arama motorlari tarafindan indexlenir, bu da sitenizin siralamalarinin dusmesine neden olabilir.
+{url} sayfasında gözlemlediklerimiz:
+  - Sayfanın kaynağına yerleştirilmiş {hacklink_count} adet üçüncü taraf bağlantısı
+  - Bağlantılar normal ziyaretçilere görünmeyecek şekilde stillendirilmiş
+  - Sitenizle ilgisi olmayan dış sayfalara yönlendiriyorlar
 
-ONERILEN ADIMLAR:
-  1. CMS ve tum eklentilerinizi en son surume guncelleyin
-  2. Raporda listelenen dosyalari enjekte edilmis kod icin kontrol edin
-  3. Tum yonetici sifrelerini degistirin
-  4. Kaynak domain'i Cloudflare'e sikayet edin (talimatlar raporda)
+Ekibiniz için tam bir teknik rapor hazırladık. Ekran görüntüleri, etkilenen dosyalar ve adım adım çözüm rehberini içeriyor. Giriş gerekmiyor:
 
-Detayli rapor ekran goruntuleri, teknik analiz ve adim adim duzeltme talimatlari icerir.
+  {report_url}
 
-Sorulariniz icin bu e-postaya yanit verebilirsiniz.
+Ekibiniz konudan haberdarsa ve üzerinde çalışıyorsa bu mesajı dikkate almayabilirsiniz. Aksi halde yardım etmekten memnuniyet duyarız — bu maile cevap verebilir veya team@abuseradar.org adresine yazabilirsiniz. 7–10 gün içinde sayfayı yeniden kontrol edip düzeltmeyi teyit edeceğiz.
 
-Saygilarimizla,
-AbuseRadar Arastirma Ekibi
-{report_url}
+İyi çalışmalar,
+AbuseRadar Araştırma Ekibi
 
----
-Bu mesaji {domain} guvenlik taramamizda tespit edildigi icin aldiniz.
-Bu tek seferlik bir bildirimdir.
+— Bu, açık kaynak taramamızda {domain} adresine rastladığımız için gönderilmiş tek seferlik bir bildirimdir. Mailing list işletmiyoruz; sebepsiz tekrar yazmayacağız.

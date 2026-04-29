@@ -959,7 +959,9 @@ async def share_report(domain: str):
         if existing and not existing.revoked:
             token = existing.token
         else:
-            token = secrets.token_urlsafe(24)
+            # 8 byte = ~11 char URL-safe = 64-bit entropy. Brute-force imkansız
+            # ama URL'i kısa/insan-dostu tutar (24 char rastgele görünmez).
+            token = secrets.token_urlsafe(8)
             if existing:
                 existing.token = token
                 existing.revoked = False

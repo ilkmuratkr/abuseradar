@@ -1,28 +1,21 @@
 Bonjour,
 
-Nous sommes une equipe de recherche en securite qui surveille les sites web contre les modifications non autorisees. Lors de notre analyse, nous avons identifie du contenu tiers non autorise sur votre site:
+Je vous écris au nom d'AbuseRadar, un projet indépendant de recherche en sécurité web.
 
-  URL affectee: {url}
-  Probleme: {hacklink_count} liens caches injectes dans le code source
-  Detecte le: {first_seen}
-  Rapport: {report_url}
+Lors d'une analyse de routine, nous avons remarqué que {domain} semble diffuser du contenu très probablement ajouté à l'insu de votre équipe — généralement via un plugin CMS obsolète, un fichier de modèle compromis ou des identifiants d'administrateur divulgués.
 
-Ce type de modification est generalement cause par une vulnerabilite dans votre CMS ou vos plugins. Le contenu injecte est invisible pour les visiteurs mais indexe par les moteurs de recherche, ce qui peut entrainer des penalites dans le classement de votre site.
+Ce que nous avons observé sur {url} :
+  - {hacklink_count} liens de tiers intégrés au code source de la page
+  - Les liens sont stylisés pour être invisibles aux visiteurs réguliers
+  - Ils pointent vers des sites externes sans rapport avec votre activité
 
-ACTIONS RECOMMANDEES:
-  1. Mettez a jour votre CMS et tous les plugins vers les dernieres versions
-  2. Verifiez les fichiers listes dans le rapport pour le code injecte
-  3. Changez tous les mots de passe administratifs
-  4. Signalez le domaine source a Cloudflare (instructions dans le rapport)
+Nous avons préparé un rapport technique complet pour votre équipe. Il comprend des captures d'écran, les fichiers concernés et un guide de remédiation pas à pas. Pas d'authentification :
 
-Le rapport detaille comprend des captures d'ecran, une analyse technique et des instructions etape par etape pour la correction.
+  {report_url}
 
-Si vous avez des questions, repondez a cet e-mail.
+Si votre équipe est déjà au courant et travaille sur le sujet, ignorez ce message. Sinon, nous sommes à votre disposition — il suffit de répondre ou d'écrire à team@abuseradar.org. Nous revérifierons la page sous 7 à 10 jours pour confirmer la correction.
 
 Cordialement,
-Equipe de Recherche AbuseRadar
-{report_url}
+L'équipe de recherche AbuseRadar
 
----
-Vous avez recu ce message car {domain} a ete identifie lors de notre analyse de securite.
-Il s'agit d'une notification unique.
+— Il s'agit d'une notification unique envoyée parce que {domain} est apparu dans notre analyse ouverte. Nous ne gérons pas de listes de diffusion et ne vous recontacterons pas sans raison.
