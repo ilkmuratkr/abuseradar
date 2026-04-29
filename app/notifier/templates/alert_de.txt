@@ -8,7 +8,7 @@ Was wir auf {url} beobachtet haben:
   - {hacklink_count} fremde Links, die im Seitenquelltext eingebettet sind
   - Die Links sind so gestaltet, dass sie für reguläre Besucher unsichtbar sind
   - Sie verweisen auf externe Seiten, die nichts mit Ihrer Tätigkeit zu tun haben
-
+{evidence_block}
 Wir haben einen vollständigen technischen Bericht für Ihr Team vorbereitet. Er enthält Screenshots, die betroffenen Dateien und eine schrittweise Anleitung zur Behebung. Kein Login erforderlich:
 
   {report_url}

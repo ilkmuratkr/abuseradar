@@ -8,7 +8,7 @@ What we observed on {url}:
   - {hacklink_count} third-party links embedded in the page source
   - The links are styled to be invisible to regular visitors
   - They point to external sites unrelated to your work
-
+{evidence_block}
 We've prepared a full technical report for your team. It includes screenshots, the affected files, and a step-by-step remediation guide. No login required:
 
   {report_url}

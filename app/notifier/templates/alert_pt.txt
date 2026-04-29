@@ -8,7 +8,7 @@ O que observamos em {url}:
   - {hacklink_count} links de terceiros incorporados ao código-fonte da página
   - Os links estão estilizados para serem invisíveis aos visitantes regulares
   - Apontam para sites externos sem relação com o seu trabalho
-
+{evidence_block}
 Preparamos um relatório técnico completo para a sua equipe. Inclui capturas de tela, os arquivos afetados e um guia de remediação passo a passo. Sem login:
 
   {report_url}

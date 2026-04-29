@@ -10,7 +10,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from config import settings
 from models.database import Contact, Notification, Site, async_session
 
-from .language import get_language, get_subject, render_template
+from .evidence_picker import load_evidence_summary
+from .language import get_language, get_subject, get_verification_block, render_template
 
 logger = logging.getLogger(__name__)
 
@@ -122,15 +123,26 @@ async def send_alert(
 
         report_url = f"{settings.report_base_url}/{domain}"
 
+        # Evidence dosyasından gerçek sayı + doğrulama anahtarı al
+        ev = load_evidence_summary(domain)
+        if ev:
+            real_count = ev.get("total_hacklinks") or hacklink_count
+            top_keyword = ev.get("top_keyword")
+        else:
+            real_count = hacklink_count
+            top_keyword = None
+        verification_block = get_verification_block(language, url, top_keyword)
+
         # Email içeriği oluştur
         subject = get_subject(language, domain)
         body = render_template(
             language,
             url=url,
             domain=domain,
-            hacklink_count=hacklink_count,
+            hacklink_count=real_count,
             first_seen=first_seen,
             report_url=report_url,
+            evidence_block=verification_block,
         )
 
         # ZeptoMail API ile gönder

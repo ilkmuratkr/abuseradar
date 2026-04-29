@@ -8,7 +8,7 @@ Ce que nous avons observé sur {url} :
   - {hacklink_count} liens de tiers intégrés au code source de la page
   - Les liens sont stylisés pour être invisibles aux visiteurs réguliers
   - Ils pointent vers des sites externes sans rapport avec votre activité
-
+{evidence_block}
 Nous avons préparé un rapport technique complet pour votre équipe. Il comprend des captures d'écran, les fichiers concernés et un guide de remédiation pas à pas. Pas d'authentification :
 
   {report_url}

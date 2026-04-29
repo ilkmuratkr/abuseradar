@@ -8,7 +8,7 @@ Cosa abbiamo osservato su {url}:
   - {hacklink_count} link di terze parti incorporati nel codice sorgente della pagina
   - I link sono stilizzati per essere invisibili ai visitatori regolari
   - Puntano a siti esterni non correlati alla vostra attività
-
+{evidence_block}
 Abbiamo preparato un rapporto tecnico completo per il vostro team. Include screenshot, i file interessati e una guida passo passo per la rimozione. Non è richiesto alcun login:
 
   {report_url}

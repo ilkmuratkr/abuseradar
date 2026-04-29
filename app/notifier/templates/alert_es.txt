@@ -8,7 +8,7 @@ Lo que encontramos en {url}:
   - {hacklink_count} enlaces de terceros incrustados en el código fuente
   - Los enlaces están estilizados para ser invisibles para visitantes habituales
   - Apuntan a sitios externos no relacionados con su actividad
-
+{evidence_block}
 Hemos preparado un informe técnico completo para su equipo. Incluye capturas de pantalla, los archivos afectados y una guía de remediación paso a paso. Sin inicio de sesión:
 
   {report_url}
