@@ -111,6 +111,9 @@ services:
     volumes:
       - ./app:/app
       - ./data:/data
+      # Lokal frontend (Caddy yokken) — /console/csv.html gibi static page'leri
+      # FastAPI StaticFiles üzerinden servis edebilmek için.
+      - ./web:/web:ro
       # docker socket mount — app, openclaw container'ına 'docker exec' ile görev
       # gönderebilsin (complaint pipeline). Sadece okuma için yeterli değil — yazma da
       # gerek (exec). Güvenlik notu: app container compromise olursa host docker'a

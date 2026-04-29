@@ -12,7 +12,7 @@ from models.database import Contact, MailLog, Notification, Site, Unsubscribe, a
 
 from .evidence_picker import load_evidence_summary
 from .html_renderer import render_html_email
-from .provider import daily_limit_for, detect_email_provider
+from .provider import daily_limit_for, detect_email_provider, is_consumer_mail
 from .language import (
     describe_category,
     get_complaint_block,
@@ -47,6 +47,18 @@ async def _zeptomail_send(
     """
     to_email_lower = (to_email or "").strip().lower()
     to_domain = to_email_lower.split("@", 1)[1] if "@" in to_email_lower else ""
+
+    # Consumer mail kısa-devre — gmail.com / hotmail.com / yahoo.com vb. adresler
+    # gov/edu admin değil, kişisel posta. Bunlara mail atma (deliverability +
+    # gerçek site sahibine ulaşmama riski).
+    if is_consumer_mail(to_email_lower):
+        await _log_mail(
+            to_email=to_email_lower, to_domain=to_domain, provider="consumer",
+            site_id=site_id, contact_id=contact_id, subject=subject,
+            language=language, status="skipped_consumer_mail",
+            error_message="recipient is a consumer mail provider", zeptomail_id=None,
+        )
+        return {"id": None, "status": "skipped", "reason": "consumer_mail", "to": to_email_lower}
 
     # Provider tespiti (MX lookup)
     provider = await detect_email_provider(to_email_lower)
@@ -343,11 +355,104 @@ async def send_alert(
             await session.commit()
 
             logger.info(f"[{domain}] Email gönderildi → {contact.email} ({language})")
+
+            # Site sahibine başarılı mail sonrası → mağdurun hosting sağlayıcısına
+            # da bilgilendirme. hosting.json crawl sırasında yazıldı; oradan oku.
+            # Hosting'e gönderim hatası, owner mail'inin başarılı dönüşünü
+            # bozmamalı — exception swallow.
+            try:
+                await _dispatch_victim_hosting_mail(
+                    domain=domain,
+                    site_id=site_id,
+                    report_url=report_url,
+                    hacklink_count=real_count,
+                    first_seen=first_seen,
+                    owner_email=contact.email,
+                )
+            except Exception as e:
+                logger.warning(f"[{domain}] victim hosting mail dispatch hatası: {e}")
+
             return {"status": "sent", "to": contact.email, "language": language}
 
         except Exception as e:
             logger.error(f"[{domain}] Email gönderim hatası: {e}")
             return {"status": "error", "reason": str(e)}
+
+
+async def _dispatch_victim_hosting_mail(
+    *,
+    domain: str,
+    site_id: int,
+    report_url: str,
+    hacklink_count: int,
+    first_seen: str,
+    owner_email: str,
+) -> None:
+    """Mağdur sitenin hosting sağlayıcısına bilgilendirme maili.
+
+    Trigger: send_alert() içinde site sahibine başarılı mail atıldıktan sonra.
+    Veri kaynağı: data/evidence/{domain}/analysis/hosting.json (crawl çıktısı).
+
+    Skip koşulları:
+      - hosting.json yok ya da abuse_email boş
+      - Hosting Cloudflare ise (CF abuse kanalı saldırgan zincirinin parçası,
+        mağdur tarafında CF'ye yazmak verim getirmez — site owner zaten haberdar)
+      - Aynı abuse_email'e aynı site_id için son 14 gün içinde 'sent' kaydı var
+      - abuse_email == owner_email (kendine kendi mail'i atma)
+    """
+    from utils.evidence_reader import get_hosting
+
+    info = get_hosting(domain) or {}
+    abuse_email = (info.get("abuse_email") or "").strip().lower()
+    if not abuse_email:
+        logger.info(f"[{domain}] victim hosting abuse_email yok, atlanıyor")
+        return
+
+    if "@" not in abuse_email:
+        logger.info(f"[{domain}] victim hosting abuse_email geçersiz: {abuse_email!r}")
+        return
+
+    if info.get("is_cloudflare"):
+        logger.info(f"[{domain}] victim CF arkasında, hosting mail atlanıyor")
+        return
+
+    if abuse_email == (owner_email or "").strip().lower():
+        logger.info(f"[{domain}] victim hosting abuse_email site sahibiyle aynı, atlanıyor")
+        return
+
+    # Dedup — aynı site için son 14 gün içinde aynı abuse'a 'sent' kaydı var mı?
+    async with async_session() as session:
+        recent = await session.execute(
+            select(MailLog).where(
+                MailLog.to_email == abuse_email,
+                MailLog.site_id == site_id,
+                MailLog.status == "sent",
+                MailLog.sent_at >= datetime.utcnow() - timedelta(days=14),
+            ).limit(1)
+        )
+        if recent.scalar_one_or_none():
+            logger.info(
+                f"[{domain}] victim hosting {abuse_email} son 14 günde mail aldı, atlanıyor"
+            )
+            return
+
+    from complainant.hosting import report_to_victim_hosting
+
+    res = await report_to_victim_hosting(
+        domain=domain,
+        abuse_email=abuse_email,
+        hosting_provider=info.get("hosting_provider") or "",
+        ip=info.get("ip") or "",
+        asn=info.get("asn") or "",
+        report_url=report_url,
+        hacklink_count=hacklink_count,
+        first_seen=first_seen,
+        site_owner_notified=True,
+        site_id=site_id,
+    )
+    logger.info(
+        f"[{domain}] victim hosting dispatch sonucu: {res.get('status')} → {abuse_email}"
+    )
 
 
 async def send_alerts_for_victims():

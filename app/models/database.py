@@ -246,9 +246,14 @@ class ReportToken(Base):
 
 
 async def init_db():
-    """Veritabanı bağlantısını test et."""
-    async with engine.begin():
-        pass
+    """Veritabanı bağlantısını test et + eksik tabloları yarat.
+
+    `metadata.create_all` mevcut tabloları korur, yalnızca eksik olanları
+    oluşturur. Yeni eklenen modeller (MailLog, Unsubscribe vb.) için manuel
+    migration gerekmiyor.
+    """
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
 async def get_session() -> AsyncSession:

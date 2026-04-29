@@ -106,6 +106,33 @@ async def discover_attacker_meta(target_domain: str) -> dict:
     return info
 
 
+async def _was_recently_complained(target_domain: str, days: int = 14) -> bool:
+    """complaints tablosunda bu target_domain için son N gün içinde
+    çalıştırılmış (status sent/submitted/captcha_blocked/timeout/error
+    farketmez — pipeline çalışmış ise) kayıt var mı?
+
+    `pending` kayıtlar dedup için sayılmaz (önceki çalışma yarıda kalmış olabilir).
+    """
+    from datetime import datetime as _dt, timedelta as _td
+
+    from sqlalchemy import select as _select
+
+    from models.database import Complaint, async_session as _sess
+
+    async with _sess() as session:
+        q = await session.execute(
+            _select(Complaint.id).where(
+                Complaint.target_domain == target_domain,
+                Complaint.status.in_([
+                    "sent", "submitted", "captcha_blocked", "timeout",
+                    "error", "submit_failed", "running", "completed",
+                ]),
+                Complaint.created_at >= _dt.utcnow() - _td(days=days),
+            ).limit(1)
+        )
+        return q.scalar_one_or_none() is not None
+
+
 async def run_chain_for_target(
     target_domain: str,
     *,
@@ -116,6 +143,8 @@ async def run_chain_for_target(
     enable_form: bool = True,
     enable_mail: bool = True,
     enable_icann: bool = False,
+    skip_if_recent_days: int = 14,
+    force: bool = False,
 ) -> dict:
     """Tek bir target_domain için tüm şikayet zincirini çalıştır.
 
@@ -131,6 +160,20 @@ async def run_chain_for_target(
     affected_gov_sites = affected_gov_sites or []
     affected_str = ", ".join(affected_gov_sites[:10]) or "(see bundle)"
 
+    # Dedup — aynı saldırgan target için son N gün içinde zincir koştuysa tekrar koşma.
+    # Manuel "Re-run chain" butonu force=True ile bypass eder.
+    if not force and skip_if_recent_days > 0:
+        if await _was_recently_complained(target_domain, days=skip_if_recent_days):
+            logger.info(
+                f"[{target_domain}] son {skip_if_recent_days} gün içinde şikayet edilmiş, atlanıyor"
+            )
+            return {
+                "target_domain": target_domain,
+                "status": "skipped",
+                "reason": f"already_complained_within_{skip_if_recent_days}_days",
+                "completed_at": datetime.utcnow().isoformat(),
+            }
+
     # CF/registrar/ICANN abuse mail'leri için ?for=auditor parametreli URL —
     # rapor sayfası audience-aware: auditor açtığında 'CF'e şikayet et'
     # CTA'sı gizlenir, "evidence package" notu gösterilir.
@@ -141,6 +184,30 @@ async def run_chain_for_target(
         auditor_url = f"{report_url}&for=auditor"
 
     logger.info(f"[{target_domain}] complaint chain başlıyor (form={enable_form}, mail={enable_mail})")
+
+    # Chain run marker — gelecekte dedup için. Run bittikten sonra status="completed".
+    chain_marker_id: int | None = None
+    try:
+        from datetime import datetime as _dt, timedelta as _td
+
+        from models.database import Complaint as _Complaint, async_session as _sess
+
+        async with _sess() as _ses:
+            _m = _Complaint(
+                target_domain=target_domain,
+                target_type="attacker",
+                platform="chain_run",
+                platform_detail=f"form={enable_form},mail={enable_mail},icann={enable_icann}",
+                status="running",
+                submitted_at=_dt.utcnow(),
+                next_check_at=_dt.utcnow() + _td(days=skip_if_recent_days),
+                notes=f"chain run started {_dt.utcnow().isoformat()}",
+            )
+            _ses.add(_m)
+            await _ses.commit()
+            chain_marker_id = _m.id
+    except Exception as _e:
+        logger.warning(f"[{target_domain}] chain marker yazılamadı: {_e}")
 
     meta = await discover_attacker_meta(target_domain)
     summary = (
@@ -258,5 +325,18 @@ async def run_chain_for_target(
         "complaints": results,
         "completed_at": datetime.utcnow().isoformat(),
     }
+    # Chain marker'ı completed olarak işaretle
+    if chain_marker_id is not None:
+        try:
+            from . import tracker as _tracker
+
+            await _tracker.mark_complaint_status(
+                chain_marker_id,
+                new_status="completed",
+                notes_append=f"chain done: {list(results.keys())}",
+            )
+        except Exception as _e:
+            logger.debug(f"[{target_domain}] chain marker güncelleme hatası: {_e}")
+
     logger.info(f"[{target_domain}] complaint chain tamamlandı: {list(results.keys())}")
     return out

@@ -234,9 +234,10 @@
     <h2 class="section">6. Hosting &amp; infrastructure <span class="section-meta">automatic WHOIS lookup</span></h2>
     <div id="hosting-body">Loading…</div>
 
-    <!-- Reporting attacker domains -->
-    <h2 class="section">7. Reporting the attacker domains <span class="section-meta">help break the chain</span></h2>
-    <div class="panel">
+    <!-- Reporting attacker domains — auditor view'da gizli (kendisine 'kendine
+         şikayet et' demek tuhaf olur). Sadece site sahibi için öneri. -->
+    <h2 class="section" id="sec-reporting" style="display:none">7. Reporting the attacker domains <span class="section-meta">help break the chain</span></h2>
+    <div class="panel" id="sec-reporting-panel" style="display:none">
       <div class="panel-pad">
         <p>Cleaning your own site stops the bleed, but the attacker keeps operating from <em>their</em> infrastructure — and very often that infrastructure sits behind a major provider like <strong>Cloudflare</strong>. Cloudflare itself is a legitimate, widely-used service; the issue is that bad actors abuse its anonymisation layer to obscure which hosting provider actually serves the spam content. They are not at fault, but they are uniquely positioned to act on well-documented reports — especially when the targets are <strong>government, education, or other public-interest institutions</strong>.</p>
         <p style="margin-top:.6rem">Filing a short, evidence-backed abuse report is one of the most effective steps you (or any technical contact at the affected institution) can take. It helps the provider identify recurring offenders and, in repeat cases, suspend the account hosting the spam network. The links below all accept reports without an account; the bundle ID and the URLs in this report are sufficient as evidence.</p>
@@ -376,12 +377,15 @@ async function loadReport() {
   el("i-domain").textContent = domain;
   el("t-domain").textContent = domain;
 
-  // Audience-aware: site owner → action card göster, auditor → "evidence package" notu
+  // Audience-aware: site owner → action card + Section 7, auditor → "evidence package" notu
   if (audience === "auditor") {
     el("auditor-note").style.display = "block";
     const ad = el("aud-domain"); if (ad) ad.textContent = domain;
   } else {
     el("owner-action").style.display = "flex";
+    // Section 7 (Reporting the attacker domains) sadece site owner için
+    const sr = el("sec-reporting"); if (sr) sr.style.display = "";
+    const srp = el("sec-reporting-panel"); if (srp) srp.style.display = "";
     try {
       // Site sahibinin paylaşılacağı URL — temiz, ?for=auditor olmadan
       const cleanUrl = location.origin + location.pathname;

@@ -115,7 +115,7 @@ async def detect_email_provider(email: str) -> str:
 # Provider-bazlı günlük limit (warm-up Hafta 1)
 # Gmail en sıkı, Outlook orta, diğerleri esnek.
 PROVIDER_DAILY_LIMITS = {
-    "gmail": 10,       # Hafta 1; sonra 25, 50, 100
+    "gmail": 20,       # Workspace MX → google. Consumer @gmail.com tamamen skip ediliyor.
     "microsoft": 30,   # Microsoft 365 daha esnek
     "yahoo": 20,
     "zoho": 30,
@@ -125,6 +125,47 @@ PROVIDER_DAILY_LIMITS = {
     "other": 50,       # kurumsal, kendi MX'i — daha esnek
     "unknown": 20,     # MX bulunamadı, ihtiyatlı
 }
+
+
+# Consumer mail provider domain'leri — bu adresler gov/edu admin/abuse
+# kontağı DEĞİL, kişisel posta kutuları. Site sahibi kayıtlarında bu
+# adresler genelde generic registration / privacy-proxy çıktısıdır
+# ve mail atmak deliverability'e zarar verir (kişisel gmail'e bulk mail
+# at → spam complaint → reputation düşüşü). Bu domain'lere mail atma.
+CONSUMER_MAIL_DOMAINS = {
+    "gmail.com",
+    "googlemail.com",
+    "hotmail.com",
+    "outlook.com",
+    "live.com",
+    "msn.com",
+    "yahoo.com",
+    "ymail.com",
+    "rocketmail.com",
+    "icloud.com",
+    "me.com",
+    "mac.com",
+    "aol.com",
+    "protonmail.com",
+    "proton.me",
+    "pm.me",
+    "gmx.com",
+    "gmx.net",
+    "mail.ru",
+    "yandex.com",
+    "yandex.ru",
+    "qq.com",
+    "163.com",
+    "126.com",
+}
+
+
+def is_consumer_mail(email: str) -> bool:
+    """Email adresi consumer mail provider'a mı ait?"""
+    if not email or "@" not in email:
+        return False
+    domain = email.split("@", 1)[1].strip().lower()
+    return domain in CONSUMER_MAIL_DOMAINS
 
 
 def daily_limit_for(provider: str) -> int:

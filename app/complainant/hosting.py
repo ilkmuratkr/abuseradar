@@ -208,6 +208,142 @@ abuseradar.org
         return {"status": "error", "reason": str(e)}
 
 
+async def report_to_victim_hosting(
+    *,
+    domain: str,
+    abuse_email: str,
+    hosting_provider: str = "",
+    ip: str = "",
+    asn: str = "",
+    report_url: str,
+    hacklink_count: int = 0,
+    first_seen: str = "",
+    site_owner_notified: bool = True,
+    site_id: int | None = None,
+) -> dict:
+    """Mağdur sitenin hosting sağlayıcısına profesyonel bilgilendirme maili.
+
+    Saldırgan domain'in hosting'inden FARKLI bir akış: burada hedef, mağdurun
+    yanlışlıkla sahibi/teknik sorumlusu olduğu hosting hesabıdır. Sağlayıcının
+    AUP'u (acceptable use policy) gereği, müşterilerinin compromise olduğunu
+    bildirme yükümlülüğü vardır. Mail tonu pasif/danışman; aksiyon talebi yok.
+
+    `report_url` site sahibine atılan rapor URL'idir; auditor view ile (?for=auditor)
+    gönderilir — hosting reviewer'ı 'Forward to Cloudflare' CTA'sı görmez,
+    bunun yerine "evidence package" tonunda raporu inceler.
+
+    Args:
+        domain: Mağdur domain (örn. www.saogoncalo.rj.gov.br)
+        abuse_email: Hosting'in abuse contact'ı (data/evidence/{domain}/analysis/hosting.json)
+        hosting_provider: Provider org adı (ipinfo)
+        ip: Mağdur sitenin IP'si
+        asn: AS number
+        report_url: Site sahibine giden rapor URL'i (?for=auditor eklenecek)
+        hacklink_count: Tespit edilen hacklink sayısı
+        first_seen: İlk tespit tarihi (str)
+        site_owner_notified: True ise mail'e "we have already notified the site
+                             owner directly" cümlesi eklenir
+        site_id: mail_log için site referansı
+    """
+    from notifier.sender import _zeptomail_send
+
+    # Auditor URL — site sahibine giden rapor URL'inin auditor view'i.
+    auditor_url = report_url
+    if report_url:
+        auditor_url = f"{report_url}?for=auditor" if "?" not in report_url else f"{report_url}&for=auditor"
+
+    owner_line = (
+        "The site's registered technical contact has been notified separately "
+        "via the WHOIS / domain-listed email."
+    ) if site_owner_notified else (
+        "We have not been able to identify a working technical contact for the "
+        "site directly; this notification is therefore routed to the hosting "
+        "abuse channel as the most reliable path to reach the account holder."
+    )
+
+    infra_lines = []
+    if hosting_provider:
+        infra_lines.append(f"  Hosting provider: {hosting_provider}")
+    if ip:
+        infra_lines.append(f"  Server IP: {ip}")
+    if asn:
+        infra_lines.append(f"  ASN: {asn}")
+    infra_block = "\n".join(infra_lines) if infra_lines else ""
+
+    fs_line = f"  First observed: {first_seen}\n" if first_seen else ""
+    hl_line = f"  Hidden third-party anchors observed on rendered pages: {hacklink_count}\n" if hacklink_count else ""
+
+    subject = f"AbuseRadar notice: {domain} — third-party content observed on your customer's site"
+    body = f"""Hello,
+
+This is a passive notification from AbuseRadar (abuseradar.org), an
+independent web-data observatory tracking SEO-spam injection patterns
+across public pages.
+
+During our routine indexing, the website {domain} — hosted on your
+infrastructure — was observed serving third-party hyperlinks that do not
+fit the site's normal content profile. Patterns of this shape commonly
+originate from a CMS plugin, theme file, or template altered outside the
+site's editorial flow (i.e. a compromise rather than intentional content).
+
+Affected site:
+  Domain: {domain}
+{infra_block + chr(10) if infra_block else ''}{hl_line}{fs_line}
+The full technical bundle (no sign-in required) — the same evidence
+package shared with the site's technical contact — is available here:
+
+  {auditor_url}
+
+The bundle includes: rendered-vs-source DOM diffs, the injected anchors
+verbatim, screenshots of the compromised pages, the upstream payload
+hostnames, and the observed C2 / loader infrastructure.
+
+{owner_line}
+
+This injection pattern has been publicly documented since January 2025 by
+independent researchers and is part of a long-running campaign:
+
+  - cside Research (original disclosure):
+    https://cside.com/blog/government-and-university-websites-targeted-in-scriptapi-dev-client-side-attack
+  - Cyber Security News:
+    https://cybersecuritynews.com/javascript-attacks-targeting/
+  - Joe Sandbox automated analysis:
+    https://www.joesandbox.com/analysis/1684428/0/html
+  - PublicWWW live footprint:
+    https://publicwww.com/websites/scriptapi.dev/
+
+We are not requesting any specific action under your AUP — this is shared
+so the case is visible to your abuse / trust-and-safety team and so the
+account holder can be assisted with remediation if helpful.
+
+This is an automated, one-off informational notice. If a follow-up or
+additional evidence (logs, samples, anchor lists) would be useful, please
+reply to abuse@abuseradar.org.
+
+— AbuseRadar Research
+abuseradar.org
+"""
+
+    try:
+        result = await _zeptomail_send(
+            to_email=abuse_email,
+            to_name=hosting_provider or None,
+            subject=subject,
+            text_body=body,
+            site_id=site_id,
+        )
+        if result.get("status") == "simulated":
+            logger.warning(f"[{domain}] Victim hosting mail simulated (no token) → {abuse_email}")
+            return {"status": "simulated", "to": abuse_email, "subject": subject}
+        if result.get("status") == "skipped":
+            return {"status": "skipped", "to": abuse_email, "reason": result.get("reason")}
+        logger.info(f"[{domain}] Victim hosting abuse mail sent → {abuse_email} ({hosting_provider})")
+        return {"status": "sent", "to": abuse_email, "message_id": result.get("id")}
+    except Exception as e:
+        logger.error(f"[{domain}] Victim hosting mail error: {e}")
+        return {"status": "error", "reason": str(e)}
+
+
 async def get_complaint_targets(domain: str) -> dict:
     """Bir magdur site icin tum sikayet hedeflerini bul.
 

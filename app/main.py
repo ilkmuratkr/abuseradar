@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
+from fastapi import BackgroundTasks, FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from sqlalchemy import func, select, text
 
@@ -32,6 +32,43 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title=settings.project_name, lifespan=lifespan)
+
+
+# ─── /api prefix rewrite ───────────────────────────────────────────
+# Production'da Caddy /api/* → backend olarak proxy ediyor (path strip ile).
+# Lokal'de Caddy yok; fakat console api.js `/api/...` çağırıyor. Aynı kodun
+# hem prod hem lokal'de çalışması için ASGI seviyesinde path rewrite:
+# /api/foo  →  /foo
+@app.middleware("http")
+async def _api_prefix_rewrite(request: Request, call_next):
+    p = request.scope.get("path", "")
+    if p.startswith("/api/"):
+        request.scope["path"] = p[4:]
+        request.scope["raw_path"] = request.scope["path"].encode()
+    elif p == "/api":
+        request.scope["path"] = "/"
+        request.scope["raw_path"] = b"/"
+    return await call_next(request)
+
+
+# ─── Static frontend (web/) — lokal dev için ──────────────────────
+# Production'da Caddy file_server'lar `/opt/abuseradar/web` altından servis
+# ediyor. Lokal'de FastAPI'nin StaticFiles'ı yeterli.
+try:
+    from fastapi.staticfiles import StaticFiles
+
+    # Container'da /web bind-mount; lokal Python run'da web/ kardeş klasör.
+    _web_root = Path("/web") if Path("/web").is_dir() else Path(__file__).parent.parent / "web"
+    if _web_root.is_dir():
+        # /console/* → web/console/*
+        _console_dir = _web_root / "console"
+        if _console_dir.is_dir():
+            app.mount("/console", StaticFiles(directory=str(_console_dir), html=True), name="console")
+        # /report/* → public report sayfası (r.html)
+        # NOT: kök / mount api route'larını gölgeler — /report ve /console alt yolları yeterli.
+except Exception as _e:
+    import logging as _lg
+    _lg.getLogger(__name__).warning(f"static mount başarısız: {_e}")
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -134,8 +171,16 @@ async def process_csv():
 
 
 @app.post("/csv/upload")
-async def csv_upload(file: UploadFile = File(...)):
-    """CSV upload — inbox/'a yazar."""
+async def csv_upload(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+    auto_run: bool = Query(True, description="Upload sonrası full pipeline'ı arkaplanda tetikle"),
+):
+    """CSV upload — inbox'a yazar ve `auto_run=True` ise tüm pipeline'ı arkaplanda tetikler.
+
+    Pipeline akışı (auto_run): process_inbox → classify → crawl_unverified_victims
+    → send_alerts_for_victims → complaint_chain (saldırgan domain başına, dedup'lı).
+    """
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(400, "CSV dosyası bekleniyor")
 
@@ -148,12 +193,86 @@ async def csv_upload(file: UploadFile = File(...)):
     body = await file.read()
     target.write_bytes(body)
 
+    if auto_run:
+        background_tasks.add_task(_run_full_pipeline_auto)
+
     return {
         "filename": safe_name,
         "size": len(body),
         "saved_to": str(target),
-        "next_step": "POST /csv/process",
+        "auto_run": auto_run,
+        "next_step": "Pipeline arka planda çalışıyor — durum için /pipeline/status" if auto_run else "POST /csv/process",
     }
+
+
+async def _run_full_pipeline_auto() -> None:
+    """CSV upload sonrası BackgroundTask: full pipeline + notify + complaint chain.
+
+    1. csv_processor.process_inbox — CSV'leri DB'ye al
+    2. classifier.reclassify_all — backlink kategorize
+    3. pipeline.crawl_unverified_victims — gerçek hacklenmişleri tespit et
+    4. notifier.send_alerts_for_victims — SADECE injection_verified=True olanlara
+       (consumer mail otomatik skip, gmail provider günlük 20 limit, 7 gün dedup)
+    5. complaint_chain.run_chain_for_target — anchor sayısı yüksek saldırgan
+       target_domain'lere şikayet (14 gün dedup, dahili).
+    """
+    import logging as _lg
+
+    _log = _lg.getLogger("uvicorn.error").getChild("auto_pipeline")
+    _log.setLevel(_lg.INFO)
+    _log.info("AUTO PIPELINE: starting")
+    try:
+        from csv_processor.parser import process_inbox
+        from classifier.multi_signal import reclassify_all
+        from pipeline import crawl_unverified_victims, extract_attacker_domains
+        from notifier.sender import send_alerts_for_victims
+        from complainant.complaint_chain import run_chain_for_target
+
+        _log.info("AUTO PIPELINE: CSV processing")
+        await process_inbox()
+
+        _log.info("AUTO PIPELINE: classification")
+        await reclassify_all()
+
+        _log.info("AUTO PIPELINE: crawl unverified victims (limit=25)")
+        await crawl_unverified_victims(limit=25)
+
+        _log.info("AUTO PIPELINE: notify verified victims")
+        notify_res = await send_alerts_for_victims()
+        _log.info(f"AUTO PIPELINE notify result: {notify_res}")
+
+        _log.info("AUTO PIPELINE: complaint chain on top attackers")
+        attackers = await extract_attacker_domains()
+        # Sadece backlink_count >= 3 olan, anchor'da gambling olan, en üstteki 30
+        seen_targets: set = set()
+        sent_chain = 0
+        for a in attackers[:60]:
+            if sent_chain >= 30:
+                break
+            d = (a.get("domain") or "").strip().lower()
+            if not d or d in seen_targets:
+                continue
+            seen_targets.add(d)
+            if int(a.get("backlink_count") or 0) < 3:
+                continue
+            try:
+                res = await run_chain_for_target(
+                    target_domain=d,
+                    affected_gov_sites=[],
+                    hacklink_count=int(a.get("backlink_count") or 0),
+                    report_url=f"{settings.report_base_url}/{d}",
+                    enable_form=True,
+                    enable_mail=True,
+                    enable_icann=False,
+                )
+                _log.info(f"chain[{d}]: {res.get('status', 'done')}")
+                sent_chain += 1
+            except Exception as e:
+                _log.warning(f"chain[{d}] error: {e}")
+
+        _log.info(f"AUTO PIPELINE complete — chains run: {sent_chain}")
+    except Exception as e:
+        _log.exception(f"AUTO PIPELINE failed: {e}")
 
 
 @app.get("/csv-files")
