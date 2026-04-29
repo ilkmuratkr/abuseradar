@@ -162,7 +162,10 @@ services:
 
   # ═══ OPENCLAW (autonomous AI agent for abuse complaints) ═══
   openclaw:
-    image: alpine/openclaw:latest
+    build:
+      context: ./infra/openclaw
+      dockerfile: Dockerfile
+    image: abuseradar/openclaw:chromium
     container_name: openclaw
     user: "0:0"
     # network_mode: vpn-us'ün network namespace'ini kullan — TÜM trafik
