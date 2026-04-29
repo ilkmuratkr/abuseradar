@@ -153,14 +153,10 @@ async def run_chain_for_target(
             target_url=f"https://{target_domain}/", domain=target_domain,
         )))
 
-    # 5. ICANN
-    if enable_form and meta.get("registrar"):
-        form_steps.append(("icann", lambda: openclaw.report_icann(
-            target_domain=target_domain, registrar=meta.get("registrar", ""),
-            registrar_abuse_email=meta.get("registrar_abuse_email", ""),
-            report_date=datetime.utcnow().strftime("%Y-%m-%d"),
-            affected_count=len(affected_gov_sites) or 1,
-        )))
+    # 5. ICANN — şimdilik kapalı (OpenClaw browser-automation tam çalışmadığı
+    # için ICANN form fail oluyor; mail kanalı zaten registrar abuse'a giderek
+    # ICANN obligation'larını tetikler. Manuel ICANN escalation için rapor
+    # sayfasında link var).
 
     results: dict[str, dict] = {}
 
@@ -173,8 +169,11 @@ async def run_chain_for_target(
             except Exception as e:
                 results[name] = {"status": "error", "reason": str(e)}
 
-    # Form görevleri SIRAYLA — OpenClaw main agent session lock için
-    for name, fn in form_steps:
+    # Form görevleri SIRAYLA — VPN-US tunnel'ın chunk'lar arası dinlenmesi için
+    # 5sn ara. Çok hızlı sıralı Chromium launch'ları SOCKS race condition yaratır.
+    for idx, (name, fn) in enumerate(form_steps):
+        if idx > 0:
+            await asyncio.sleep(5)
         logger.info(f"[{target_domain}] form step başlıyor: {name}")
         try:
             results[name] = await _safe(fn())
