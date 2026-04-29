@@ -289,22 +289,9 @@ async def send_alert(
             language, top_keyword, top_source, domain=display_domain
         )
         content_category = describe_category(language, category)
-
-        # CF Trust&Safety için pre-filled mailto link — site sahibi tek tıkla
-        # kendi mail'inden CF abuse'a forward edebilir (institutional sender ağırlığı).
-        from urllib.parse import quote
-        cf_subj = quote(f"Abuse report — SEO spam injection on {display_domain}")
-        cf_body = quote(
-            f"Hello Cloudflare Trust & Safety,\n\n"
-            f"I am the technical contact for {display_domain}, which has been compromised "
-            f"by an SEO-spam injection. Hidden third-party links pointing to attacker-operated "
-            f"domains hosted on Cloudflare's infrastructure are being injected into our pages.\n\n"
-            f"Reference report (no sign-in): {report_url}\n\n"
-            f"Please investigate the attacker domain(s) under your acceptable-use policy.\n\n"
-            f"Thanks,\n[YOUR NAME]"
-        )
-        cf_mailto = f"mailto:abuse@cloudflare.com?subject={cf_subj}&body={cf_body}"
-        complaint_block = get_complaint_block(language, cf_mailto=cf_mailto)
+        # Mail body temiz — CF mailto link rapor sayfasında. Mail spam'e
+        # düşmesin diye URL sayısı 1 (sadece rapor URL'i).
+        complaint_block = get_complaint_block(language)
 
         subject = get_subject(language, display_domain)
         body = render_template(

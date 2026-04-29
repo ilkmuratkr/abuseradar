@@ -176,6 +176,17 @@
       </div>
     </div>
 
+    <!-- Quick action — visible above the fold so site owner can act without
+         scrolling to Section 7. Sends mail FROM the owner's institutional
+         address → carries more weight at Cloudflare Trust&Safety. -->
+    <section style="margin:1.5rem 0;padding:1rem 1.2rem;background:linear-gradient(95deg, rgba(26,206,201,0.08), rgba(26,206,201,0.02));border:1px solid #1ACEC9;border-radius:8px;display:flex;flex-wrap:wrap;align-items:center;gap:.9rem;justify-content:space-between">
+      <div style="flex:1 1 320px">
+        <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem">📧 Forward this case to Cloudflare</div>
+        <div style="font-size:.83rem;color:var(--text-2)">The attacker domains sit behind Cloudflare. A short report from <em>your</em> institutional mailbox — to <span class="mono">abuse@cloudflare.com</span> — is one of the most effective steps. We've pre-filled subject and body for you.</div>
+      </div>
+      <a id="quick-cf-mailto" href="#" class="btn btn-primary" style="background:#1ACEC9;color:#001016;padding:.65rem 1.1rem;border-radius:6px;font-weight:700;text-decoration:none;white-space:nowrap">Open in mail client →</a>
+    </section>
+
     <!-- Findings -->
     <h2 class="section">1. What we found</h2>
     <div class="panel">
@@ -353,6 +364,21 @@ async function loadReport() {
   // Header
   el("i-domain").textContent = domain;
   el("t-domain").textContent = domain;
+
+  // Quick CF mailto — yukarıdaki action card için
+  try {
+    const reportUrlNow = location.href;
+    const subj = encodeURIComponent(`Abuse report — SEO spam injection on ${domain}`);
+    const body = encodeURIComponent(
+      `Hello Cloudflare Trust & Safety,\n\n` +
+      `I am the technical contact for ${domain}, which has been compromised by an SEO-spam injection. Hidden third-party links pointing to attacker-operated domains hosted on Cloudflare's infrastructure are being injected into our pages.\n\n` +
+      `Reference report (no sign-in): ${reportUrlNow}\n\n` +
+      `Please investigate the attacker domain(s) under your acceptable-use policy.\n\n` +
+      `Thanks,\n[YOUR NAME]`
+    );
+    const cfBtn = el("quick-cf-mailto");
+    if (cfBtn) cfBtn.href = `mailto:abuse@cloudflare.com?subject=${subj}&body=${body}`;
+  } catch (e) { /* best-effort */ }
 
   // Complaint template — domain + report URL'yi yerleştir, copy + mailto handler
   try {
