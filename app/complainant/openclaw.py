@@ -38,6 +38,107 @@ def _render_task(task_file: str, variables: dict) -> str:
     return content
 
 
+async def _run_playwright_task(
+    *,
+    platform_id: str,
+    target_url: str,
+    description: str,
+    target_domain: str,
+    platform: str,
+    platform_detail: str,
+    reporter_email: str = "abuse@abuseradar.org",
+) -> dict:
+    """Playwright form-filler agent çağrısı (crawler container'da).
+
+    OpenClaw browser-automation skill yerine kullanılır. CF abuse,
+    Google SB için sabit selector. CAPTCHA tespit edilirse status=
+    captcha_blocked, screenshot kaydedilir.
+    """
+    from .tracker import submit_complaint, mark_complaint_status
+
+    check = await submit_complaint(
+        target_domain=target_domain,
+        target_type="attacker",
+        platform=platform,
+        platform_detail=platform_detail,
+    )
+    if check["status"] == "already_exists":
+        return check
+    complaint_id = check.get("id")
+
+    cmd = [
+        "docker", "exec", "abuseradar-crawler-1",
+        "python", "-m", "complainant.playwright_filler",
+        "--platform", platform_id,
+        "--target", target_url,
+        "--description", description,
+        "--reporter-email", reporter_email,
+    ]
+
+    try:
+        proc = await asyncio.create_subprocess_exec(
+            *cmd,
+            stdin=asyncio.subprocess.DEVNULL,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )
+        try:
+            stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=180)
+        except asyncio.TimeoutError:
+            proc.kill()
+            await proc.communicate()
+            if complaint_id:
+                await mark_complaint_status(complaint_id, new_status="timeout", notes_append="Playwright timeout (180s)")
+            return {"status": "timeout", "complaint_id": complaint_id}
+
+        out = (stdout or b"").decode(errors="replace").strip()
+        err = (stderr or b"").decode(errors="replace").strip()
+
+        # Playwright filler tek satır JSON yazar
+        result_json = None
+        for line in reversed(out.splitlines()):
+            line = line.strip()
+            if line.startswith("{") and line.endswith("}"):
+                try:
+                    result_json = json.loads(line)
+                    break
+                except json.JSONDecodeError:
+                    continue
+
+        new_status = "failed"
+        notes = f"playwright stdout={out[:150]} stderr={err[:200]}"
+        if result_json:
+            rs = result_json.get("status")
+            if rs == "submitted":
+                new_status = "submitted"
+                notes = f"submitted url={result_json.get('form_url','-')}"
+            elif rs == "captcha_blocked":
+                new_status = "captcha_blocked"
+                notes = "CAPTCHA detected"
+            elif rs == "submit_failed":
+                new_status = "submit_failed"
+                notes = f"submit_failed: {result_json.get('reason','')[:200]}"
+            elif rs == "error":
+                new_status = "failed"
+                notes = f"playwright error: {result_json.get('reason','')[:200]}"
+        evidence_path = (result_json or {}).get("screenshot")
+        if complaint_id:
+            await mark_complaint_status(
+                complaint_id, new_status=new_status, notes_append=notes,
+                evidence_path=evidence_path,
+            )
+        return {
+            "status": new_status,
+            "complaint_id": complaint_id,
+            "playwright_result": result_json,
+            "evidence_path": evidence_path,
+        }
+    except Exception as e:
+        if complaint_id:
+            await mark_complaint_status(complaint_id, new_status="failed", notes_append=f"exec error: {e}")
+        return {"status": "failed", "complaint_id": complaint_id, "reason": str(e)}
+
+
 async def _run_form_task(
     *,
     task_file: str,
@@ -225,38 +326,48 @@ async def report_cloudflare(
     reporter_email: str | None = None,
     report_url: str = "",
 ) -> dict:
-    """Cloudflare abuse formunu OpenClaw ile doldur."""
-    return await _run_form_task(
-        task_file="cloudflare_abuse.md",
-        variables={
-            "target_domain": target_domain,
-            "target_role": target_role,
-            "reporter_email": reporter_email or "abuse@abuseradar.org",
-            "affected_gov_sites": affected_gov_sites or "(see report bundle)",
-            "injection_method": injection_method,
-            "script_endpoint": script_endpoint,
-            "affected_count": str(affected_count),
-            "first_seen": first_seen,
-            "report_url": report_url,
-        },
+    """Cloudflare abuse formu — Playwright filler.
+
+    Not: abuse.cloudflare.com kendi CF WAF arkasında headless tarayıcıyı
+    bloklayabilir → submit_failed/captcha_blocked sıkça görülür. Mail
+    kanalı (abuse@cloudflare.com) genelde daha güvenilir.
+    """
+    description = (
+        f"AbuseRadar — Independent web-data observatory.\n\n"
+        f"The domain {target_domain} appears in our public-pages index as the destination "
+        f"of hidden third-party links injected into legitimate websites (typical SEO-spam "
+        f"injection pattern). Role: {target_role}.\n\n"
+        f"Compromised host pages: {affected_count} (sample: {affected_gov_sites}).\n"
+        f"Injection method: {injection_method}.\n"
+        f"First observed: {first_seen}.\n"
+        f"Public attribution: cside.com (Jan 2025), CyberSecurityNews, Joe Sandbox.\n"
+        f"Full bundle: {report_url}"
+    )
+    return await _run_playwright_task(
+        platform_id="cloudflare",
+        target_url=target_domain,
+        description=description,
         target_domain=target_domain,
-        target_type="attacker",
         platform="cloudflare",
         platform_detail="abuse form",
-        task_name=f"cf_{target_domain}",
+        reporter_email=reporter_email or "abuse@abuseradar.org",
     )
 
 
 async def report_google_safebrowsing(*, target_url: str, domain: str, c2_endpoint: str = "") -> dict:
-    """Google Safe Browsing — bilinen attacker domain bildir."""
-    return await _run_form_task(
-        task_file="google_safebrowsing.md",
-        variables={"target_url": target_url, "domain": domain, "c2_endpoint": c2_endpoint},
+    """Google Safe Browsing — Playwright form filler (OpenClaw alternative)."""
+    return await _run_playwright_task(
+        platform_id="google_sb",
+        target_url=target_url,
+        description=(
+            f"Reported by AbuseRadar (abuseradar.org). The domain {domain} appears as a "
+            f"destination for hidden anchors injected into legitimate websites via SEO-spam "
+            f"injection. Public attribution: cside.com (Jan 2025), CyberSecurityNews, Joe Sandbox. "
+            f"C2 endpoint: {c2_endpoint or 'see report bundle'}."
+        ),
         target_domain=domain,
-        target_type="attacker",
         platform="google_safebrowsing",
         platform_detail="safe browsing report",
-        task_name=f"gsb_{domain}",
     )
 
 
