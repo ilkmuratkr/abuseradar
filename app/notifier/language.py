@@ -169,51 +169,71 @@ def describe_category(language: str, category: str) -> str:
     return neutral.get(language, neutral["en"])
 
 
-def get_complaint_block(language: str) -> str:
-    """Spam-trigger kelimeler (abuse, Cloudflare, complaint, report)
-    mail içeriğinde minimum tutuluyor — alıcı raporda Section 7'yi okur.
+def get_complaint_block(language: str, *, cf_mailto: str | None = None) -> str:
+    """Site sahibinin tek tıkla CF'e şikayet atabilmesi için pre-filled mailto.
+
+    cf_mailto verildiğinde mail içine 'Quick action' satırı eklenir — alıcının
+    mail client'ı tıkladığında pre-filled mail compose açılır (institutional
+    sender, CF için daha ciddi bir mesaj).
     """
+    quick = ""
+    if cf_mailto:
+        labels = {
+            "en": "Quick action — forward this case to Cloudflare Trust & Safety:",
+            "tr": "Hızlı aksiyon — bu vakayı Cloudflare Trust & Safety'e iletmek için:",
+            "pt": "Ação rápida — encaminhe este caso ao Cloudflare Trust & Safety:",
+            "es": "Acción rápida — reenvíe este caso a Cloudflare Trust & Safety:",
+            "fr": "Action rapide — transmettez ce cas à Cloudflare Trust & Safety :",
+            "de": "Schnelle Aktion — leiten Sie diesen Fall an Cloudflare Trust & Safety weiter:",
+            "it": "Azione rapida — inoltra questo caso a Cloudflare Trust & Safety:",
+            "ru": "Быстрое действие — перешлите этот случай в Cloudflare Trust & Safety:",
+            "ar": "إجراء سريع — أعد توجيه هذه الحالة إلى Cloudflare Trust & Safety:",
+            "zh": "快速操作 — 将此案例转发给 Cloudflare Trust & Safety:",
+        }
+        label = labels.get(language, labels["en"])
+        quick = f"\n{label}\n  {cf_mailto}\n"
+
     blocks = {
         "en": (
             "\nThe report also lists the upstream providers behind the attacker "
-            "infrastructure and the appropriate reporting channels for each.\n"
+            "infrastructure and the appropriate reporting channels for each."
         ),
         "tr": (
             "\nSaldırgan altyapısının arkasındaki sağlayıcılar ve uygun bildirim "
-            "kanalları raporda ayrıntılı şekilde yer alıyor.\n"
+            "kanalları raporda ayrıntılı şekilde yer alıyor."
         ),
         "pt": (
             "\nO relatório também lista os provedores upstream e os canais "
-            "apropriados de notificação.\n"
+            "apropriados de notificação."
         ),
         "es": (
             "\nEl informe también enumera los proveedores upstream y los canales "
-            "adecuados de notificación.\n"
+            "adecuados de notificación."
         ),
         "fr": (
             "\nLe rapport répertorie aussi les fournisseurs en amont et les canaux "
-            "de notification adaptés.\n"
+            "de notification adaptés."
         ),
         "de": (
             "\nDer Bericht listet zudem die Upstream-Anbieter und die jeweils "
-            "passenden Meldekanäle auf.\n"
+            "passenden Meldekanäle auf."
         ),
         "it": (
             "\nIl rapporto elenca anche i provider upstream e i canali di "
-            "segnalazione adatti.\n"
+            "segnalazione adatti."
         ),
         "ru": (
             "\nВ отчёте также перечислены вышестоящие провайдеры и подходящие "
-            "каналы уведомления.\n"
+            "каналы уведомления."
         ),
         "ar": (
-            "\nيسرد التقرير أيضاً مزودي الخدمة في الأعلى وقنوات الإبلاغ المناسبة لكل منهم.\n"
+            "\nيسرد التقرير أيضاً مزودي الخدمة في الأعلى وقنوات الإبلاغ المناسبة لكل منهم."
         ),
         "zh": (
-            "\n报告还列出了上游服务提供商和针对每一方的适当通知渠道。\n"
+            "\n报告还列出了上游服务提供商和针对每一方的适当通知渠道。"
         ),
     }
-    return blocks.get(language, blocks["en"])
+    return blocks.get(language, blocks["en"]) + quick + "\n"
 
 
 def get_subject(language: str, domain: str) -> str:
