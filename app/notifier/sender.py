@@ -9,7 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from models.database import Contact, Notification, Site, async_session
-from utils.helpers import extract_root_domain
 
 from .language import get_language, get_subject, render_template
 
@@ -100,23 +99,22 @@ async def send_alert(
         if not contact:
             return {"status": "error", "reason": "contact_not_found"}
 
-        # Kök domain dedup: aynı root domain'e (farklı subdomain hacklenmiş olsa bile)
-        # son 30 gün içinde mail gönderildiyse atma. IT ekibi aynı.
-        root = extract_root_domain(domain) or domain
+        # Email-bazlı dedup: AYNI mail adresine (farklı site_id/contact_id ile bile)
+        # son 7 günde mail gittiyse atma. Aynı kuruma birden fazla subdomain'den
+        # de gönderim olabilir, ama tek mail adresi 7 gün içinde tek uyarı alır.
         recent = await session.execute(
             select(Notification)
-            .join(Site, Site.id == Notification.site_id)
+            .join(Contact, Contact.id == Notification.contact_id)
             .where(
-                Site.root_domain == root,
-                Notification.contact_id == contact_id,
+                Contact.email == contact.email,
                 Notification.status == "sent",
-                Notification.sent_at >= datetime.utcnow() - timedelta(days=30),
+                Notification.sent_at >= datetime.utcnow() - timedelta(days=7),
             )
             .limit(1)
         )
         if recent.scalar_one_or_none() and (not notif or notif.send_count == 0):
-            logger.info(f"[{domain}] Kök domain ({root}) → {contact.email} son 30 günde mail aldı, atlandı")
-            return {"status": "skipped", "reason": "root_domain_recently_notified"}
+            logger.info(f"[{domain}] {contact.email} son 7 günde zaten mail aldı, atlandı")
+            return {"status": "skipped", "reason": "email_recently_notified"}
 
         # Dil tespit
         if not language:
