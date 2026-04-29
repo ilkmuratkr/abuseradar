@@ -9,6 +9,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Public Suffix List'i build sırasında indir → runtime'da network gerektirmesin.
+# tldextract'in default cache dizini /tmp olabilir; biz /data altına yönlendirip
+# kalıcı volume kullanacağız (compose env: TLDEXTRACT_CACHE).
+RUN python -c "import tldextract; tldextract.TLDExtract().update(fetch_now=True)" || true
+
 COPY . .
 
 EXPOSE 8000

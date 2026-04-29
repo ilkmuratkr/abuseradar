@@ -50,6 +50,7 @@ class Site(Base):
 
     id = Column(Integer, primary_key=True)
     domain = Column(String(500), unique=True, nullable=False)
+    root_domain = Column(String(500))
     url = Column(Text)
     site_type = Column(String(50))
     category = Column(String(20), default="BELIRSIZ")
@@ -78,8 +79,10 @@ class Backlink(Base):
     referring_site_id = Column(Integer, ForeignKey("sites.id"))
     referring_url = Column(Text, nullable=False)
     referring_title = Column(Text)
+    referring_root_domain = Column(String(500))
     target_url = Column(Text, nullable=False)
     target_domain = Column(String(500))
+    target_root_domain = Column(String(500))
     anchor_text = Column(Text)
     left_context = Column(Text)
     right_context = Column(Text)

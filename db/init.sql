@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS csv_files (
 CREATE TABLE IF NOT EXISTS sites (
     id SERIAL PRIMARY KEY,
     domain VARCHAR(500) UNIQUE NOT NULL,
+    root_domain VARCHAR(500),
     url TEXT,
     site_type VARCHAR(50),
     category VARCHAR(20) DEFAULT 'BELIRSIZ',
@@ -45,8 +46,10 @@ CREATE TABLE IF NOT EXISTS backlinks (
     referring_site_id INTEGER REFERENCES sites(id),
     referring_url TEXT NOT NULL,
     referring_title TEXT,
+    referring_root_domain VARCHAR(500),
     target_url TEXT NOT NULL,
     target_domain VARCHAR(500),
+    target_root_domain VARCHAR(500),
     anchor_text TEXT,
     left_context TEXT,
     right_context TEXT,
@@ -180,7 +183,15 @@ CREATE INDEX IF NOT EXISTS idx_backlinks_target_domain ON backlinks(target_domai
 CREATE INDEX IF NOT EXISTS idx_backlinks_category ON backlinks(category);
 CREATE INDEX IF NOT EXISTS idx_backlinks_spam_score ON backlinks(spam_score DESC);
 CREATE INDEX IF NOT EXISTS idx_sites_domain ON sites(domain);
+CREATE INDEX IF NOT EXISTS idx_sites_root_domain ON sites(root_domain);
 CREATE INDEX IF NOT EXISTS idx_sites_category ON sites(category);
+CREATE INDEX IF NOT EXISTS idx_backlinks_target_root_domain ON backlinks(target_root_domain);
+CREATE INDEX IF NOT EXISTS idx_backlinks_referring_root_domain ON backlinks(referring_root_domain);
+
+-- Idempotent migration için (mevcut DB'yi update etmek):
+ALTER TABLE sites ADD COLUMN IF NOT EXISTS root_domain VARCHAR(500);
+ALTER TABLE backlinks ADD COLUMN IF NOT EXISTS referring_root_domain VARCHAR(500);
+ALTER TABLE backlinks ADD COLUMN IF NOT EXISTS target_root_domain VARCHAR(500);
 CREATE INDEX IF NOT EXISTS idx_detected_hacklinks_site_id ON detected_hacklinks(site_id);
 CREATE INDEX IF NOT EXISTS idx_notifications_status ON notifications(status);
 CREATE INDEX IF NOT EXISTS idx_complaints_status ON complaints(status);

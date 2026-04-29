@@ -107,6 +107,7 @@ services:
       - HTTP_PROXY=socks5h://vpn-us:1080
       - HTTPS_PROXY=socks5h://vpn-us:1080
       - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us
+      - TLDEXTRACT_CACHE=/data/.tldextract-cache
     volumes:
       - ./app:/app
       - ./data:/data
@@ -134,6 +135,7 @@ services:
       - HTTP_PROXY=socks5h://vpn-tr:1080
       - HTTPS_PROXY=socks5h://vpn-tr:1080
       - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us
+      - TLDEXTRACT_CACHE=/data/.tldextract-cache
     volumes:
       - ./app:/app
       - ./data:/data

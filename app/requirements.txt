@@ -17,3 +17,4 @@ abuse-finder==0.3
 pysocks==1.7.1
 httpx[socks]==0.28.1
 python-multipart==0.0.20
+tldextract==5.1.3

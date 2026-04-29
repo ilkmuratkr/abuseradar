@@ -12,6 +12,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from config import settings
 from models.database import Backlink, CsvFile, Site, async_session
+from utils.helpers import extract_root_domain
 
 from .scorer import calculate_spam_score
 from .tracker import (
@@ -50,10 +51,14 @@ async def get_or_create_site(session, domain: str, row: dict) -> int:
     site = result.scalar_one_or_none()
 
     if site:
+        # Mevcut kayıt root_domain boşsa doldur (geriye dönük migration)
+        if not site.root_domain:
+            site.root_domain = extract_root_domain(domain) or domain
         return site.id
 
     new_site = Site(
         domain=domain,
+        root_domain=extract_root_domain(domain) or domain,
         url=row.get("referring_url", ""),
         platform=row.get("platform", ""),
         domain_rating=row.get("domain_rating"),
@@ -148,12 +153,15 @@ async def process_csv_file(filepath: str | Path) -> dict:
                     s = str(val) if pd.notna(val) else ""
                     return "" if s == "nan" else s
 
+                target_dom = extract_domain(target_url)
                 backlink_data = {
                     "csv_file_id": csv_record.id,
                     "referring_url": referring_url,
                     "referring_title": _clean(row.get("Referring page title")),
+                    "referring_root_domain": extract_root_domain(referring_domain) or referring_domain,
                     "target_url": target_url,
-                    "target_domain": extract_domain(target_url),
+                    "target_domain": target_dom,
+                    "target_root_domain": extract_root_domain(target_dom) or target_dom,
                     "anchor_text": _clean(row.get("Anchor")),
                     "left_context": _clean(row.get("Left context")),
                     "right_context": _clean(row.get("Right context")),

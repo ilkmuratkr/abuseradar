@@ -16,6 +16,9 @@ COPY requirements.txt requirements-crawler.txt ./
 RUN pip install --no-cache-dir -r requirements.txt -r requirements-crawler.txt
 RUN playwright install chromium
 
+# Public Suffix List'i build sırasında indir
+RUN python -c "import tldextract; tldextract.TLDExtract().update(fetch_now=True)" || true
+
 COPY . .
 
 CMD ["python", "-m", "crawler.worker"]
