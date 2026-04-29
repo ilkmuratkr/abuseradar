@@ -176,15 +176,23 @@
       </div>
     </div>
 
-    <!-- Quick action — visible above the fold so site owner can act without
-         scrolling to Section 7. Sends mail FROM the owner's institutional
-         address → carries more weight at Cloudflare Trust&Safety. -->
-    <section style="margin:1.5rem 0;padding:1rem 1.2rem;background:linear-gradient(95deg, rgba(26,206,201,0.08), rgba(26,206,201,0.02));border:1px solid #1ACEC9;border-radius:8px;display:flex;flex-wrap:wrap;align-items:center;gap:.9rem;justify-content:space-between">
+    <!-- Quick action (sadece SITE OWNER için) — Cloudflare/registrar/hosting
+         tarafı kendi audit URL'sinde (?for=auditor) açtığında bu blok gizlenir
+         (kendine 'CF'e şikayet et' demek tuhaf olur). -->
+    <section id="owner-action" style="margin:1.5rem 0;padding:1rem 1.2rem;background:linear-gradient(95deg, rgba(26,206,201,0.08), rgba(26,206,201,0.02));border:1px solid #1ACEC9;border-radius:8px;display:none;flex-wrap:wrap;align-items:center;gap:.9rem;justify-content:space-between">
       <div style="flex:1 1 320px">
-        <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem">📧 Forward this case to Cloudflare</div>
+        <div style="font-weight:700;font-size:1rem;margin-bottom:.2rem">📧 If you are the technical contact for this domain — forward to Cloudflare</div>
         <div style="font-size:.83rem;color:var(--text-2)">The attacker domains sit behind Cloudflare. A short report from <em>your</em> institutional mailbox — to <span class="mono">abuse@cloudflare.com</span> — is one of the most effective steps. We've pre-filled subject and body for you.</div>
       </div>
       <a id="quick-cf-mailto" href="#" class="btn btn-primary" style="background:#1ACEC9;color:#001016;padding:.65rem 1.1rem;border-radius:6px;font-weight:700;text-decoration:none;white-space:nowrap">Open in mail client →</a>
+    </section>
+
+    <!-- Auditor view (Cloudflare/registrar/hosting kendileri açtığında) -->
+    <section id="auditor-note" style="margin:1.5rem 0;padding:1rem 1.2rem;background:rgba(120,120,120,0.06);border:1px solid var(--border);border-radius:8px;display:none">
+      <div style="font-weight:700;font-size:1rem;margin-bottom:.3rem">For Cloudflare / Registrar / Hosting reviewers</div>
+      <div style="font-size:.85rem;color:var(--text-2);line-height:1.55">
+        This bundle is the evidence package for the case mailed to your abuse channel. The attacker domains observed (Section 4 below), the rendered DOM (Section 3), and the per-page screenshots (Section 2) are reproducible against the bundle ID in the footer. The same evidence has been forwarded to the technical contact for <span id="aud-domain" class="mono">—</span>; we are not requesting a specific action — only that the case is visible to your acceptable-use review team. Reply to <span class="mono">abuse@abuseradar.org</span> for any follow-up.
+      </div>
     </section>
 
     <!-- Findings -->
@@ -316,6 +324,9 @@ if (pathMatch) {
   token = params.get("t");
 }
 
+// Audience: ?for=auditor → CF/registrar/hosting reviewers; default → site owner
+const audience = (new URLSearchParams(location.search).get("for") || "owner").toLowerCase();
+
 function el(id) { return document.getElementById(id); }
 function escapeHtml(s) {
   if (s === null || s === undefined) return "";
@@ -365,20 +376,27 @@ async function loadReport() {
   el("i-domain").textContent = domain;
   el("t-domain").textContent = domain;
 
-  // Quick CF mailto — yukarıdaki action card için
-  try {
-    const reportUrlNow = location.href;
-    const subj = encodeURIComponent(`Abuse report — SEO spam injection on ${domain}`);
-    const body = encodeURIComponent(
-      `Hello Cloudflare Trust & Safety,\n\n` +
-      `I am the technical contact for ${domain}, which has been compromised by an SEO-spam injection. Hidden third-party links pointing to attacker-operated domains hosted on Cloudflare's infrastructure are being injected into our pages.\n\n` +
-      `Reference report (no sign-in): ${reportUrlNow}\n\n` +
-      `Please investigate the attacker domain(s) under your acceptable-use policy.\n\n` +
-      `Thanks,\n[YOUR NAME]`
-    );
-    const cfBtn = el("quick-cf-mailto");
-    if (cfBtn) cfBtn.href = `mailto:abuse@cloudflare.com?subject=${subj}&body=${body}`;
-  } catch (e) { /* best-effort */ }
+  // Audience-aware: site owner → action card göster, auditor → "evidence package" notu
+  if (audience === "auditor") {
+    el("auditor-note").style.display = "block";
+    const ad = el("aud-domain"); if (ad) ad.textContent = domain;
+  } else {
+    el("owner-action").style.display = "flex";
+    try {
+      // Site sahibinin paylaşılacağı URL — temiz, ?for=auditor olmadan
+      const cleanUrl = location.origin + location.pathname;
+      const subj = encodeURIComponent(`Abuse report — SEO spam injection on ${domain}`);
+      const body = encodeURIComponent(
+        `Hello Cloudflare Trust & Safety,\n\n` +
+        `I am the technical contact for ${domain}, which has been compromised by an SEO-spam injection. Hidden third-party links pointing to attacker-operated domains hosted on Cloudflare's infrastructure are being injected into our pages.\n\n` +
+        `Reference report (no sign-in): ${cleanUrl}\n\n` +
+        `Please investigate the attacker domain(s) under your acceptable-use policy.\n\n` +
+        `Thanks,\n[YOUR NAME]`
+      );
+      const cfBtn = el("quick-cf-mailto");
+      if (cfBtn) cfBtn.href = `mailto:abuse@cloudflare.com?subject=${subj}&body=${body}`;
+    } catch (e) { /* best-effort */ }
+  }
 
   // Complaint template — domain + report URL'yi yerleştir, copy + mailto handler
   try {

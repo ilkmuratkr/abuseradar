@@ -131,6 +131,15 @@ async def run_chain_for_target(
     affected_gov_sites = affected_gov_sites or []
     affected_str = ", ".join(affected_gov_sites[:10]) or "(see bundle)"
 
+    # CF/registrar/ICANN abuse mail'leri için ?for=auditor parametreli URL —
+    # rapor sayfası audience-aware: auditor açtığında 'CF'e şikayet et'
+    # CTA'sı gizlenir, "evidence package" notu gösterilir.
+    auditor_url = report_url
+    if report_url and "?" not in report_url:
+        auditor_url = f"{report_url}?for=auditor"
+    elif report_url:
+        auditor_url = f"{report_url}&for=auditor"
+
     logger.info(f"[{target_domain}] complaint chain başlıyor (form={enable_form}, mail={enable_mail})")
 
     meta = await discover_attacker_meta(target_domain)
@@ -162,7 +171,7 @@ async def run_chain_for_target(
         if enable_mail:
             mail_steps.append(("cloudflare_mail", lambda: hosting_mod.report_to_hosting(
                 domain=target_domain, abuse_email="abuse@cloudflare.com",
-                issue_type="takeover", evidence_summary=summary, report_url=report_url,
+                issue_type="takeover", evidence_summary=summary, report_url=auditor_url,
             )))
 
     # 2. Hosting (CF arkasında değilse)
@@ -170,7 +179,7 @@ async def run_chain_for_target(
         if enable_mail:
             mail_steps.append(("hosting_mail", lambda: hosting_mod.report_to_hosting(
                 domain=target_domain, abuse_email=meta["abuse_email"],
-                issue_type="takeover", evidence_summary=summary, report_url=report_url,
+                issue_type="takeover", evidence_summary=summary, report_url=auditor_url,
             )))
         if enable_form:
             form_steps.append(("hosting_form", lambda: openclaw.report_hosting_form(
@@ -188,7 +197,7 @@ async def run_chain_for_target(
     if meta.get("registrar_abuse_email") and enable_mail:
         mail_steps.append(("registrar_mail", lambda: hosting_mod.report_to_hosting(
             domain=target_domain, abuse_email=meta["registrar_abuse_email"],
-            issue_type="takeover", evidence_summary=summary, report_url=report_url,
+            issue_type="takeover", evidence_summary=summary, report_url=auditor_url,
         )))
 
     # 4. Google Safe Browsing
@@ -211,7 +220,7 @@ async def run_chain_for_target(
         )
         mail_steps.append(("icann_mail", lambda: hosting_mod.report_to_hosting(
             domain=target_domain, abuse_email="compliance@icann.org",
-            issue_type="takeover", evidence_summary=icann_summary, report_url=report_url,
+            issue_type="takeover", evidence_summary=icann_summary, report_url=auditor_url,
         )))
 
     results: dict[str, dict] = {}
