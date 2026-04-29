@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from sqlalchemy import select, text
 
@@ -1086,11 +1086,14 @@ async def public_unsubscribe(request: Request):
     Gmail/Yahoo (Şubat 2024+) bulk sender requirements: alıcı tek tıkla
     çıkabilmeli. Bu listedeki email'e bir daha mail gönderilmez.
     """
-    email = (
-        request.query_params.get("e", "")
-        or (await request.form()).get("List-Unsubscribe", "") if request.method == "POST" else ""
-    )
-    email = (email or request.query_params.get("e", "")).strip().lower()
+    email = (request.query_params.get("e", "") or "").strip().lower()
+    if not email and request.method == "POST":
+        try:
+            form = await request.form()
+            # one-click POST'ta body 'List-Unsubscribe=One-Click'; email query'de
+            email = (form.get("e", "") or "").strip().lower()
+        except Exception:
+            pass
     if not email or "@" not in email:
         raise HTTPException(400, "Email parameter required")
 
