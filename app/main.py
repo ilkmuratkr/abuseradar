@@ -1079,6 +1079,79 @@ async def public_report_hosting(token: str):
         return {"error": str(e)}
 
 
+@app.get("/mail-stats/today")
+async def mail_stats_today():
+    """Bugünkü gönderim istatistikleri — provider bazında.
+
+    Warm-up sürecini izlemek için: hangi provider'a kaç mail gitti, limit ne.
+    """
+    from notifier.provider import PROVIDER_DAILY_LIMITS, daily_limit_for
+    from models.database import MailLog
+
+    async with async_session() as session:
+        today_start = datetime.utcnow() - timedelta(hours=24)
+        rows = await session.execute(
+            select(
+                MailLog.recipient_provider,
+                MailLog.status,
+                func.count(MailLog.id).label("n"),
+            ).where(MailLog.sent_at >= today_start)
+            .group_by(MailLog.recipient_provider, MailLog.status)
+        )
+        result = {}
+        total = {"sent": 0, "skipped": 0, "error": 0, "skipped_daily_limit": 0, "simulated": 0}
+        for r in rows:
+            prov = r.recipient_provider or "unknown"
+            st = r.status or "unknown"
+            n = r.n
+            result.setdefault(prov, {"sent": 0, "skipped_daily_limit": 0, "error": 0, "limit": daily_limit_for(prov)})
+            if st in result[prov]:
+                result[prov][st] = n
+            total[st] = total.get(st, 0) + n
+
+    # Eksik provider'ları da göster
+    for prov, lim in PROVIDER_DAILY_LIMITS.items():
+        if prov not in result:
+            result[prov] = {"sent": 0, "skipped_daily_limit": 0, "error": 0, "limit": lim}
+
+    return {
+        "window_hours": 24,
+        "total": total,
+        "by_provider": result,
+    }
+
+
+@app.get("/mail-stats/contacts")
+async def mail_stats_contacts():
+    """Mevcut tüm contact'ların MX-based provider dağılımı.
+
+    'Kaç kontak gerçekte Gmail'e yönleniyor?' sorusunun cevabı.
+    Bu MX lookup'ları bir defa yapar, ileride limit planlamasına temel.
+    """
+    from notifier.provider import detect_email_provider
+
+    async with async_session() as session:
+        contacts = (await session.execute(select(Contact))).scalars().all()
+
+    counts: dict[str, int] = {}
+    domain_seen: dict[str, str] = {}
+    for c in contacts:
+        email = (c.email or "").strip().lower()
+        if "@" not in email:
+            continue
+        domain = email.split("@", 1)[1]
+        if domain not in domain_seen:
+            domain_seen[domain] = await detect_email_provider(email)
+        prov = domain_seen[domain]
+        counts[prov] = counts.get(prov, 0) + 1
+
+    return {
+        "total_contacts": len(contacts),
+        "by_provider": counts,
+        "unique_domains_scanned": len(domain_seen),
+    }
+
+
 @app.api_route("/public/unsubscribe", methods=["GET", "POST"])
 async def public_unsubscribe(request: Request):
     """RFC 8058 List-Unsubscribe one-click + manuel link.

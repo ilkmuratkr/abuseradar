@@ -163,6 +163,26 @@ CREATE TABLE IF NOT EXISTS complaints (
     UNIQUE(target_domain, platform)
 );
 
+-- Mail gönderim log'u — her _zeptomail_send çağrısı buraya yazılır.
+-- Provider-bazlı günlük limit + reputation izleme için.
+CREATE TABLE IF NOT EXISTS mail_log (
+    id SERIAL PRIMARY KEY,
+    to_email VARCHAR(500) NOT NULL,
+    to_email_domain VARCHAR(500),
+    recipient_provider VARCHAR(20),
+    site_id INTEGER,
+    contact_id INTEGER,
+    subject TEXT,
+    language VARCHAR(10),
+    status VARCHAR(50),
+    error_message TEXT,
+    zeptomail_id VARCHAR(200),
+    sent_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_mail_log_sent_at ON mail_log(sent_at DESC);
+CREATE INDEX IF NOT EXISTS idx_mail_log_provider ON mail_log(recipient_provider);
+CREATE INDEX IF NOT EXISTS idx_mail_log_to_email ON mail_log(to_email);
+
 -- Unsubscribe listesi — RFC 8058 one-click + manuel mailto. Bu listede olan
 -- email'e bir daha mail gönderilmez. Gmail/Yahoo bulk sender requirements.
 CREATE TABLE IF NOT EXISTS unsubscribes (

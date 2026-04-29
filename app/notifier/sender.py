@@ -4,13 +4,14 @@ import logging
 from datetime import datetime, timedelta
 
 import httpx
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
-from models.database import Contact, Notification, Site, Unsubscribe, async_session
+from models.database import Contact, MailLog, Notification, Site, Unsubscribe, async_session
 
 from .evidence_picker import load_evidence_summary
+from .provider import daily_limit_for, detect_email_provider
 from .language import (
     describe_category,
     get_complaint_block,
@@ -29,15 +30,73 @@ async def _zeptomail_send(
     to_name: str | None,
     subject: str,
     text_body: str,
+    site_id: int | None = None,
+    contact_id: int | None = None,
+    language: str | None = None,
+    enforce_daily_limit: bool = True,
 ) -> dict:
     """ZeptoMail REST API çağrısı.
+
+    Her gönderim mail_log tablosuna yazılır (provider tespitiyle).
+    enforce_daily_limit=True iken provider-bazlı günlük limit aşılırsa
+    gönderim yapılmaz, status=skipped döner.
 
     RFC 8058 one-click List-Unsubscribe header'ı ile birlikte gönderilir
     — Gmail/Yahoo bulk sender requirements (Şubat 2024+) bunu zorunlu kılar.
     """
+    to_email_lower = (to_email or "").strip().lower()
+    to_domain = to_email_lower.split("@", 1)[1] if "@" in to_email_lower else ""
+
+    # Provider tespiti (MX lookup)
+    provider = await detect_email_provider(to_email_lower)
+
+    # Daily limit kontrolü — provider bazlı
+    if enforce_daily_limit:
+        limit = daily_limit_for(provider)
+        async with async_session() as session:
+            today_start = datetime.utcnow() - timedelta(hours=24)
+            count_q = await session.execute(
+                select(func.count(MailLog.id)).where(
+                    MailLog.recipient_provider == provider,
+                    MailLog.status == "sent",
+                    MailLog.sent_at >= today_start,
+                )
+            )
+            sent_today = count_q.scalar() or 0
+        if sent_today >= limit:
+            logger.warning(
+                f"[{to_email_lower}] Provider {provider} günlük limit ({limit}) aşıldı "
+                f"(bugün {sent_today} mail). Atlandı."
+            )
+            await _log_mail(
+                to_email=to_email_lower,
+                to_domain=to_domain,
+                provider=provider,
+                site_id=site_id,
+                contact_id=contact_id,
+                subject=subject,
+                language=language,
+                status="skipped_daily_limit",
+                error_message=f"daily limit {limit} reached for provider {provider}",
+                zeptomail_id=None,
+            )
+            return {
+                "id": None,
+                "status": "skipped",
+                "reason": "daily_limit",
+                "provider": provider,
+                "sent_today": sent_today,
+                "limit": limit,
+            }
+
     token = settings.zeptomail_token.strip()
     if not token:
-        return {"id": "simulated", "status": "simulated"}
+        await _log_mail(
+            to_email=to_email_lower, to_domain=to_domain, provider=provider,
+            site_id=site_id, contact_id=contact_id, subject=subject,
+            language=language, status="simulated", error_message=None, zeptomail_id="simulated",
+        )
+        return {"id": "simulated", "status": "simulated", "provider": provider}
 
     if not token.lower().startswith("zoho-enczapikey "):
         token = f"Zoho-enczapikey {token}"
@@ -86,13 +145,67 @@ async def _zeptomail_send(
     # Mail gönderimi VPN üzerinden GİTMEMELİ — Zenlayer/Mullvad IP'sinden
     # mail atmak ZeptoMail nezdinde fraud sinyali, alıcı tarafında reputation
     # zararı yapar. Doğrudan host network ile ZeptoMail'e bağlan.
-    async with httpx.AsyncClient(timeout=20.0, trust_env=False) as client:
-        r = await client.post(settings.zeptomail_endpoint, json=payload, headers=headers)
+    try:
+        async with httpx.AsyncClient(timeout=20.0, trust_env=False) as client:
+            r = await client.post(settings.zeptomail_endpoint, json=payload, headers=headers)
+        if r.status_code >= 400:
+            err = f"ZeptoMail HTTP {r.status_code}: {r.text}"
+            await _log_mail(
+                to_email=to_email_lower, to_domain=to_domain, provider=provider,
+                site_id=site_id, contact_id=contact_id, subject=subject,
+                language=language, status="error", error_message=err, zeptomail_id=None,
+            )
+            raise RuntimeError(err)
+        data = r.json()
+        zid = (data.get("data") or [{}])[0].get("message_id", "unknown")
+    except Exception as e:
+        if "ZeptoMail HTTP" not in str(e):
+            await _log_mail(
+                to_email=to_email_lower, to_domain=to_domain, provider=provider,
+                site_id=site_id, contact_id=contact_id, subject=subject,
+                language=language, status="error", error_message=str(e), zeptomail_id=None,
+            )
+        raise
 
-    if r.status_code >= 400:
-        raise RuntimeError(f"ZeptoMail HTTP {r.status_code}: {r.text}")
-    data = r.json()
-    return {"id": (data.get("data") or [{}])[0].get("message_id", "unknown"), "status": "sent"}
+    await _log_mail(
+        to_email=to_email_lower, to_domain=to_domain, provider=provider,
+        site_id=site_id, contact_id=contact_id, subject=subject,
+        language=language, status="sent", error_message=None, zeptomail_id=zid,
+    )
+    return {"id": zid, "status": "sent", "provider": provider}
+
+
+async def _log_mail(
+    *,
+    to_email: str,
+    to_domain: str,
+    provider: str,
+    site_id: int | None,
+    contact_id: int | None,
+    subject: str,
+    language: str | None,
+    status: str,
+    error_message: str | None,
+    zeptomail_id: str | None,
+) -> None:
+    """mail_log tablosuna kayıt ekle."""
+    try:
+        async with async_session() as session:
+            session.add(MailLog(
+                to_email=to_email,
+                to_email_domain=to_domain,
+                recipient_provider=provider,
+                site_id=site_id,
+                contact_id=contact_id,
+                subject=subject[:500] if subject else None,
+                language=language,
+                status=status,
+                error_message=error_message,
+                zeptomail_id=zeptomail_id,
+            ))
+            await session.commit()
+    except Exception as e:
+        logger.warning(f"mail_log kayıt hatası: {e}")
 
 
 async def send_alert(
@@ -189,14 +302,19 @@ async def send_alert(
             content_category=content_category,
         )
 
-        # ZeptoMail API ile gönder
+        # ZeptoMail API ile gönder (provider-bazlı limit + mail_log otomatik)
         try:
             result = await _zeptomail_send(
                 to_email=contact.email,
                 to_name=None,
                 subject=subject,
                 text_body=body,
+                site_id=site_id,
+                contact_id=contact_id,
+                language=language,
             )
+            if result.get("status") == "skipped":
+                return result
 
             # Notification kaydı
             if notif:

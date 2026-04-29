@@ -18,3 +18,4 @@ pysocks==1.7.1
 httpx[socks]==0.28.1
 python-multipart==0.0.20
 tldextract==5.1.3
+dnspython==2.7.0

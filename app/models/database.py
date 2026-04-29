@@ -205,6 +205,23 @@ class Complaint(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class MailLog(Base):
+    __tablename__ = "mail_log"
+
+    id = Column(Integer, primary_key=True)
+    to_email = Column(String(500), nullable=False)
+    to_email_domain = Column(String(500))
+    recipient_provider = Column(String(20))
+    site_id = Column(Integer)
+    contact_id = Column(Integer)
+    subject = Column(Text)
+    language = Column(String(10))
+    status = Column(String(50))
+    error_message = Column(Text)
+    zeptomail_id = Column(String(200))
+    sent_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class Unsubscribe(Base):
     __tablename__ = "unsubscribes"
 
