@@ -129,6 +129,7 @@ async def _zeptomail_send(
         ],
         "subject": subject,
         "textbody": text_body,
+        "htmlbody": render_html_email(text_body),
         "mime_headers": {
             "List-Unsubscribe": list_unsubscribe,
             "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
