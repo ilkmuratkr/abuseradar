@@ -162,6 +162,17 @@ async def run_chain_for_target(
             domain=target_domain,
         )))
 
+    # 5. ICANN compliance — registrar varsa direkt ekle (chain'in başında
+    # registrar mail/form gönderilmiş kabul edilir; ICANN paralel gider).
+    if enable_form and meta.get("registrar"):
+        tasks["icann"] = asyncio.create_task(_safe(openclaw.report_icann(
+            target_domain=target_domain,
+            registrar=meta.get("registrar", ""),
+            registrar_abuse_email=meta.get("registrar_abuse_email", ""),
+            report_date=datetime.utcnow().strftime("%Y-%m-%d"),
+            affected_count=len(affected_gov_sites) or 1,
+        )))
+
     # Tüm şikayetleri paralel bekle
     results: dict[str, dict] = {}
     for name, task in tasks.items():
