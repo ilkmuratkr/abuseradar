@@ -161,13 +161,16 @@ services:
     container_name: openclaw
     user: "0:0"
     environment:
+      # LLM çağrıları (api.openai.com) direct gitsin — VPN-US proxy LLM için fazlalık.
+      # Browser otomasyon (CF abuse form vs.) yine VPN üzerinden çıkar (anonim IP).
       - HTTP_PROXY=socks5h://vpn-us:1080
       - HTTPS_PROXY=socks5h://vpn-us:1080
-      - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us
+      - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us,api.openai.com,api.anthropic.com,generativelanguage.googleapis.com
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - OPENCLAW_HOME=/root/.openclaw
-      - OPENCLAW_LLM_PROVIDER=gemini
-      - OPENCLAW_LLM_MODEL=gemini-2.5-pro
+      - OPENCLAW_LLM_PROVIDER=openai
+      - OPENCLAW_LLM_MODEL=gpt-4o
     volumes:
       - openclaw-config:/root/.openclaw
       - ./data/openclaw-workspace:/root/workspace
