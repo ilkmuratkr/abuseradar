@@ -168,16 +168,12 @@ def _spam_safe_token(text: str) -> str | None:
     if not safe_seq:
         return None
 
-    # Öncelik 1 — TR spam pattern'inde en yaygın: 'veren siteler' / 'siteleri' / 'siteler'
-    if "veren" in safe_seq and "siteler" in safe_seq:
-        return "veren siteler"
-    for kw in ("siteleri", "veren", "siteler"):
+    # TR spam pattern'inde en yaygın tek kelime — sırayla ara
+    for kw in ("veren", "siteler", "siteleri", "veriyor"):
         if kw in safe_seq:
             return kw
 
-    # Öncelik 2 — Anchor'daki ilk 2 nötr kelime (orijinal sıra)
-    if len(safe_seq) >= 2:
-        return f"{safe_seq[0]} {safe_seq[1]}"
+    # Fallback: ilk nötr kelime (tek kelime)
     return safe_seq[0]
 
 
