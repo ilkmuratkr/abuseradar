@@ -2,11 +2,52 @@
 
 import json
 import logging
+import re
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
 EVIDENCE_DIR = Path("/data/evidence")
+
+# Spam-trigger kelimeler — Gmail/Outlook ML filtresi mail'de bunları görürse
+# direkt phishing/spam olarak işaretler. Anchor text'inden çıkarılır,
+# yerine geriye kalan nötr kelimeler kullanılır (örn. 'veren', 'siteler').
+SPAM_TRIGGER_TOKENS = {
+    # Gambling — TR
+    "deneme", "bonus", "bonusu", "bonuslu", "casino", "kasino",
+    "slot", "slots", "kumar", "bahis", "bahisçi", "bahsegel",
+    "iddaa", "iddia", "tipobet", "betpark", "betboo", "betturkey",
+    "poker", "1xbet", "stake", "rulet", "ruleta", "tombala",
+    "jackpot", "kazandıran", "kazanc", "yatırımsız", "freebet",
+    "freespin", "freespins", "spin", "spinoyna", "casinoyu",
+    # Gambling — EN
+    "gamble", "gambling", "betting", "wager", "blackjack",
+    "sportsbook", "lottery", "jackpot", "winnings", "wagering",
+    # Adult
+    "porno", "porn", "xxx", "xnxx", "xvideos", "pornhub",
+    "erotik", "erotic", "sex", "seks", "adult", "fetish", "fetiş",
+    "escort", "eskort", "milf", "anal", "fuck",
+    # Pharma
+    "viagra", "cialis", "kamagra", "pharma", "pharmacy", "rxonline",
+    "rxshop", "tabletim", "ilac",
+    # Crypto / loan scam (sıkça spamlanan)
+    "ico", "airdrop", "cashback", "kredibank",
+    # Şehir adları — escort/bahis spam'i çok kullanır
+    # ('izmir escort' anchor'ında 'izmir' de trigger sayılırsa keyword=None olur,
+    #  mail keyword'süz pasif cümleye düşer; bu da güvenli)
+    "istanbul", "izmir", "ankara", "bursa", "antalya", "kayseri",
+    "mersin", "gaziantep", "konya", "samsun", "adana", "eskişehir",
+    "eskisehir", "diyarbakır", "diyarbakir", "balıkesir", "balikesir",
+    "trabzon", "denizli", "sakarya", "manisa", "kocaeli", "şanlıurfa",
+    "sanliurfa", "malatya", "erzurum", "hatay", "tekirdağ", "tekirdag",
+    # Istanbul ilçeleri (escort spam yoğun)
+    "mecidiyeköy", "mecidiyekoy", "taksim", "beşiktaş", "besiktas",
+    "kadıköy", "kadikoy", "ataşehir", "atasehir", "beylikdüzü",
+    "beylikduzu", "şişli", "sisli", "etiler", "ataköy", "atakoy",
+    "bakırköy", "bakirkoy", "levent", "maslak", "fatih",
+    # Diğer TR spam çağrışım kelimeleri
+    "bayan", "bayanlar", "altyazılı", "altyazili", "türbanlı", "turbanli",
+}
 
 # Kategori → keyword set. Her zaman en yüksek skorla en iyi kategori seçilir.
 CATEGORY_KEYWORDS = {
@@ -96,6 +137,50 @@ def load_evidence_summary(domain: str) -> dict | None:
     }
 
 
+def _spam_safe_token(text: str) -> str | None:
+    """Anchor text'inden mail'e konabilecek 'spam-safe' bir kelime ÖBEĞİ seç.
+
+    Gmail TR filtresinde 'deneme bonusu' direkt phishing → mail'e koyamayız.
+    Ama anchor 'deneme bonusu veren siteler' → 'veren siteler' nötrdür ve
+    sayfa kaynağında Ctrl+F yapan alıcı gizli linkleri bulur.
+
+    Strateji:
+      1. Anchor'ı tokenize et (orijinal sırayı koru)
+      2. Trigger kelimeleri çıkar
+      3. 4+ harfli komşu nötr kelimelerden 2'sini al → 'veren siteler'
+      4. Tek kelime kalmışsa onu döndür
+    """
+    if not text:
+        return None
+    # Orijinal sırayı koruyarak tokenize
+    tokens = re.findall(r"[\wçğıöşüÇĞİÖŞÜ]+", text.lower(), re.UNICODE)
+
+    safe_seq = []  # (orijinal sırada nötr kelimeler)
+    for t in tokens:
+        if len(t) < 4:
+            continue
+        if t in SPAM_TRIGGER_TOKENS:
+            continue
+        if any(trig in t for trig in SPAM_TRIGGER_TOKENS):
+            continue
+        safe_seq.append(t)
+
+    if not safe_seq:
+        return None
+
+    # Öncelik 1 — TR spam pattern'inde en yaygın: 'veren siteler' / 'siteleri' / 'siteler'
+    if "veren" in safe_seq and "siteler" in safe_seq:
+        return "veren siteler"
+    for kw in ("siteleri", "veren", "siteler"):
+        if kw in safe_seq:
+            return kw
+
+    # Öncelik 2 — Anchor'daki ilk 2 nötr kelime (orijinal sıra)
+    if len(safe_seq) >= 2:
+        return f"{safe_seq[0]} {safe_seq[1]}"
+    return safe_seq[0]
+
+
 def _pick_top_keyword(raw_links: list[dict], js_links: list[dict]) -> tuple[str | None, str]:
     """En kanıt değeri yüksek anchor + hangi kaynaktan geldiğini döndür.
 
@@ -139,24 +224,41 @@ def _pick_top_keyword(raw_links: list[dict], js_links: list[dict]) -> tuple[str 
             return candidates[0][1]
         return None
 
-    # 1-4. Öncelik grupları — match varsa kısa display_keyword döner
+    # Her bir öncelik grubunda eşleşen anchor'lar varsa, ANCHOR TEXT'inden
+    # spam-safe nötr bir kelime seç (örn 'deneme bonusu veren siteler' → 'veren').
     for display_kw, predicates in priority_groups:
-        src = _has_match(predicates)
-        if src:
-            return display_kw, src
+        candidates = []
+        for link, src in tagged:
+            text = (link.get("text") or "").strip().lower()
+            if not text or len(text) > 200:
+                continue
+            if any(p in text for p in predicates):
+                candidates.append((link.get("score", 0) or 0, link.get("text", ""), src))
+        if not candidates:
+            continue
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        for _, anchor_text, src in candidates:
+            safe = _spam_safe_token(anchor_text)
+            if safe:
+                return safe, src
 
-    # 5. Diğer kategori keyword'leri — match olan ilk keyword'ü kısa döndür
+    # Diğer kategori keyword'leri için de anchor'dan nötr kelime çıkar
     for cat, kws in CATEGORY_KEYWORDS.items():
         for kw in kws:
-            src = _has_match([kw])
-            if src:
-                return kw, src
+            for link, src in tagged:
+                text = (link.get("text") or "").strip().lower()
+                if kw in text:
+                    safe = _spam_safe_token(link.get("text", ""))
+                    if safe:
+                        return safe, src
 
-    # 6. Fallback: ilk uzun anchor (anchor text'in kendisi)
+    # Son fallback: ilk uzun anchor'dan nötr kelime
     for link, src in tagged:
         text = (link.get("text") or "").strip()
-        if text and 5 <= len(text) <= 60:
-            return text, src
+        if text and len(text) >= 5:
+            safe = _spam_safe_token(text)
+            if safe:
+                return safe, src
     return None, "raw"
 
 

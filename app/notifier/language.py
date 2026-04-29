@@ -61,13 +61,13 @@ def get_verification_block(
     source: str = "raw",
     domain: str = "",
 ) -> str:
-    """Pasif kanıt cümlesi — 'click here' / 'search for X' direktifi yok.
-    Site sahibi raporu açtığında oradaki vurguları görür.
-    """
-    if not keyword:
-        return ""
+    """Hızlı doğrulama bloğu — sayfa kaynağı/F12 + Ctrl+F ile spam-safe keyword.
+    Anchor'dan seçilen 'veren siteler' gibi nötr kelime öbeği mail'e konur;
+    spam trigger içermez ama gizli linklerin source'unda yine geçer.
 
-    blocks = {
+    Keyword bulunamamışsa pasif gözlem cümlesi döner.
+    """
+    passive = {
         "en": "\nThe page-source view (Ctrl+U) and the DevTools Elements view (F12) both surface the inserted nodes; the report highlights the relevant anchors.\n",
         "tr": "\nSayfa kaynağı görünümü (Ctrl+U) ve DevTools Elements görünümü (F12), eklenen düğümleri ortaya çıkarır; rapor ilgili bağlantıları vurgular.\n",
         "pt": "\nA visualização do código-fonte (Ctrl+U) e a visualização DevTools Elements (F12) revelam os nós inseridos; o relatório destaca as âncoras relevantes.\n",
@@ -78,6 +78,74 @@ def get_verification_block(
         "ru": "\nИсходный код (Ctrl+U) и панель DevTools Elements (F12) показывают вставленные узлы; в отчёте выделены соответствующие якоря.\n",
         "ar": "\nيُظهر عرض شيفرة المصدر (Ctrl+U) وعرض DevTools Elements (F12) العقد المُدرجة؛ ويبرز التقرير المراسي ذات الصلة.\n",
         "zh": "\n页面源代码视图 (Ctrl+U) 和 DevTools Elements 视图 (F12) 都会显示被插入的节点;报告中突出显示了相关锚点。\n",
+    }
+    if not keyword:
+        return passive.get(language, passive["en"])
+
+    kw = keyword.replace('"', '\\"')
+    d = domain or "the page"
+
+    blocks = {
+        "en": (
+            f"\nQuick verification:\n"
+            f"  1. Open {d} → press Ctrl+U (page source) or F12 → Elements\n"
+            f"  2. Press Ctrl+F and search for: \"{kw}\"\n"
+            f"  The match will be inside the hidden anchors we observed.\n"
+        ),
+        "tr": (
+            f"\nHızlı doğrulama:\n"
+            f"  1. {d} sayfasını açın → Ctrl+U (sayfa kaynağı) veya F12 → Elements\n"
+            f"  2. Ctrl+F ile şunu arayın: \"{kw}\"\n"
+            f"  Eşleşme, tespit ettiğimiz gizli bağlantıların içinde olacaktır.\n"
+        ),
+        "pt": (
+            f"\nVerificação rápida:\n"
+            f"  1. Abra {d} → Ctrl+U (código-fonte) ou F12 → Elements\n"
+            f"  2. Pesquise (Ctrl+F): \"{kw}\"\n"
+            f"  A ocorrência estará dentro dos links ocultos que observamos.\n"
+        ),
+        "es": (
+            f"\nVerificación rápida:\n"
+            f"  1. Abra {d} → Ctrl+U (código fuente) o F12 → Elements\n"
+            f"  2. Busque (Ctrl+F): \"{kw}\"\n"
+            f"  La coincidencia estará dentro de los enlaces ocultos detectados.\n"
+        ),
+        "fr": (
+            f"\nVérification rapide :\n"
+            f"  1. Ouvrez {d} → Ctrl+U (code source) ou F12 → Elements\n"
+            f"  2. Recherchez (Ctrl+F) : \"{kw}\"\n"
+            f"  La correspondance se trouve dans les liens cachés observés.\n"
+        ),
+        "de": (
+            f"\nSchnelle Überprüfung:\n"
+            f"  1. Öffnen Sie {d} → Strg+U (Quelltext) oder F12 → Elements\n"
+            f"  2. Suchen (Strg+F): \"{kw}\"\n"
+            f"  Der Treffer befindet sich in den verborgenen Ankern.\n"
+        ),
+        "it": (
+            f"\nVerifica rapida:\n"
+            f"  1. Apri {d} → Ctrl+U (sorgente) o F12 → Elements\n"
+            f"  2. Cerca (Ctrl+F): \"{kw}\"\n"
+            f"  Il riscontro è all'interno degli anchor nascosti osservati.\n"
+        ),
+        "ru": (
+            f"\nБыстрая проверка:\n"
+            f"  1. Откройте {d} → Ctrl+U (исходный код) или F12 → Elements\n"
+            f"  2. Найдите (Ctrl+F): «{kw}»\n"
+            f"  Совпадение находится внутри обнаруженных скрытых ссылок.\n"
+        ),
+        "ar": (
+            f"\nالتحقق السريع:\n"
+            f"  1. افتح {d} → Ctrl+U (المصدر) أو F12 → Elements\n"
+            f"  2. ابحث (Ctrl+F): \"{kw}\"\n"
+            f"  ستجد التطابق داخل الروابط المخفية التي رصدناها.\n"
+        ),
+        "zh": (
+            f"\n快速验证:\n"
+            f"  1. 打开 {d} → Ctrl+U(源代码)或 F12 → Elements\n"
+            f"  2. 搜索 (Ctrl+F): \"{kw}\"\n"
+            f"  匹配项会出现在我们观察到的隐藏锚点中。\n"
+        ),
     }
     return blocks.get(language, blocks["en"])
 
