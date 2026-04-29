@@ -1,21 +1,22 @@
 Olá,
 
-Escrevo em nome da AbuseRadar, um projeto independente de pesquisa em segurança web.
+Uma nota breve da AbuseRadar, um observatório independente de dados web.
 
-Durante uma varredura de rotina, percebemos que {domain} parece estar servindo conteúdo provavelmente adicionado sem o conhecimento da sua equipe — geralmente através de um plugin de CMS desatualizado, um arquivo de tema comprometido ou credenciais de administrador vazadas.
+No índice atual de páginas públicas, {domain} apresenta {hacklink_count} links de terceiros que não se encaixam no perfil de conteúdo normal do site, {content_category}.
 
-O que observamos:
-  - {hacklink_count} links de terceiros incorporados às páginas, {content_category}
-  - Os links estão estilizados para serem invisíveis aos visitantes regulares
-  - Apontam para sites externos sem relação com o seu trabalho
+Padrões assim costumam surgir quando um plugin de CMS ou arquivo de modelo é alterado fora do fluxo editorial habitual do site.
+
+O que o índice mostra:
+  - Nós de código-fonte estilizados para serem invisíveis aos visitantes regulares
+  - Referências a sites de terceiros sem relação com o propósito declarado do site
 {evidence_block}
-Preparamos um relatório técnico completo para a sua equipe. Inclui capturas de tela, os arquivos afetados e um guia de remediação passo a passo. Sem login:
+Um pacote técnico para as páginas afetadas — capturas de tela, caminhos de arquivos e DOM renderizado — está publicado no nosso índice de pesquisa, sem exigir login:
 
   {report_url}
 {complaint_block}
-Se a sua equipe já está ciente e trabalhando no assunto, ignore esta mensagem. Caso contrário, ficamos à disposição — basta responder a este e-mail ou escrever para team@abuseradar.org. Verificaremos a página novamente em 7–10 dias para confirmar a correção.
+Esta é uma notificação automatizada e única. Não se espera resposta; caso um acompanhamento seja útil, team@abuseradar.org está disponível.
 
-Atenciosamente,
-Equipe de Pesquisa AbuseRadar
+— AbuseRadar Research
+abuseradar.org
 
-— Esta é uma notificação única enviada porque {domain} apareceu em nossa varredura aberta. Não operamos listas de e-mail e não entraremos em contato novamente sem motivo.
+— Enviado porque {domain} apareceu em nosso índice aberto. Não mantemos listas de correspondência.

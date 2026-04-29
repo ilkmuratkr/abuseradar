@@ -1,21 +1,22 @@
 Hello,
 
-I'm writing from AbuseRadar, an independent web security research project.
+A short note from AbuseRadar, an independent web-data observatory.
 
-During a routine scan we noticed that {domain} appears to be serving content that was very likely added without your team's knowledge — usually through an outdated CMS plugin, a compromised template file, or leaked admin credentials.
+In our recent index of public pages, {domain} surfaces {hacklink_count} third-party links that do not fit the site's normal content profile, {content_category}.
 
-What we observed:
-  - {hacklink_count} third-party links embedded in the pages, {content_category}
-  - The links are styled to be invisible to regular visitors
-  - They point to external sites unrelated to your work
+Patterns like this commonly originate from a CMS plugin or template file that was altered outside the site's usual editorial flow.
+
+What the index shows:
+  - Page-source nodes that are styled to be invisible to regular visitors
+  - Outbound references to third-party sites unrelated to the site's stated purpose
 {evidence_block}
-We've prepared a full technical report for your team. It includes screenshots, the affected files, and a step-by-step remediation guide. No login required:
+A technical bundle for the affected pages — screenshots, file paths, and the rendered DOM — is published at our research index, no sign-in required:
 
   {report_url}
 {complaint_block}
-If your team is already aware and working on this, please ignore this message. Otherwise we're happy to help — just reply, or write to team@abuseradar.org. We'll re-check the page in 7–10 days and confirm the fix.
+This is an automated, one-off notice. No reply is expected; if a follow-up is useful, team@abuseradar.org is reachable.
 
-Kind regards,
-AbuseRadar Research
+— AbuseRadar Research
+abuseradar.org
 
-— This is a one-time notification sent because {domain} surfaced in our open-source scan. We do not run mailing lists and will not contact you again about this finding without a reason.
+— Sent because {domain} surfaced in our open index. We do not maintain mailing lists.

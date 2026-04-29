@@ -61,85 +61,23 @@ def get_verification_block(
     source: str = "raw",
     domain: str = "",
 ) -> str:
-    """Alıcının doğrulama yönergesi — spam-trigger keyword'sü mail'de geçmez,
-    raporda gösterilir. Gmail/Outlook ML filtreleri 'gambling/adult/pharma'
-    kelimelerini gördüğünde direkt spam'e atıyor.
+    """Pasif kanıt cümlesi — 'click here' / 'search for X' direktifi yok.
+    Site sahibi raporu açtığında oradaki vurguları görür.
     """
     if not keyword:
         return ""
-    d = domain or "the page"
 
     blocks = {
-        "en": (
-            f"\nQuick verification:\n"
-            f"  1. Open {d} in your browser\n"
-            f"  2. View page source (Ctrl+U) or DevTools → Elements (F12)\n"
-            f"  3. Search (Ctrl+F) for the highlighted anchor shown in the report's Findings section\n"
-            f"  At least one view will surface the hidden links we observed.\n"
-        ),
-        "tr": (
-            f"\nHızlı doğrulama:\n"
-            f"  1. {d} sayfasını tarayıcıda açın\n"
-            f"  2. Sayfa kaynağı (Ctrl+U) veya DevTools → Elements (F12) görüntüleyin\n"
-            f"  3. Raporun bulgular bölümünde işaretli anahtar metni Ctrl+F ile arayın\n"
-            f"  En az birinde tespit ettiğimiz gizli bağlantıları göreceksiniz.\n"
-        ),
-        "pt": (
-            f"\nVerificação rápida:\n"
-            f"  1. Abra {d} no seu navegador\n"
-            f"  2. Veja o código-fonte (Ctrl+U) ou DevTools → Elements (F12)\n"
-            f"  3. Pesquise (Ctrl+F) o termo destacado na seção de achados do relatório\n"
-            f"  Em pelo menos uma das visões aparecerão os links ocultos.\n"
-        ),
-        "es": (
-            f"\nVerificación rápida:\n"
-            f"  1. Abra {d} en su navegador\n"
-            f"  2. Vea el código fuente (Ctrl+U) o DevTools → Elements (F12)\n"
-            f"  3. Busque (Ctrl+F) el término destacado en la sección de hallazgos del informe\n"
-            f"  En al menos una vista aparecerán los enlaces ocultos.\n"
-        ),
-        "fr": (
-            f"\nVérification rapide :\n"
-            f"  1. Ouvrez {d} dans votre navigateur\n"
-            f"  2. Affichez le code source (Ctrl+U) ou DevTools → Elements (F12)\n"
-            f"  3. Recherchez (Ctrl+F) le terme mis en évidence dans la section constats du rapport\n"
-            f"  Au moins une vue révélera les liens cachés.\n"
-        ),
-        "de": (
-            f"\nSchnelle Überprüfung:\n"
-            f"  1. Öffnen Sie {d} im Browser\n"
-            f"  2. Quelltext (Strg+U) oder DevTools → Elements (F12) anzeigen\n"
-            f"  3. Suchen Sie (Strg+F) nach dem im Bericht hervorgehobenen Begriff\n"
-            f"  Mindestens eine Ansicht zeigt die versteckten Links.\n"
-        ),
-        "it": (
-            f"\nVerifica rapida:\n"
-            f"  1. Apri {d} nel browser\n"
-            f"  2. Visualizza il sorgente (Ctrl+U) o DevTools → Elements (F12)\n"
-            f"  3. Cerca (Ctrl+F) il termine evidenziato nella sezione risultati del rapporto\n"
-            f"  In almeno una vista compariranno i link nascosti.\n"
-        ),
-        "ru": (
-            f"\nБыстрая проверка:\n"
-            f"  1. Откройте {d} в браузере\n"
-            f"  2. Просмотрите исходный код (Ctrl+U) или DevTools → Elements (F12)\n"
-            f"  3. Найдите (Ctrl+F) выделенный термин из раздела находок в отчёте\n"
-            f"  Хотя бы один из видов покажет скрытые ссылки.\n"
-        ),
-        "ar": (
-            f"\nالتحقق السريع:\n"
-            f"  1. افتح {d} في المتصفح\n"
-            f"  2. اعرض شيفرة المصدر (Ctrl+U) أو DevTools → Elements (F12)\n"
-            f"  3. ابحث (Ctrl+F) عن المصطلح المظلل في قسم النتائج بالتقرير\n"
-            f"  ستظهر الروابط المخفية في إحدى الواجهتين على الأقل.\n"
-        ),
-        "zh": (
-            f"\n快速验证:\n"
-            f"  1. 在浏览器中打开 {d}\n"
-            f"  2. 查看页面源代码 (Ctrl+U) 或 DevTools → Elements (F12)\n"
-            f"  3. 搜索 (Ctrl+F) 报告发现部分中高亮显示的关键词\n"
-            f"  至少在其中一个视图中会显示这些隐藏链接。\n"
-        ),
+        "en": "\nThe page-source view (Ctrl+U) and the DevTools Elements view (F12) both surface the inserted nodes; the report highlights the relevant anchors.\n",
+        "tr": "\nSayfa kaynağı görünümü (Ctrl+U) ve DevTools Elements görünümü (F12), eklenen düğümleri ortaya çıkarır; rapor ilgili bağlantıları vurgular.\n",
+        "pt": "\nA visualização do código-fonte (Ctrl+U) e a visualização DevTools Elements (F12) revelam os nós inseridos; o relatório destaca as âncoras relevantes.\n",
+        "es": "\nLa vista del código fuente (Ctrl+U) y la vista DevTools Elements (F12) muestran los nodos insertados; el informe destaca los anclajes relevantes.\n",
+        "fr": "\nLe code source (Ctrl+U) et la vue DevTools Elements (F12) font apparaître les nœuds insérés ; le rapport met en évidence les ancres concernées.\n",
+        "de": "\nDie Quelltextansicht (Strg+U) und die DevTools-Elements-Ansicht (F12) zeigen die eingefügten Knoten; der Bericht hebt die relevanten Anker hervor.\n",
+        "it": "\nLa vista del sorgente (Ctrl+U) e la vista DevTools Elements (F12) mostrano i nodi inseriti; il rapporto evidenzia gli anchor rilevanti.\n",
+        "ru": "\nИсходный код (Ctrl+U) и панель DevTools Elements (F12) показывают вставленные узлы; в отчёте выделены соответствующие якоря.\n",
+        "ar": "\nيُظهر عرض شيفرة المصدر (Ctrl+U) وعرض DevTools Elements (F12) العقد المُدرجة؛ ويبرز التقرير المراسي ذات الصلة.\n",
+        "zh": "\n页面源代码视图 (Ctrl+U) 和 DevTools Elements 视图 (F12) 都会显示被插入的节点;报告中突出显示了相关锚点。\n",
     }
     return blocks.get(language, blocks["en"])
 
@@ -211,17 +149,17 @@ def get_complaint_block(language: str) -> str:
 
 
 def get_subject(language: str, domain: str) -> str:
-    """Dile göre email konusu — 'human' ton, spam tetik kelimeleri azaltılmış."""
+    """Dile göre email konusu — pasif gözlem tonu."""
     subjects = {
-        "en": f"A finding on {domain} — quick note from AbuseRadar",
-        "tr": f"{domain} sitesinde bir bulgu — AbuseRadar'dan kısa not",
-        "pt": f"Algo encontrado em {domain} — uma nota rápida da AbuseRadar",
-        "es": f"Algo detectado en {domain} — una nota breve de AbuseRadar",
-        "fr": f"Un constat sur {domain} — note rapide d'AbuseRadar",
-        "de": f"Ein Befund zu {domain} — kurze Notiz von AbuseRadar",
-        "it": f"Un riscontro su {domain} — breve nota da AbuseRadar",
-        "ru": f"Замечание по {domain} — короткое сообщение от AbuseRadar",
-        "ar": f"ملاحظة بشأن {domain} — رسالة قصيرة من AbuseRadar",
-        "zh": f"关于 {domain} 的一项发现 — AbuseRadar 简要通知",
+        "en": f"AbuseRadar index entry: {domain}",
+        "tr": f"AbuseRadar dizin kaydı: {domain}",
+        "pt": f"Entrada no índice AbuseRadar: {domain}",
+        "es": f"Entrada en el índice AbuseRadar: {domain}",
+        "fr": f"Entrée d'index AbuseRadar : {domain}",
+        "de": f"AbuseRadar Index-Eintrag: {domain}",
+        "it": f"Voce nell'indice AbuseRadar: {domain}",
+        "ru": f"Запись в индексе AbuseRadar: {domain}",
+        "ar": f"إدخال في فهرس AbuseRadar: {domain}",
+        "zh": f"AbuseRadar 索引条目:{domain}",
     }
     return subjects.get(language, subjects["en"])

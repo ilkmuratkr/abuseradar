@@ -1,21 +1,22 @@
 Salve,
 
-vi scrivo a nome di AbuseRadar, un progetto indipendente di ricerca in sicurezza web.
+una breve nota da AbuseRadar, un osservatorio indipendente di dati web.
 
-Durante una scansione di routine, abbiamo notato che {domain} sembra servire contenuto molto probabilmente aggiunto all'insaputa del vostro team — di solito attraverso un plugin CMS obsoleto, un file di template compromesso o credenziali amministrative trapelate.
+Nel nostro indice recente di pagine pubbliche, {domain} mostra {hacklink_count} link di terze parti che non rientrano nel profilo di contenuto abituale del sito, {content_category}.
 
-Cosa abbiamo osservato:
-  - {hacklink_count} link di terze parti incorporati nelle pagine, {content_category}
-  - I link sono stilizzati per essere invisibili ai visitatori regolari
-  - Puntano a siti esterni non correlati alla vostra attività
+Pattern di questo tipo nascono spesso quando un plugin CMS o un file di template viene modificato al di fuori del normale flusso editoriale del sito.
+
+Cosa mostra l'indice:
+  - Nodi del sorgente stilizzati per risultare invisibili ai visitatori regolari
+  - Riferimenti a siti terzi non correlati allo scopo dichiarato del sito
 {evidence_block}
-Abbiamo preparato un rapporto tecnico completo per il vostro team. Include screenshot, i file interessati e una guida passo passo per la rimozione. Non è richiesto alcun login:
+Un pacchetto tecnico per le pagine interessate — screenshot, percorsi dei file e DOM renderizzato — è pubblicato nel nostro indice di ricerca, senza richiedere login:
 
   {report_url}
 {complaint_block}
-Se il vostro team è già al corrente e ci sta lavorando, ignorate questo messaggio. Altrimenti siamo a disposizione — basta rispondere a questa e-mail o scrivere a team@abuseradar.org. Ricontrolleremo la pagina in 7–10 giorni e confermeremo la correzione.
+Questa è una notifica automatica e singola. Non è attesa una risposta; se un follow-up risulta utile, team@abuseradar.org è raggiungibile.
 
-Cordiali saluti,
-Team di ricerca AbuseRadar
+— AbuseRadar Research
+abuseradar.org
 
-— Questa è una notifica unica inviata perché {domain} è emerso nella nostra scansione aperta. Non gestiamo liste di distribuzione e non vi ricontatteremo senza motivo.
+— Inviato perché {domain} è emerso nel nostro indice aperto. Non gestiamo liste di distribuzione.

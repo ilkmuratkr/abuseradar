@@ -1,21 +1,22 @@
 Merhaba,
 
-Bağımsız bir web güvenlik araştırma projesi olan AbuseRadar adına yazıyorum.
+Bağımsız bir web verisi gözlemevi olan AbuseRadar'dan kısa bir not.
 
-Rutin bir taramada {domain} adresinin, ekibinizin haberi olmadan eklendiğini düşündüğümüz içerikler sunduğunu fark ettik. Bu tür içerikler genellikle güncel olmayan bir CMS eklentisi, ele geçirilmiş bir tema dosyası veya sızdırılmış yönetici parolaları ile ekleniyor.
+Açık sayfaların güncel dizininde, {domain} adresinde sitenin olağan içerik profiline uymayan {hacklink_count} adet üçüncü taraf bağlantı görülüyor; {content_category}.
 
-Gözlemlediklerimiz:
-  - Sayfalara yerleştirilmiş {hacklink_count} adet üçüncü taraf bağlantısı, {content_category}
-  - Bağlantılar normal ziyaretçilere görünmeyecek şekilde stillendirilmiş
-  - Sitenizle ilgisi olmayan dış sayfalara yönlendiriyorlar
+Bu tarz desenler genellikle bir CMS eklentisi ya da tema dosyasının sitenin normal yayın akışı dışında değiştirilmesi sonucunda ortaya çıkar.
+
+Dizinde görünenler:
+  - Olağan ziyaretçilere görünmeyecek şekilde stillendirilmiş kaynak düğümleri
+  - Sitenin amacıyla ilgisiz üçüncü taraf adreslerine yönelen referanslar
 {evidence_block}
-Ekibiniz için tam bir teknik rapor hazırladık. Ekran görüntüleri, etkilenen dosyalar ve adım adım çözüm rehberini içeriyor. Giriş gerekmiyor:
+Etkilenen sayfalar için teknik paket — ekran görüntüleri, dosya yolları ve render edilmiş DOM — araştırma dizinimizde, giriş gerekmeden erişilebilir:
 
   {report_url}
 {complaint_block}
-Ekibiniz konudan haberdarsa ve üzerinde çalışıyorsa bu mesajı dikkate almayabilirsiniz. Aksi halde yardım etmekten memnuniyet duyarız — bu maile cevap verebilir veya team@abuseradar.org adresine yazabilirsiniz. 7–10 gün içinde sayfayı yeniden kontrol edip düzeltmeyi teyit edeceğiz.
+Bu otomatik, tek seferlik bir bildirimdir. Yanıt beklenmiyor; takip yararlı görülürse team@abuseradar.org adresinden ulaşılabilir.
 
-İyi çalışmalar,
-AbuseRadar Araştırma Ekibi
+— AbuseRadar Araştırma
+abuseradar.org
 
-— Bu, açık kaynak taramamızda {domain} adresine rastladığımız için gönderilmiş tek seferlik bir bildirimdir. Mailing list işletmiyoruz; sebepsiz tekrar yazmayacağız.
+— {domain} açık dizinimizde göründüğü için gönderildi. Posta listesi tutmuyoruz.

@@ -1,21 +1,22 @@
 Hola,
 
-Les escribo en nombre de AbuseRadar, un proyecto independiente de investigación en seguridad web.
+Una breve nota de AbuseRadar, un observatorio independiente de datos web.
 
-Durante una exploración de rutina, observamos que {domain} parece estar sirviendo contenido que muy probablemente se añadió sin el conocimiento de su equipo — habitualmente a través de un plugin de CMS desactualizado, un archivo de plantilla comprometido o credenciales de administrador filtradas.
+En el índice actual de páginas públicas, {domain} presenta {hacklink_count} enlaces de terceros que no encajan con el perfil de contenido habitual del sitio, {content_category}.
 
-Lo que encontramos:
-  - {hacklink_count} enlaces de terceros incrustados en las páginas, {content_category}
-  - Los enlaces están estilizados para ser invisibles para visitantes habituales
-  - Apuntan a sitios externos no relacionados con su actividad
+Patrones como este suelen aparecer cuando un plugin de CMS o un archivo de plantilla ha sido alterado fuera del flujo editorial habitual del sitio.
+
+Lo que muestra el índice:
+  - Nodos del código fuente estilizados para ser invisibles a los visitantes habituales
+  - Referencias a sitios de terceros no relacionados con el propósito declarado del sitio
 {evidence_block}
-Hemos preparado un informe técnico completo para su equipo. Incluye capturas de pantalla, los archivos afectados y una guía de remediación paso a paso. Sin inicio de sesión:
+Un paquete técnico para las páginas afectadas — capturas de pantalla, rutas de archivos y DOM renderizado — está publicado en nuestro índice de investigación, sin requerir inicio de sesión:
 
   {report_url}
 {complaint_block}
-Si su equipo ya está al tanto y trabajando en ello, ignore este mensaje. De lo contrario, estamos disponibles — basta con responder a este correo o escribir a team@abuseradar.org. Volveremos a comprobar la página en 7–10 días y confirmaremos la corrección.
+Esta es una notificación automatizada y única. No se espera respuesta; si un seguimiento resulta útil, team@abuseradar.org está disponible.
 
-Un saludo,
-Equipo de Investigación AbuseRadar
+— AbuseRadar Research
+abuseradar.org
 
-— Esta es una notificación única enviada porque {domain} apareció en nuestra exploración abierta. No operamos listas de correo y no volveremos a contactarles sin motivo.
+— Enviado porque {domain} apareció en nuestro índice abierto. No mantenemos listas de correo.

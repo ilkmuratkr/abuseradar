@@ -1,21 +1,22 @@
 Guten Tag,
 
-ich schreibe Ihnen im Namen von AbuseRadar, einem unabhängigen Forschungsprojekt für Web-Sicherheit.
+eine kurze Notiz von AbuseRadar, einem unabhängigen Web-Daten-Observatorium.
 
-Bei einer Routine-Analyse ist uns aufgefallen, dass {domain} Inhalte ausliefert, die sehr wahrscheinlich ohne Wissen Ihres Teams hinzugefügt wurden — üblicherweise durch ein veraltetes CMS-Plugin, eine kompromittierte Template-Datei oder geleakte Administrator-Zugangsdaten.
+Im aktuellen Index öffentlicher Seiten zeigt {domain} {hacklink_count} Drittlinks, die nicht zum üblichen Inhaltsprofil der Seite passen, {content_category}.
 
-Was wir beobachtet haben:
-  - {hacklink_count} fremde Links in den Seiten eingebettet, {content_category}
-  - Die Links sind so gestaltet, dass sie für reguläre Besucher unsichtbar sind
-  - Sie verweisen auf externe Seiten, die nichts mit Ihrer Tätigkeit zu tun haben
+Solche Muster entstehen häufig, wenn ein CMS-Plugin oder eine Template-Datei außerhalb des normalen redaktionellen Flusses verändert wurde.
+
+Was der Index zeigt:
+  - Quelltext-Knoten, die so gestaltet sind, dass sie für reguläre Besucher unsichtbar bleiben
+  - Verweise auf Drittseiten ohne Bezug zum erklärten Zweck der Seite
 {evidence_block}
-Wir haben einen vollständigen technischen Bericht für Ihr Team vorbereitet. Er enthält Screenshots, die betroffenen Dateien und eine schrittweise Anleitung zur Behebung. Kein Login erforderlich:
+Ein technisches Paket zu den betroffenen Seiten — Screenshots, Dateipfade und gerenderter DOM — ist in unserem Forschungs-Index ohne Login verfügbar:
 
   {report_url}
 {complaint_block}
-Wenn Ihr Team bereits Bescheid weiß und daran arbeitet, ignorieren Sie diese Nachricht bitte. Andernfalls helfen wir gerne — antworten Sie einfach auf diese E-Mail oder schreiben Sie an team@abuseradar.org. Wir prüfen die Seite in 7–10 Tagen erneut und bestätigen die Korrektur.
+Dies ist eine automatisierte einmalige Mitteilung. Keine Antwort wird erwartet; bei Bedarf einer Rückmeldung steht team@abuseradar.org zur Verfügung.
 
-Mit freundlichen Grüßen,
-AbuseRadar Forschungsteam
+— AbuseRadar Research
+abuseradar.org
 
-— Dies ist eine einmalige Benachrichtigung, gesendet, weil {domain} in unserem offenen Scan auftauchte. Wir betreiben keine Verteilerlisten und werden uns nicht erneut grundlos melden.
+— Gesendet, weil {domain} in unserem offenen Index aufgetaucht ist. Wir führen keine Verteilerlisten.

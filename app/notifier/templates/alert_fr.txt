@@ -1,21 +1,22 @@
 Bonjour,
 
-Je vous écris au nom d'AbuseRadar, un projet indépendant de recherche en sécurité web.
+Une note brève d'AbuseRadar, un observatoire indépendant de données web.
 
-Lors d'une analyse de routine, nous avons remarqué que {domain} semble diffuser du contenu très probablement ajouté à l'insu de votre équipe — généralement via un plugin CMS obsolète, un fichier de modèle compromis ou des identifiants d'administrateur divulgués.
+Dans notre index récent des pages publiques, {domain} fait apparaître {hacklink_count} liens tiers qui ne correspondent pas au profil de contenu habituel du site, {content_category}.
 
-Ce que nous avons observé :
-  - {hacklink_count} liens de tiers intégrés aux pages, {content_category}
-  - Les liens sont stylisés pour être invisibles aux visiteurs réguliers
-  - Ils pointent vers des sites externes sans rapport avec votre activité
+De tels schémas apparaissent souvent lorsqu'un plugin de CMS ou un fichier de modèle a été modifié en dehors du flux éditorial habituel du site.
+
+Ce que montre l'index :
+  - Des nœuds du code source stylisés pour être invisibles aux visiteurs réguliers
+  - Des références à des sites tiers sans rapport avec la vocation déclarée du site
 {evidence_block}
-Nous avons préparé un rapport technique complet pour votre équipe. Il comprend des captures d'écran, les fichiers concernés et un guide de remédiation pas à pas. Pas d'authentification :
+Un dossier technique pour les pages concernées — captures d'écran, chemins de fichiers et DOM rendu — est publié dans notre index de recherche, sans authentification :
 
   {report_url}
 {complaint_block}
-Si votre équipe est déjà au courant et travaille sur le sujet, ignorez ce message. Sinon, nous sommes à votre disposition — il suffit de répondre ou d'écrire à team@abuseradar.org. Nous revérifierons la page sous 7 à 10 jours pour confirmer la correction.
+Il s'agit d'une notification automatisée et unique. Aucune réponse n'est attendue ; si un suivi est utile, team@abuseradar.org reste joignable.
 
-Cordialement,
-L'équipe de recherche AbuseRadar
+— AbuseRadar Research
+abuseradar.org
 
-— Il s'agit d'une notification unique envoyée parce que {domain} est apparu dans notre analyse ouverte. Nous ne gérons pas de listes de diffusion et ne vous recontacterons pas sans raison.
+— Envoyé parce que {domain} est apparu dans notre index ouvert. Nous ne gérons pas de listes de diffusion.
