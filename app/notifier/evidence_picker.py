@@ -90,35 +90,38 @@ def load_evidence_summary(domain: str) -> dict | None:
 
 
 def _pick_top_keyword(raw_links: list[dict], js_links: list[dict]) -> tuple[str | None, str]:
-    """En kanıt değeri yüksek anchor + hangi kaynaktan geldiğini döndür."""
+    """En kanıt değeri yüksek anchor + hangi kaynaktan geldiğini döndür.
+
+    Kategori keyword'ü içeren anchor'lar her zaman genel anchor'lardan
+    önce gelir — kaynak (raw/js) fark etmez. Gambling/adult/pharma
+    içeriği "SEMESTER RULES" gibi nötr metinden çok daha güçlü kanıttır.
+    """
     all_kw = set()
     for s in CATEGORY_KEYWORDS.values():
         all_kw.update(s)
 
-    def _scan(links: list[dict]) -> str | None:
-        scored = sorted(links, key=lambda l: l.get("score", 0) or 0, reverse=True)
-        for link in scored:
-            text = (link.get("text") or "").strip()
-            if not text or len(text) < 3 or len(text) > 60:
-                continue
-            low = text.lower()
-            if any(g in low for g in all_kw):
-                return text
-        for link in links:
-            text = (link.get("text") or "").strip()
-            if text and 5 <= len(text) <= 60:
-                return text
-        return None
+    # Tüm linkleri tek listede topla, her birine source işaretle
+    tagged = [(l, "raw") for l in raw_links] + [(l, "js") for l in js_links]
 
-    # Raw'ı önceler — kullanıcı için Ctrl+U doğrulaması en hızlısı
-    if raw_links:
-        kw = _scan(raw_links)
-        if kw:
-            return kw, "raw"
-    if js_links:
-        kw = _scan(js_links)
-        if kw:
-            return kw, "js"
+    # 1. ÖNCE: kategori keyword'ü içeren anchor'lar — en yüksek skorlu
+    candidates = []
+    for link, src in tagged:
+        text = (link.get("text") or "").strip()
+        if not text or len(text) < 3 or len(text) > 60:
+            continue
+        low = text.lower()
+        if any(g in low for g in all_kw):
+            candidates.append((link.get("score", 0) or 0, text, src))
+    if candidates:
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        _, text, src = candidates[0]
+        return text, src
+
+    # 2. Yoksa fallback: önce raw (Ctrl+U en hızlı), sonra js, ilk uzun anchor
+    for link, src in tagged:
+        text = (link.get("text") or "").strip()
+        if text and 5 <= len(text) <= 60:
+            return text, src
     return None, "raw"
 
 
