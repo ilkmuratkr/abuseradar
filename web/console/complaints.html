@@ -202,7 +202,8 @@ async function loadTargets() {
             <td><span class="strong mono">${AR.escapeHtml(t.target_domain)}</span></td>
             <td class="right">${t.victim_count}</td>
             <td class="right">${t.link_count}</td>
-            <td class="right">
+            <td class="right" style="white-space:nowrap">
+              <a class="btn-link" href="complaint-detail.html?td=${encodeURIComponent(t.target_domain)}" style="margin-right:.6rem">View</a>
               <button class="btn-link run-chain-btn" data-target="${AR.escapeHtml(t.target_domain)}" data-victims="${t.victim_count}" data-links="${t.link_count}">Run chain →</button>
             </td>
           </tr>`).join("")}
