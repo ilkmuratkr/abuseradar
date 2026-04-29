@@ -171,35 +171,61 @@ def score_link(link: dict, site_domain: str, known_spam_domains: set | None = No
 
 
 def analyze_links(all_links: list[dict], site_domain: str, known_spam_domains: set | None = None) -> dict:
-    """Tüm linkleri analiz edip hacklink'leri ayıkla."""
+    """Tüm linkleri analiz edip hacklink'leri ayıkla.
+
+    Filtreler (false positive engelleme):
+    - Same-root_domain: kurbanın kendi site içi linkleri (eTLD+1 karşılaştırma)
+    - Major service whitelist: Google/MS/FB/GitHub vs.
+    """
+    from utils.helpers import extract_root_domain
+    from utils.safe_domains import is_safe_domain
+
+    site_root = extract_root_domain(site_domain) or site_domain
+
     hacklinks = []
     legitimate_count = 0
+    filtered_self = 0
+    filtered_safe = 0
 
     for link in all_links:
         score, reasons = score_link(link, site_domain, known_spam_domains)
-        if score >= 40:
-            try:
-                target_domain = urlparse(link.get("href", "")).hostname or ""
-            except Exception:
-                target_domain = ""
-            hacklinks.append({
-                "href": link.get("href", ""),
-                "text": link.get("text", ""),
-                "target_domain": target_domain,
-                "score": score,
-                "reasons": reasons,
-                "hiding_method": _detect_hiding(link),
-                "parent_class": link.get("pClass", ""),
-                "data_wpl": link.get("dataWpl", ""),
-                "found_in": "rendered_dom",
-            })
-        else:
+        if score < 40:
             legitimate_count += 1
+            continue
+
+        try:
+            target_domain = urlparse(link.get("href", "")).hostname or ""
+        except Exception:
+            target_domain = ""
+        target_root = extract_root_domain(target_domain) or target_domain
+
+        # Same-root filter — kurban kendi self-link
+        if target_root and site_root and target_root == site_root:
+            filtered_self += 1
+            continue
+        # Major service whitelist
+        if is_safe_domain(target_domain):
+            filtered_safe += 1
+            continue
+
+        hacklinks.append({
+            "href": link.get("href", ""),
+            "text": link.get("text", ""),
+            "target_domain": target_domain,
+            "score": score,
+            "reasons": reasons,
+            "hiding_method": _detect_hiding(link),
+            "parent_class": link.get("pClass", ""),
+            "data_wpl": link.get("dataWpl", ""),
+            "found_in": "rendered_dom",
+        })
 
     return {
         "hacklinks": hacklinks,
         "hacklink_count": len(hacklinks),
         "legitimate_count": legitimate_count,
+        "filtered_self_link": filtered_self,
+        "filtered_safe_domain": filtered_safe,
         "total_links": len(all_links),
     }
 

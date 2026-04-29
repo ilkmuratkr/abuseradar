@@ -32,10 +32,35 @@ C2_SIGNATURES = [
 ]
 
 
+def _is_third_party(href: str, site_root: str) -> tuple[bool, str]:
+    """href bir third-party hacklink mi (kurban kendisi/major service değil)?
+
+    Returns: (is_third_party, target_domain)
+    """
+    from utils.helpers import extract_root_domain
+    from utils.safe_domains import is_safe_domain
+
+    if not href or not href.startswith("http"):
+        return False, ""
+    try:
+        target_domain = urlparse(href).hostname or ""
+    except Exception:
+        return False, ""
+    target_root = extract_root_domain(target_domain) or target_domain
+    if site_root and target_root == site_root:
+        return False, target_domain
+    if is_safe_domain(target_domain):
+        return False, target_domain
+    return True, target_domain
+
+
 def extract_hacklinks_from_html(raw_html: str, site_domain: str) -> list[dict]:
-    """Raw HTML'den gizli hacklink'leri çıkar."""
+    """Raw HTML'den gizli hacklink'leri çıkar (self-link + safe-domain filtreli)."""
+    from utils.helpers import extract_root_domain
+
     soup = BeautifulSoup(raw_html, "lxml")
     hacklinks = []
+    site_root = extract_root_domain(site_domain) or site_domain
 
     # 1. Style attribute'ünde gizleme olan elementlerdeki linkler
     for el in soup.find_all(style=True):
@@ -43,10 +68,12 @@ def extract_hacklinks_from_html(raw_html: str, site_domain: str) -> list[dict]:
         if any(p.search(style) for p in HIDING_PATTERNS):
             for a in el.find_all("a", href=True):
                 href = a.get("href", "")
-                if site_domain not in href and href.startswith("http"):
+                ok, target_domain = _is_third_party(href, site_root)
+                if ok:
                     hacklinks.append({
                         "href": href,
                         "text": a.get_text(strip=True)[:200],
+                        "target_domain": target_domain,
                         "method": "html_css_hidden",
                         "hiding_css": style[:200],
                         "found_in": "raw_html",
@@ -60,10 +87,12 @@ def extract_hacklinks_from_html(raw_html: str, site_domain: str) -> list[dict]:
             for cls in class_matches:
                 for el in soup.find_all(class_=cls):
                     for a in el.find_all("a", href=True):
-                        if site_domain not in a["href"]:
+                        ok, target_domain = _is_third_party(a["href"], site_root)
+                        if ok:
                             hacklinks.append({
                                 "href": a["href"],
                                 "text": a.get_text(strip=True)[:200],
+                                "target_domain": target_domain,
                                 "method": "html_style_class",
                                 "hiding_class": cls,
                                 "found_in": "raw_html",
@@ -83,13 +112,17 @@ def extract_hacklinks_from_html(raw_html: str, site_domain: str) -> list[dict]:
 
     # 4. data-wpl attribute'lü linkler
     for a in soup.find_all("a", attrs={"data-wpl": True}):
-        hacklinks.append({
-            "href": a.get("href", ""),
-            "text": a.get_text(strip=True)[:200],
-            "method": "data_wpl",
-            "data_wpl": a["data-wpl"],
-            "found_in": "raw_html",
-        })
+        href = a.get("href", "")
+        ok, target_domain = _is_third_party(href, site_root)
+        if ok:
+            hacklinks.append({
+                "href": href,
+                "text": a.get_text(strip=True)[:200],
+                "target_domain": target_domain,
+                "method": "data_wpl",
+                "data_wpl": a["data-wpl"],
+                "found_in": "raw_html",
+            })
 
     return hacklinks
 
@@ -138,24 +171,18 @@ def extract_injection_scripts(raw_html: str) -> list[dict]:
 
 def compare_raw_vs_rendered(raw_links: set[str], rendered_links: set[str], site_domain: str) -> list[dict]:
     """Raw'da olmayıp rendered'da olan linkler = JS ile enjekte edilmiş."""
+    from utils.helpers import extract_root_domain
+
     js_injected = rendered_links - raw_links
     suspicious = []
-
-    safe_domains = {
-        site_domain, "google.com", "facebook.com", "twitter.com",
-        "youtube.com", "instagram.com", "cdnjs.cloudflare.com",
-        "fonts.googleapis.com", "www.googletagmanager.com",
-    }
+    site_root = extract_root_domain(site_domain) or site_domain
 
     for href in js_injected:
-        try:
-            domain = urlparse(href).hostname or ""
-        except Exception:
-            continue
-        if domain and domain not in safe_domains and not domain.endswith(f".{site_domain}"):
+        ok, target_domain = _is_third_party(href, site_root)
+        if ok:
             suspicious.append({
                 "href": href,
-                "target_domain": domain,
+                "target_domain": target_domain,
                 "method": "js_injection",
                 "evidence": "raw HTML'de yok, rendered DOM'da var",
                 "found_in": "js_diff",
