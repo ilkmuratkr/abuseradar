@@ -55,11 +55,18 @@ def load_evidence_summary(domain: str) -> dict | None:
 
     raw_links = data.get("raw_hacklinks", []) or []
     js_links = data.get("js_diff_hacklinks", []) or []
-    all_links = raw_links + js_links
+    rendered_links = data.get("rendered_hacklinks", []) or []
+    # Raw + js boşsa (VPN SOCKS hatası gibi durumlarda Playwright rendered'ı tek kanıt),
+    # rendered'ı fallback olarak kullan.
+    all_links = raw_links + js_links if (raw_links or js_links) else rendered_links
 
     # Top keyword: önce skor + kategori yüksek; raw'dan gelenleri biraz öncele
     # (kullanıcı Ctrl+U ile en kolay raw'ı bulur)
-    top_keyword, top_source = _pick_top_keyword(raw_links, js_links)
+    # Raw/JS boşsa rendered'ı js gibi değerlendir
+    if not raw_links and not js_links and rendered_links:
+        top_keyword, top_source = _pick_top_keyword([], rendered_links)
+    else:
+        top_keyword, top_source = _pick_top_keyword(raw_links, js_links)
 
     # Kategori
     category = _detect_category(all_links)
@@ -75,7 +82,7 @@ def load_evidence_summary(domain: str) -> dict | None:
         if len(target_doms) >= 5:
             break
 
-    total = data.get("total_hacklinks") or len(all_links)
+    total = data.get("total_hacklinks") or len(all_links) or len(rendered_links)
 
     return {
         "total_hacklinks": total,

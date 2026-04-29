@@ -504,8 +504,15 @@ async def crawl_site(homepage_url: str, max_pages: int = MAX_PAGES_PER_SITE) -> 
                     aggregate["cloaking_evidence"].append(ev)
 
     aggregate["injection_scripts"] = list(aggregate["unique_scripts"].values())
-    # Total = raw ∪ js (rendered redundant)
-    aggregate["total_hacklinks"] = len(aggregate["raw_hacklinks"]) + len(aggregate["js_diff_hacklinks"])
+    # Total = raw ∪ js (rendered redundant when raw fetched).
+    # Ama raw HTTP fetch başarısız ise (örn. VPN SOCKS hatası), rendered tek kanıt;
+    # o zaman fallback olarak rendered_hacklinks sayısını kullan.
+    raw_js_total = len(aggregate["raw_hacklinks"]) + len(aggregate["js_diff_hacklinks"])
+    rendered_total = len(aggregate.get("rendered_hacklinks", []))
+    if raw_js_total > 0:
+        aggregate["total_hacklinks"] = raw_js_total
+    else:
+        aggregate["total_hacklinks"] = rendered_total
 
     # Status
     if aggregate["total_hacklinks"] > 0:
