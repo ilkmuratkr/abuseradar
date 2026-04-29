@@ -60,7 +60,7 @@ async def fill_cloudflare_abuse(
     async with async_playwright() as p:
         browser, ctx, page = await _new_page(p)
         try:
-            await page.goto("https://abuse.cloudflare.com/general", wait_until="domcontentloaded", timeout=45000)
+            await _goto_with_retry(page, "https://abuse.cloudflare.com/general")
             # Kategori seçimi: 'Other' tipi (web-spam için)
             try:
                 # Form yapısı değişebilir; 'reporter_name' input'larını arayalım
@@ -105,6 +105,20 @@ async def fill_cloudflare_abuse(
             await browser.close()
 
 
+async def _goto_with_retry(page, url: str, *, max_attempts: int = 3, wait_between_sec: int = 12) -> None:
+    """SOCKS connection fail durumunda retry — VPN tunnel cool-down için bekle."""
+    last_err = None
+    for attempt in range(max_attempts):
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=45000)
+            return
+        except Exception as e:
+            last_err = e
+            if attempt < max_attempts - 1:
+                await asyncio.sleep(wait_between_sec)
+    raise last_err
+
+
 async def fill_google_safebrowsing(
     *,
     target_url: str,
@@ -119,7 +133,7 @@ async def fill_google_safebrowsing(
     async with async_playwright() as p:
         browser, ctx, page = await _new_page(p)
         try:
-            await page.goto("https://safebrowsing.google.com/safebrowsing/report_phish/", wait_until="domcontentloaded", timeout=45000)
+            await _goto_with_retry(page, "https://safebrowsing.google.com/safebrowsing/report_phish/")
             try:
                 await page.fill('input[name="url"], input[type="url"]', target_url)
             except Exception:
