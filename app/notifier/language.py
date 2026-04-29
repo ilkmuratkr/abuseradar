@@ -274,9 +274,6 @@ def get_complaint_block(language: str) -> str:
 
 
 def get_subject(language: str, domain: str) -> str:
-
-
-def get_subject(language: str, domain: str) -> str:
     """Dile göre email konusu — 'human' ton, spam tetik kelimeleri azaltılmış."""
     subjects = {
         "en": f"A finding on {domain} — quick note from AbuseRadar",

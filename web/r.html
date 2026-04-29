@@ -215,6 +215,23 @@
     <h2 class="section">6. Hosting &amp; infrastructure <span class="section-meta">automatic WHOIS lookup</span></h2>
     <div id="hosting-body">Loading…</div>
 
+    <!-- Reporting attacker domains -->
+    <h2 class="section">7. Reporting the attacker domains <span class="section-meta">help break the chain</span></h2>
+    <div class="panel">
+      <div class="panel-pad">
+        <p>Cleaning your own site stops the bleed, but the attacker keeps operating from <em>their</em> infrastructure — and very often that infrastructure sits behind a major provider like <strong>Cloudflare</strong>. Cloudflare itself is a legitimate, widely-used service; the issue is that bad actors abuse its anonymisation layer to obscure which hosting provider actually serves the spam content. They are not at fault, but they are uniquely positioned to act on well-documented reports — especially when the targets are <strong>government, education, or other public-interest institutions</strong>.</p>
+        <p style="margin-top:.6rem">Filing a short, evidence-backed abuse report is one of the most effective steps you (or any technical contact at the affected institution) can take. It helps the provider identify recurring offenders and, in repeat cases, suspend the account hosting the spam network. The links below all accept reports without an account; the bundle ID and the URLs in this report are sufficient as evidence.</p>
+        <ul class="play" style="margin-top:.8rem">
+          <li><strong>Cloudflare abuse</strong> — <a href="https://abuse.cloudflare.com/" target="_blank" rel="noopener">abuse.cloudflare.com</a> · choose "Phishing" or "Other" and attach this report URL. Especially impactful when the attack targets a government or .edu domain.</li>
+          <li><strong>Google Safe Browsing</strong> — <a href="https://safebrowsing.google.com/safebrowsing/report_phish/" target="_blank" rel="noopener">safebrowsing.google.com/report_phish</a> · flags the attacker domains in Chrome / Search.</li>
+          <li><strong>Google Search spam report</strong> — <a href="https://www.google.com/webmasters/tools/spamreport" target="_blank" rel="noopener">google.com/webmasters/tools/spamreport</a> · for SEO-spam injections specifically.</li>
+          <li><strong>Hosting provider abuse</strong> — see the WHOIS section above; most providers list an <span class="mono">abuse@…</span> address.</li>
+          <li><strong>Registrar abuse</strong> — for the registrar of each attacker domain (also listed in the WHOIS section); registrars are obliged by ICANN to act on documented abuse reports.</li>
+        </ul>
+        <p style="margin-top:.8rem"><em>If you'd like, AbuseRadar can prepare and send these reports on your behalf — reply to <span class="mono">team@abuseradar.org</span> and we'll handle the chain (CF → registrar → hosting) using the evidence in this bundle.</em></p>
+      </div>
+    </div>
+
     <!-- Footer / disclosure -->
     <div class="footer-disc">
       <h3 style="margin:0 0 .5rem;font-family:'Bitter',serif;font-size:1.05rem">About this disclosure</h3>
