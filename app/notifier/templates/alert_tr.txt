@@ -4,15 +4,15 @@ Bağımsız bir web güvenlik araştırma projesi olan AbuseRadar adına yazıyo
 
 Rutin bir taramada {domain} adresinin, ekibinizin haberi olmadan eklendiğini düşündüğümüz içerikler sunduğunu fark ettik. Bu tür içerikler genellikle güncel olmayan bir CMS eklentisi, ele geçirilmiş bir tema dosyası veya sızdırılmış yönetici parolaları ile ekleniyor.
 
-{url} sayfasında gözlemlediklerimiz:
-  - Sayfanın kaynağına yerleştirilmiş {hacklink_count} adet üçüncü taraf bağlantısı
+Gözlemlediklerimiz:
+  - Sayfalara yerleştirilmiş {hacklink_count} adet üçüncü taraf bağlantısı, {content_category}
   - Bağlantılar normal ziyaretçilere görünmeyecek şekilde stillendirilmiş
   - Sitenizle ilgisi olmayan dış sayfalara yönlendiriyorlar
 {evidence_block}
 Ekibiniz için tam bir teknik rapor hazırladık. Ekran görüntüleri, etkilenen dosyalar ve adım adım çözüm rehberini içeriyor. Giriş gerekmiyor:
 
   {report_url}
-
+{complaint_block}
 Ekibiniz konudan haberdarsa ve üzerinde çalışıyorsa bu mesajı dikkate almayabilirsiniz. Aksi halde yardım etmekten memnuniyet duyarız — bu maile cevap verebilir veya team@abuseradar.org adresine yazabilirsiniz. 7–10 gün içinde sayfayı yeniden kontrol edip düzeltmeyi teyit edeceğiz.
 
 İyi çalışmalar,

@@ -11,7 +11,14 @@ from config import settings
 from models.database import Contact, Notification, Site, async_session
 
 from .evidence_picker import load_evidence_summary
-from .language import get_language, get_subject, get_verification_block, render_template
+from .language import (
+    describe_category,
+    get_complaint_block,
+    get_language,
+    get_subject,
+    get_verification_block,
+    render_template,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -123,26 +130,37 @@ async def send_alert(
 
         report_url = f"{settings.report_base_url}/{domain}"
 
-        # Evidence dosyasından gerçek sayı + doğrulama anahtarı al
+        # Evidence dosyasından gerçek sayı + kategori + doğrulama anahtarı
         ev = load_evidence_summary(domain)
         if ev:
             real_count = ev.get("total_hacklinks") or hacklink_count
             top_keyword = ev.get("top_keyword")
+            top_source = ev.get("top_keyword_source", "raw")
+            category = ev.get("category", "off_topic")
         else:
             real_count = hacklink_count
             top_keyword = None
-        verification_block = get_verification_block(language, url, top_keyword)
+            top_source = "raw"
+            category = "off_topic"
 
-        # Email içeriği oluştur
-        subject = get_subject(language, domain)
+        verification_block = get_verification_block(language, top_keyword, top_source)
+        content_category = describe_category(language, category)
+        complaint_block = get_complaint_block(language)
+
+        # Mail'de www. prefix'ini gösterme — daha temiz, daha az URL benzeri
+        display_domain = domain[4:] if domain.startswith("www.") else domain
+
+        subject = get_subject(language, display_domain)
         body = render_template(
             language,
             url=url,
-            domain=domain,
+            domain=display_domain,
             hacklink_count=real_count,
             first_seen=first_seen,
             report_url=report_url,
             evidence_block=verification_block,
+            complaint_block=complaint_block,
+            content_category=content_category,
         )
 
         # ZeptoMail API ile gönder
