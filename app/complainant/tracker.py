@@ -45,14 +45,15 @@ async def submit_complaint(
                     "current_status": complaint.status,
                 }
 
-        # Yeni şikayet
+        # Yeni şikayet — status="pending" başlat. OpenClaw form gerçekten
+        # submit edildiğinde mark_complaint_status() ile "submitted"a çevrilir.
         complaint = Complaint(
             target_domain=target_domain,
             target_type=target_type,
             platform=platform,
             platform_detail=platform_detail,
-            status="submitted",
-            submitted_at=datetime.utcnow(),
+            status="pending",
+            submitted_at=None,
             next_check_at=datetime.utcnow() + timedelta(days=14),
             evidence_path=evidence_path,
             notes=notes,
@@ -60,8 +61,34 @@ async def submit_complaint(
         session.add(complaint)
         await session.commit()
 
-        logger.info(f"Şikayet oluşturuldu: {target_domain} → {platform}")
+        logger.info(f"Şikayet pending oluşturuldu: {target_domain} → {platform}")
         return {"status": "created", "id": complaint.id}
+
+
+async def mark_complaint_status(
+    complaint_id: int,
+    *,
+    new_status: str,
+    notes_append: str | None = None,
+    evidence_path: str | None = None,
+) -> bool:
+    """Şikayet durumunu güncelle (pending → submitted / failed / captcha_blocked).
+
+    OpenClaw görevi tamamlandıktan sonra çağrılır.
+    """
+    async with async_session() as session:
+        complaint = await session.get(Complaint, complaint_id)
+        if not complaint:
+            return False
+        complaint.status = new_status
+        if new_status == "submitted":
+            complaint.submitted_at = datetime.utcnow()
+        if notes_append:
+            complaint.notes = (complaint.notes or "") + f"\n{datetime.utcnow().isoformat()}: {notes_append}"
+        if evidence_path:
+            complaint.evidence_path = evidence_path
+        await session.commit()
+        return True
 
 
 async def check_and_followup():
