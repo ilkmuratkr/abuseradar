@@ -115,6 +115,7 @@ async def run_chain_for_target(
     report_url: str = "",
     enable_form: bool = True,
     enable_mail: bool = True,
+    enable_icann: bool = False,
 ) -> dict:
     """Tek bir target_domain için tüm şikayet zincirini çalıştır.
 
@@ -196,10 +197,22 @@ async def run_chain_for_target(
             target_url=f"https://{target_domain}/", domain=target_domain,
         )))
 
-    # 5. ICANN — şimdilik kapalı (OpenClaw browser-automation tam çalışmadığı
-    # için ICANN form fail oluyor; mail kanalı zaten registrar abuse'a giderek
-    # ICANN obligation'larını tetikler. Manuel ICANN escalation için rapor
-    # sayfasında link var).
+    # 5. ICANN — Contractual Compliance'a doğrudan mail (compliance@icann.org).
+    # 'last resort' — sadece registrar cevap vermediğinde escalate edilmeli.
+    # Default kapalı (enable_icann=True ile manuel tetiklenir).
+    if enable_icann and enable_mail:
+        icann_summary = (
+            f"This is an escalation per ICANN RAA §3.18.\n"
+            f"{summary}\n\n"
+            f"Initial registrar abuse notification was sent to "
+            f"{meta.get('registrar_abuse_email') or 'registrar abuse contact'} "
+            f"({meta.get('registrar', 'unknown registrar')}). The registrar has not "
+            f"acted on the documented evidence within the expected response window."
+        )
+        mail_steps.append(("icann_mail", lambda: hosting_mod.report_to_hosting(
+            domain=target_domain, abuse_email="compliance@icann.org",
+            issue_type="takeover", evidence_summary=icann_summary, report_url=report_url,
+        )))
 
     results: dict[str, dict] = {}
 

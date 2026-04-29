@@ -1112,8 +1112,39 @@ async def complain_target(target_domain: str, request: Request):
         report_url=body.get("report_url") or "",
         enable_form=bool(body.get("enable_form", True)),
         enable_mail=bool(body.get("enable_mail", True)),
+        enable_icann=bool(body.get("enable_icann", False)),
     )
     return result
+
+
+@app.post("/complain/target/{target_domain}/escalate-icann")
+async def complain_escalate_icann(target_domain: str, request: Request):
+    """ICANN compliance'a doğrudan mail at (registrar cevap vermediği vakalar).
+
+    Manuel tetiklenir — frontend Complaint detail sayfasında 'Escalate to ICANN' butonu.
+    """
+    from complainant.complaint_chain import run_chain_for_target
+
+    body: dict = {}
+    try:
+        body = await request.json()
+    except Exception:
+        pass
+
+    target_domain = (target_domain or "").strip().lower()
+    if not target_domain or "." not in target_domain:
+        raise HTTPException(400, "Invalid target_domain")
+
+    return await run_chain_for_target(
+        target_domain=target_domain,
+        affected_gov_sites=body.get("affected_gov_sites") or [],
+        hacklink_count=int(body.get("hacklink_count") or 0),
+        injection_method=body.get("injection_method") or "JS injection (hidden anchors)",
+        report_url=body.get("report_url") or "",
+        enable_form=False,         # ICANN escalation sadece mail
+        enable_mail=True,
+        enable_icann=True,
+    )
 
 
 @app.get("/complain/discover-targets")
