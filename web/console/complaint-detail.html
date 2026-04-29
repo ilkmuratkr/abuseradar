@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Complaint detail — AbuseRadar Console</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bitter:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="console.css">
+  <style>
+    .ch-row { display:grid; grid-template-columns: 100px 80px 1fr 130px 130px 80px; gap:.7rem; align-items:center; padding:.55rem .7rem; border-bottom:1px solid var(--border); font-size:.83rem; }
+    .ch-row:last-child { border-bottom:none; }
+    .ch-row.head { font-weight:600; color:var(--text-dim); font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; padding-top:.4rem; padding-bottom:.4rem; border-bottom:2px solid var(--border); }
+    .ch-pl { font-family:'JetBrains Mono', monospace; font-weight:600; }
+    .ch-st { display:inline-block; padding:.15rem .55rem; border-radius:10px; font-size:.72rem; font-weight:600; text-transform:capitalize; white-space:nowrap; }
+    .ch-st.sent, .ch-st.submitted { background:var(--green-soft); color:var(--green); }
+    .ch-st.pending { background:rgba(0,150,255,0.12); color:#0096ff; }
+    .ch-st.captcha_blocked, .ch-st.submit_failed { background:rgba(240,163,0,.12); color:#f0a300; }
+    .ch-st.failed, .ch-st.timeout, .ch-st.error { background:rgba(224,57,44,.12); color:#e0392c; }
+    .ch-st.simulated { background:rgba(120,120,120,.18); color:var(--text-dim); }
+    .ch-time { font-size:.75rem; color:var(--text-dim); font-family:'JetBrains Mono', monospace; }
+    .ch-target { font-size:.77rem; font-family:'JetBrains Mono', monospace; }
+    .ch-notes { font-size:.74rem; color:var(--text-dim); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .meta-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:.6rem; }
+    .meta-cell { background:var(--bg-card-2); padding:.6rem .8rem; border-radius:6px; }
+    .meta-label { font-size:.7rem; color:var(--text-dim); text-transform:uppercase; letter-spacing:.04em; }
+    .meta-value { font-family:'JetBrains Mono', monospace; font-size:.85rem; margin-top:.2rem; word-break:break-all; }
+    .ev-thumb { display:inline-block; padding:.2rem .55rem; border:1px solid var(--border); border-radius:4px; font-size:.72rem; color:var(--text-dim); text-decoration:none; }
+    .ev-thumb:hover { background:var(--bg-card-2); color:var(--text); }
+  </style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="rail" data-active="complaints"></aside>
+
+  <main class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="icon-btn" data-toggle-rail style="display:none"><svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <nav class="crumbs"><a href="index.html">Console</a><span class="sep">/</span><a href="complaints.html">Complaints</a><span class="sep">/</span><span class="current" id="cb-domain">—</span></nav>
+      </div>
+      <div class="topbar-right">
+        <button class="btn" id="btn-rerun">Re-run chain</button>
+        <button class="icon-btn" id="btn-refresh" title="Refresh"><svg viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></button>
+      </div>
+    </header>
+
+    <div class="content">
+      <div class="page-head">
+        <div>
+          <h1>Complaint timeline · <span id="t-domain" class="mono">—</span></h1>
+          <p>Bu saldırgan domain için açılmış tüm şikayet kanalları (mail + form). Status, evidence, ve gönderim zamanı.</p>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h3>Channel summary</h3></div>
+        <div id="ch-host" class="panel-pad"><div class="loading-spinner">Loading…</div></div>
+      </section>
+
+      <section class="panel" style="margin-top:1.2rem">
+        <div class="panel-head"><h3>Form attempts (Playwright)</h3></div>
+        <div id="forms-host" class="panel-pad"><div class="loading-spinner">…</div></div>
+      </section>
+
+      <section class="panel" style="margin-top:1.2rem">
+        <div class="panel-head"><h3>Mail dispatches (ZeptoMail)</h3></div>
+        <div id="mails-host" class="panel-pad"><div class="loading-spinner">…</div></div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<script src="api.js"></script>
+<script src="console.js"></script>
+<script>
+function escHtml(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function fmtTime(iso){ if(!iso) return '—'; try{ return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }catch{return iso;} }
+
+const params = new URLSearchParams(location.search);
+const target = params.get("td") || "";
+document.getElementById("cb-domain").textContent = target || "(no target)";
+document.getElementById("t-domain").textContent = target || "—";
+
+async function load() {
+  if (!target) {
+    document.getElementById("ch-host").innerHTML = '<div class="callout orange">No target_domain in URL (?td=...)</div>';
+    return;
+  }
+  try {
+    const data = await AR.get(`/complain/target/${encodeURIComponent(target)}/timeline`);
+
+    // Channel summary — birleşik tablo (form + mail)
+    const channels = [];
+    for (const c of data.complaints || []) {
+      channels.push({
+        platform: c.platform, kind: 'form', status: c.status,
+        time: c.submitted_at || c.created_at,
+        target: '(form)', notes: c.notes, evidence: c.evidence_path,
+      });
+    }
+    for (const m of data.mails || []) {
+      channels.push({
+        platform: (m.subject||'').includes('cloudflare')?'cf_mail':'mail',
+        kind: 'mail', status: m.status,
+        time: m.sent_at, target: m.to_email, notes: '', evidence: null,
+      });
+    }
+    channels.sort((a,b) => (b.time||'').localeCompare(a.time||''));
+
+    if (!channels.length) {
+      document.getElementById("ch-host").innerHTML = '<div class="empty-state">No complaint activity yet.</div>';
+    } else {
+      const head = `<div class="ch-row head"><div>Platform</div><div>Kind</div><div>Target</div><div>Status</div><div>When</div><div>Evidence</div></div>`;
+      const rows = channels.map(c => `<div class="ch-row">
+        <div class="ch-pl">${escHtml(c.platform)}</div>
+        <div class="ch-time">${escHtml(c.kind)}</div>
+        <div class="ch-target">${escHtml(c.target||'')}</div>
+        <div><span class="ch-st ${escHtml(c.status||'')}">${escHtml(c.status||'—')}</span></div>
+        <div class="ch-time">${fmtTime(c.time)}</div>
+        <div>${c.evidence ? `<a class="ev-thumb" href="/api/complain/evidence/${escHtml(c.evidence.split('/').pop())}" target="_blank">📷 PNG</a>` : '—'}</div>
+      </div>`).join("");
+      document.getElementById("ch-host").innerHTML = head + rows;
+    }
+
+    // Forms detayı
+    if (!data.complaints?.length) {
+      document.getElementById("forms-host").innerHTML = '<div class="empty-state" style="padding:.7rem">No form attempts.</div>';
+    } else {
+      document.getElementById("forms-host").innerHTML = data.complaints.map(c => `
+        <div style="padding:.7rem 0;border-bottom:1px solid var(--border)">
+          <div style="display:flex;gap:.6rem;align-items:center;margin-bottom:.3rem">
+            <span class="ch-pl">${escHtml(c.platform)}</span>
+            <span class="ch-st ${escHtml(c.status||'')}">${escHtml(c.status||'—')}</span>
+            <span class="ch-time">${fmtTime(c.submitted_at || c.created_at)}</span>
+            ${c.evidence_path ? `<a class="ev-thumb" href="/api/complain/evidence/${escHtml(c.evidence_path.split('/').pop())}" target="_blank">📷 Screenshot</a>` : ''}
+          </div>
+          ${c.notes ? `<pre style="font-size:.74rem;color:var(--text-dim);white-space:pre-wrap;margin:.3rem 0 0;font-family:inherit">${escHtml((c.notes||'').slice(0,500))}</pre>` : ''}
+        </div>
+      `).join("");
+    }
+
+    // Mails detayı
+    if (!data.mails?.length) {
+      document.getElementById("mails-host").innerHTML = '<div class="empty-state" style="padding:.7rem">No abuse mails sent.</div>';
+    } else {
+      document.getElementById("mails-host").innerHTML = data.mails.map(m => `
+        <div style="padding:.55rem 0;border-bottom:1px solid var(--border);font-size:.83rem">
+          <span class="ch-st ${escHtml(m.status||'')}">${escHtml(m.status||'—')}</span>
+          <span class="mono" style="font-size:.78rem;margin-left:.5rem">${escHtml(m.to_email)}</span>
+          <span class="ch-time" style="margin-left:.5rem">${fmtTime(m.sent_at)}</span>
+          <div style="font-size:.76rem;color:var(--text-dim);margin-top:.2rem">${escHtml((m.subject||'').slice(0,140))}</div>
+        </div>
+      `).join("");
+    }
+  } catch(e) {
+    document.getElementById("ch-host").innerHTML = `<div class="callout orange">${escHtml(e.message)}</div>`;
+  }
+}
+
+document.getElementById("btn-refresh").addEventListener("click", load);
+document.getElementById("btn-rerun").addEventListener("click", async () => {
+  if (!confirm(`Re-run complaint chain for ${target}? Sends real complaints.`)) return;
+  try {
+    await AR.post(`/complain/target/${encodeURIComponent(target)}`, {
+      affected_gov_sites: [], hacklink_count: 0, enable_form: true, enable_mail: true,
+    });
+    AR.toast("Chain re-triggered", "success");
+    setTimeout(load, 2000);
+  } catch (e) { AR.toast(e.message, "error"); }
+});
+
+load();
+setInterval(load, 30000);  // 30sn'de bir refresh — pending status takip et
+</script>
+
+</body>
+</html>

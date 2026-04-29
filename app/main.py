@@ -1156,6 +1156,76 @@ async def discover_complaint_targets(min_count: int = 2, limit: int = 50):
     return {"count": len(out), "targets": out}
 
 
+@app.get("/complain/target/{target_domain}/timeline")
+async def complain_target_timeline(target_domain: str):
+    """Bir target_domain için tüm şikayet aktivitesi (mail + form).
+
+    Frontend Complaint detail sayfası bunu kullanır.
+    """
+    from models.database import Complaint, MailLog
+    target_domain = target_domain.strip().lower()
+
+    async with async_session() as session:
+        comps = (await session.execute(
+            select(Complaint)
+            .where(Complaint.target_domain == target_domain)
+            .order_by(Complaint.created_at.desc())
+        )).scalars().all()
+
+        # Mail kanalı için mail_log'da target_domain'i abuse@cloudflare.com vb.
+        # gönderim yapmadığımız için bağlantıyı subject'tan kuruyoruz.
+        # subject "AbuseRadar notice: <td>" ile başlar.
+        mails = (await session.execute(
+            select(MailLog)
+            .where(MailLog.subject.like(f"%: {target_domain}%"))
+            .order_by(MailLog.sent_at.desc())
+            .limit(50)
+        )).scalars().all()
+
+    return {
+        "target_domain": target_domain,
+        "complaints": [
+            {
+                "id": c.id,
+                "platform": c.platform,
+                "platform_detail": c.platform_detail,
+                "status": c.status,
+                "submitted_at": c.submitted_at.isoformat() if c.submitted_at else None,
+                "next_check_at": c.next_check_at.isoformat() if c.next_check_at else None,
+                "evidence_path": c.evidence_path,
+                "notes": c.notes,
+                "created_at": c.created_at.isoformat() if c.created_at else None,
+                "kind": "form",
+            }
+            for c in comps
+        ],
+        "mails": [
+            {
+                "id": m.id,
+                "to_email": m.to_email,
+                "provider": m.recipient_provider,
+                "subject": m.subject,
+                "status": m.status,
+                "sent_at": m.sent_at.isoformat() if m.sent_at else None,
+                "kind": "mail",
+            }
+            for m in mails
+        ],
+    }
+
+
+@app.get("/complain/evidence/{filename}")
+async def complain_evidence_screenshot(filename: str):
+    """Playwright filler tarafından alınan abuse form screenshot'ı."""
+    from pathlib import Path
+    if "/" in filename or ".." in filename or not filename.endswith(".png"):
+        raise HTTPException(400, "Invalid filename")
+    p = Path("/data/openclaw-workspace/evidence") / filename
+    if not p.is_file():
+        raise HTTPException(404, "Screenshot bulunamadı")
+    return FileResponse(str(p), media_type="image/png")
+
+
 @app.get("/complaints/log")
 async def complaints_log(limit: int = 200, target_domain: str | None = None):
     """Tüm complaint kayıtları (audit trail). Frontend Complaints sayfasında listele."""
