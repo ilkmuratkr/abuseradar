@@ -92,32 +92,57 @@ def load_evidence_summary(domain: str) -> dict | None:
 def _pick_top_keyword(raw_links: list[dict], js_links: list[dict]) -> tuple[str | None, str]:
     """En kanıt değeri yüksek anchor + hangi kaynaktan geldiğini döndür.
 
-    Kategori keyword'ü içeren anchor'lar her zaman genel anchor'lardan
-    önce gelir — kaynak (raw/js) fark etmez. Gambling/adult/pharma
-    içeriği "SEMESTER RULES" gibi nötr metinden çok daha güçlü kanıttır.
-    """
-    all_kw = set()
-    for s in CATEGORY_KEYWORDS.values():
-        all_kw.update(s)
+    Katı öncelik sırası — kullanıcının "anlık doğrulama"
+    refleksini en güçlü tetikleyecek kelimeler önce:
 
-    # Tüm linkleri tek listede topla, her birine source işaretle
+      1. "deneme bonusu" / "deneme"   (gambling, çoğu TR sitede var)
+      2. "casino" / "kasino"          (gambling, evrensel)
+      3. "porno" / "porn"             (adult)
+      4. "escort" / "eskort"          (adult)
+      5. herhangi bir kategori keyword (bahis, slot, viagra, vs.)
+      6. fallback: ilk uzun anchor
+
+    Aynı öncelik grubunda en yüksek skorlu anchor kazanır.
+    """
+    priority_groups = [
+        ("deneme bonusu", "deneme"),
+        ("casino", "kasino"),
+        ("porno", "porn"),
+        ("escort", "eskort"),
+    ]
+
     tagged = [(l, "raw") for l in raw_links] + [(l, "js") for l in js_links]
 
-    # 1. ÖNCE: kategori keyword'ü içeren anchor'lar — en yüksek skorlu
-    candidates = []
-    for link, src in tagged:
-        text = (link.get("text") or "").strip()
-        if not text or len(text) < 3 or len(text) > 60:
-            continue
-        low = text.lower()
-        if any(g in low for g in all_kw):
-            candidates.append((link.get("score", 0) or 0, text, src))
-    if candidates:
-        candidates.sort(key=lambda x: x[0], reverse=True)
-        _, text, src = candidates[0]
+    def _best_match(predicates) -> tuple[str | None, str]:
+        candidates = []
+        for link, src in tagged:
+            text = (link.get("text") or "").strip()
+            if not text or len(text) < 3 or len(text) > 60:
+                continue
+            low = text.lower()
+            if any(p in low for p in predicates):
+                candidates.append((link.get("score", 0) or 0, text, src))
+        if candidates:
+            candidates.sort(key=lambda x: x[0], reverse=True)
+            _, text, src = candidates[0]
+            return text, src
+        return None, ""
+
+    # 1-4. Öncelik grupları
+    for group in priority_groups:
+        text, src = _best_match(group)
+        if text:
+            return text, src
+
+    # 5. Diğer kategori keyword'leri (bahis, slot, 1xbet, viagra, vs.)
+    other = set()
+    for s in CATEGORY_KEYWORDS.values():
+        other.update(s)
+    text, src = _best_match(other)
+    if text:
         return text, src
 
-    # 2. Yoksa fallback: önce raw (Ctrl+U en hızlı), sonra js, ilk uzun anchor
+    # 6. Fallback: ilk uzun anchor
     for link, src in tagged:
         text = (link.get("text") or "").strip()
         if text and 5 <= len(text) <= 60:
