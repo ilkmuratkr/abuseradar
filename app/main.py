@@ -6,7 +6,7 @@ from pathlib import Path
 
 from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 
 from config import settings
 from models.database import (
