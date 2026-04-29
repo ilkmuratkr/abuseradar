@@ -55,85 +55,88 @@ def render_template(language: str, **kwargs) -> str:
         return template
 
 
-def get_verification_block(language: str, keyword: str | None, source: str = "raw") -> str:
+def get_verification_block(
+    language: str,
+    keyword: str | None,
+    source: str = "raw",
+    domain: str = "",
+) -> str:
     """Alıcının 15-30 saniyede mailin gerçekliğini doğrulayabileceği talimat.
 
-    Kaynak ne olursa olsun her iki yöntemi de söyleriz — kullanıcı hangisi
-    işe yaradıysa onu kullanır:
-      - Ctrl+U → Ctrl+F: HTML'de düz gizli linkleri yakalar
-      - F12 → Elements → Ctrl+F: JS ile çalışma anında eklenen linkleri yakalar
+    1. madde: hangi sayfayı açacağı net olsun → {domain} bilgisi geçer.
     """
     if not keyword:
         return ""
     kw = keyword.replace('"', '\\"')
+    d = domain or "the page"
 
     blocks = {
         "en": (
             f"\nQuick verification (30 seconds):\n"
-            f"  1. Open the page in your browser\n"
+            f"  1. Open {d} in your browser\n"
             f"  2. Try either: Ctrl+U (page source) — or F12 → Elements\n"
             f"  3. Press Ctrl+F and search for: \"{kw}\"\n"
             f"  At least one view will show the hidden links we observed.\n"
         ),
         "tr": (
             f"\nHızlı doğrulama (30 saniye):\n"
-            f"  1. Sayfayı tarayıcıda açın\n"
+            f"  1. {d} sayfasını tarayıcıda açın\n"
             f"  2. Ya Ctrl+U (sayfa kaynağı) ya da F12 → Elements ile içeriği görün\n"
             f"  3. Ctrl+F ile şunu arayın: \"{kw}\"\n"
             f"  En az birinde bizim de tespit ettiğimiz gizli bağlantıları göreceksiniz.\n"
         ),
         "pt": (
             f"\nVerificação rápida (30 segundos):\n"
-            f"  1. Abra a página no navegador\n"
+            f"  1. Abra {d} no seu navegador\n"
             f"  2. Use Ctrl+U (código-fonte) — ou F12 → Elements\n"
             f"  3. Pressione Ctrl+F e pesquise por: \"{kw}\"\n"
             f"  Em pelo menos uma das visões verá os mesmos links ocultos.\n"
         ),
         "es": (
             f"\nVerificación rápida (30 segundos):\n"
-            f"  1. Abra la página en el navegador\n"
+            f"  1. Abra {d} en su navegador\n"
             f"  2. Use Ctrl+U (código fuente) — o F12 → Elements\n"
             f"  3. Pulse Ctrl+F y busque: \"{kw}\"\n"
             f"  En al menos una vista verá los mismos enlaces ocultos que detectamos.\n"
         ),
         "fr": (
             f"\nVérification rapide (30 secondes) :\n"
-            f"  1. Ouvrez la page dans le navigateur\n"
+            f"  1. Ouvrez {d} dans votre navigateur\n"
             f"  2. Essayez Ctrl+U (code source) — ou F12 → Elements\n"
             f"  3. Appuyez sur Ctrl+F et recherchez : \"{kw}\"\n"
             f"  Au moins une des deux vues révélera les liens cachés que nous avons observés.\n"
         ),
         "de": (
             f"\nSchnelle Überprüfung (30 Sekunden):\n"
-            f"  1. Öffnen Sie die Seite im Browser\n"
+            f"  1. Öffnen Sie {d} in Ihrem Browser\n"
             f"  2. Versuchen Sie Strg+U (Quelltext) — oder F12 → Elements\n"
             f"  3. Drücken Sie Strg+F und suchen Sie: \"{kw}\"\n"
             f"  Mindestens eine Ansicht zeigt die versteckten Links, die wir beobachtet haben.\n"
         ),
         "it": (
             f"\nVerifica rapida (30 secondi):\n"
-            f"  1. Apri la pagina nel browser\n"
+            f"  1. Apri {d} nel tuo browser\n"
             f"  2. Usa Ctrl+U (sorgente) — oppure F12 → Elements\n"
             f"  3. Premi Ctrl+F e cerca: \"{kw}\"\n"
             f"  In almeno una delle viste vedrai gli stessi link nascosti che abbiamo osservato.\n"
         ),
         "ru": (
             f"\nБыстрая проверка (30 секунд):\n"
-            f"  1. Откройте страницу в браузере\n"
+            f"  1. Откройте {d} в браузере\n"
             f"  2. Используйте Ctrl+U (исходный код) — или F12 → Elements\n"
             f"  3. Нажмите Ctrl+F и найдите: «{kw}»\n"
             f"  Хотя бы один из видов покажет те же скрытые ссылки, что нашли мы.\n"
         ),
         "ar": (
             f"\nالتحقق السريع (30 ثانية):\n"
-            f"  1. افتح الصفحة في المتصفح\n"
+            f"  1. افتح {d} في متصفحك\n"
             f"  2. جرّب Ctrl+U (شيفرة المصدر) — أو F12 ثم Elements\n"
             f"  3. اضغط Ctrl+F وابحث عن: \"{kw}\"\n"
             f"  ستجد في إحدى الواجهتين على الأقل نفس الروابط المخفية التي رصدناها.\n"
         ),
         "zh": (
             f"\n快速验证(30秒):\n"
-            f"  1. 在浏览器中打开页面\n"
+            f"  1. 在浏览器中打开 {d}\n"
             f"  2. 尝试 Ctrl+U(查看源代码)或 F12 → Elements\n"
             f"  3. 按 Ctrl+F 搜索:\"{kw}\"\n"
             f"  至少在其中一个视图中会显示我们观察到的相同隐藏链接。\n"

@@ -143,12 +143,14 @@ async def send_alert(
             top_source = "raw"
             category = "off_topic"
 
-        verification_block = get_verification_block(language, top_keyword, top_source)
-        content_category = describe_category(language, category)
-        complaint_block = get_complaint_block(language)
-
         # Mail'de www. prefix'ini gösterme — daha temiz, daha az URL benzeri
         display_domain = domain[4:] if domain.startswith("www.") else domain
+
+        verification_block = get_verification_block(
+            language, top_keyword, top_source, domain=display_domain
+        )
+        content_category = describe_category(language, category)
+        complaint_block = get_complaint_block(language)
 
         subject = get_subject(language, display_domain)
         body = render_template(
