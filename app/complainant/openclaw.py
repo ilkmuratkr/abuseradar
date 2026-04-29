@@ -132,23 +132,43 @@ async def _send_to_openclaw(task_text: str, task_name: str, timeout: int = DEFAU
             logger.warning(f"OpenClaw exit={proc.returncode} task={task_name}: {err[:300]}")
             return {"status": "failed", "exit": proc.returncode, "stderr": err[:500], "stdout": out[:500]}
 
-        # JSON içerik parse — son satırda olmalı
+        # OpenClaw --json output formatı:
+        # Outer JSON envelope { "data": { ..., "finalAssistantVisibleText": "<agent cevabı>" } }
+        # Agent'ın bizim istediğimiz JSON'u finalAssistantVisibleText içinde.
         result_json: dict | None = None
-        for line in reversed(out.splitlines()):
-            line = line.strip()
-            if line.startswith("{"):
-                try:
-                    result_json = json.loads(line)
-                    break
-                except json.JSONDecodeError:
-                    continue
+        agent_text: str | None = None
+        try:
+            envelope = json.loads(out)
+            data = envelope.get("data") if isinstance(envelope, dict) else None
+            agent_text = (
+                (data or {}).get("finalAssistantVisibleText")
+                or (data or {}).get("finalAssistantRawText")
+                or envelope.get("finalAssistantVisibleText") if isinstance(envelope, dict) else None
+            )
+        except json.JSONDecodeError:
+            agent_text = out
 
-        logger.info(f"OpenClaw tamamlandı: {task_name}")
+        if agent_text:
+            # Agent text içinde son JSON-benzeri parça
+            stripped = agent_text.strip()
+            # Markdown ```json ... ``` çıkar
+            if "```json" in stripped:
+                stripped = stripped.split("```json", 1)[1].split("```", 1)[0].strip()
+            elif stripped.startswith("```"):
+                stripped = stripped.strip("`").strip()
+            if stripped.startswith("{") and stripped.endswith("}"):
+                try:
+                    result_json = json.loads(stripped)
+                except json.JSONDecodeError:
+                    pass
+
+        logger.info(f"OpenClaw tamamlandı: {task_name} → result={result_json}")
         return {
             "status": "completed",
             "task_name": task_name,
             "result": result_json,
-            "raw_output": out[:1000] if not result_json else None,
+            "agent_text": agent_text[:500] if agent_text else None,
+            "raw_output": out[:500] if not result_json else None,
         }
 
     except Exception as e:
