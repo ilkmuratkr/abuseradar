@@ -21,8 +21,9 @@ logger = logging.getLogger(__name__)
 TASKS_DIR = Path(__file__).parent / "openclaw_tasks"
 OPENCLAW_CONTAINER = os.environ.get("OPENCLAW_CONTAINER", "openclaw")
 
-# 5 dakikalık görev limiti (form doldurma + LLM call'ları + screenshot)
-DEFAULT_TIMEOUT_SEC = 300
+# 10 dakikalık görev limiti (form doldurma + LLM call'ları + screenshot
+# + CAPTCHA çözmeye çalışma). 5dk Google reCAPTCHA için kısaydı.
+DEFAULT_TIMEOUT_SEC = 600
 
 
 def _render_task(task_file: str, variables: dict) -> str:
@@ -122,9 +123,18 @@ async def _send_to_openclaw(task_text: str, task_name: str, timeout: int = DEFAU
             stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=timeout)
         except asyncio.TimeoutError:
             proc.kill()
-            await proc.communicate()
-            logger.error(f"OpenClaw timeout: {task_name} ({timeout}s)")
-            return {"status": "timeout", "task_name": task_name}
+            try:
+                stdout, stderr = await asyncio.wait_for(proc.communicate(), timeout=10)
+            except asyncio.TimeoutError:
+                stdout, stderr = b"", b""
+            partial_out = (stderr or b"").decode(errors="replace")[-2000:]
+            logger.error(f"OpenClaw timeout: {task_name} ({timeout}s) — partial={partial_out[-300:]}")
+            return {
+                "status": "timeout",
+                "task_name": task_name,
+                "timeout_sec": timeout,
+                "partial_output": partial_out,
+            }
 
         # OpenClaw --json envelope'u stderr'e yazıyor. stdout genelde boş.
         # Önce stderr'i, sonra stdout'u tek bir 'out' string'ine birleştir.
