@@ -165,13 +165,15 @@ services:
     image: alpine/openclaw:latest
     container_name: openclaw
     user: "0:0"
+    # network_mode: vpn-us'ün network namespace'ini kullan — TÜM trafik
+    # (LLM, browser, Playwright, web_fetch dahil) VPN-US tunnel'ından çıkar.
+    # HTTP_PROXY env'i bypass edilebileceği için bu DAHA SAĞLAM bir önlem.
+    # Kural: sunucu IP'si (5.135.245.3) ASLA dış servislere açılmamalı.
+    network_mode: "service:vpn-us"
     environment:
-      # TÜM trafik (LLM çağrıları dahil) VPN-US üzerinden — sunucu IP'si
-      # asla provider dashboard'larına yansımamalı. NO_PROXY'e api.openai.com
-      # vs. EKLENMEZ.
-      - HTTP_PROXY=socks5h://vpn-us:1080
-      - HTTPS_PROXY=socks5h://vpn-us:1080
-      - NO_PROXY=db,redis,localhost,127.0.0.1,vpn-tr,vpn-us
+      # HTTP_PROXY bilerek BOŞ — network zaten VPN'den çıkıyor.
+      # OpenClaw NodeJS http modülü proxy env'i tutarsız kullanır;
+      # network_mode ile zorunlu tunnel.
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - OPENCLAW_HOME=/root/.openclaw
@@ -181,10 +183,9 @@ services:
       - openclaw-config:/root/.openclaw
       - ./data/openclaw-workspace:/root/workspace
       - ./app/complainant/openclaw_tasks:/root/workspace/tasks
-    ports:
-      - "${PORT_BIND:-}${PORT_BIND:+:}${PORT_OPENCLAW:-18789}:18789"
-    networks:
-      - internal
+    # ports + networks tanımı network_mode ile çakışır → kaldırıldı.
+    # OpenClaw 18789 portu app tarafından 'docker exec' ile çağrılır,
+    # bind gerekli değil.
     depends_on:
       vpn-us:
         condition: service_healthy
