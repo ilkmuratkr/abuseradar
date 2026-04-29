@@ -1079,6 +1079,42 @@ async def public_report_hosting(token: str):
         return {"error": str(e)}
 
 
+@app.api_route("/public/unsubscribe", methods=["GET", "POST"])
+async def public_unsubscribe(request: Request):
+    """RFC 8058 List-Unsubscribe one-click + manuel link.
+
+    Gmail/Yahoo (Şubat 2024+) bulk sender requirements: alıcı tek tıkla
+    çıkabilmeli. Bu listedeki email'e bir daha mail gönderilmez.
+    """
+    email = (
+        request.query_params.get("e", "")
+        or (await request.form()).get("List-Unsubscribe", "") if request.method == "POST" else ""
+    )
+    email = (email or request.query_params.get("e", "")).strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(400, "Email parameter required")
+
+    from models.database import Unsubscribe
+    async with async_session() as session:
+        existing = await session.execute(
+            select(Unsubscribe).where(Unsubscribe.email == email)
+        )
+        if not existing.scalar_one_or_none():
+            session.add(Unsubscribe(
+                email=email,
+                source="one_click",
+                reason="user_request",
+            ))
+            await session.commit()
+
+    # Plain text response (one-click), HTML render edilmez
+    return PlainTextResponse(
+        "You have been unsubscribed.\n"
+        "AbuseRadar will not send any further notifications to this address.",
+        status_code=200,
+    )
+
+
 @app.get("/public/reports/{token}/screenshot/{name}")
 async def public_report_screenshot(token: str, name: str):
     """AUTH GEREKMEZ. Token doğrulayıp screenshot dosyasını döndür."""

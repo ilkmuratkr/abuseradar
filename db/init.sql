@@ -163,6 +163,17 @@ CREATE TABLE IF NOT EXISTS complaints (
     UNIQUE(target_domain, platform)
 );
 
+-- Unsubscribe listesi — RFC 8058 one-click + manuel mailto. Bu listede olan
+-- email'e bir daha mail gönderilmez. Gmail/Yahoo bulk sender requirements.
+CREATE TABLE IF NOT EXISTS unsubscribes (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(500) UNIQUE NOT NULL,
+    reason VARCHAR(100),
+    source VARCHAR(50),
+    created_at TIMESTAMPTZ DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_unsubscribes_email ON unsubscribes(email);
+
 -- Public report token'ları (auth'suz paylaşım)
 CREATE TABLE IF NOT EXISTS report_tokens (
     id SERIAL PRIMARY KEY,

@@ -205,6 +205,16 @@ class Complaint(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
 
+class Unsubscribe(Base):
+    __tablename__ = "unsubscribes"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(500), unique=True, nullable=False)
+    reason = Column(String(100))
+    source = Column(String(50))
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
 class ReportToken(Base):
     __tablename__ = "report_tokens"
 

@@ -31,7 +31,9 @@ class Settings(BaseSettings):
     googlebot_ua: str = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)"
 
     # Email ayarları
-    email_daily_limit: int = 100
+    # Warm-up: Hafta 1: 10/gün, Hafta 2: 25, Hafta 3: 50, Hafta 4: 100, Hafta 8+: 250
+    # .env üzerinden EMAIL_DAILY_LIMIT ile override edilebilir.
+    email_daily_limit: int = 10
     email_max_followups: int = 3
     email_followup_days: int = 7
 

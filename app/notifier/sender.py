@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
-from models.database import Contact, Notification, Site, async_session
+from models.database import Contact, Notification, Site, Unsubscribe, async_session
 
 from .evidence_picker import load_evidence_summary
 from .language import (
@@ -30,13 +30,24 @@ async def _zeptomail_send(
     subject: str,
     text_body: str,
 ) -> dict:
-    """ZeptoMail REST API çağrısı."""
+    """ZeptoMail REST API çağrısı.
+
+    RFC 8058 one-click List-Unsubscribe header'ı ile birlikte gönderilir
+    — Gmail/Yahoo bulk sender requirements (Şubat 2024+) bunu zorunlu kılar.
+    """
     token = settings.zeptomail_token.strip()
     if not token:
         return {"id": "simulated", "status": "simulated"}
 
     if not token.lower().startswith("zoho-enczapikey "):
         token = f"Zoho-enczapikey {token}"
+
+    # Public unsubscribe endpoint (token'lı) — alıcı bir tıkla çıkabilir.
+    # POST /api/public/unsubscribe → 200, mailing list'e ekleme yapmaz çünkü
+    # zaten liste yok — ama Gmail'in "this sender respects unsubscribe"
+    # sinyali yine de gerekli. mailto: fallback de var.
+    unsubscribe_url = f"{settings.public_base_url.rstrip('/')}/api/public/unsubscribe?e={to_email}"
+    list_unsubscribe = f"<mailto:unsubscribe@abuseradar.org?subject=unsubscribe>, <{unsubscribe_url}>"
 
     payload = {
         "from": {
@@ -59,6 +70,11 @@ async def _zeptomail_send(
         ],
         "subject": subject,
         "textbody": text_body,
+        "headers": {
+            "List-Unsubscribe": list_unsubscribe,
+            "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            "Precedence": "bulk",
+        },
     }
     headers = {
         "Accept": "application/json",
@@ -106,6 +122,14 @@ async def send_alert(
         contact = await session.get(Contact, contact_id)
         if not contact:
             return {"status": "error", "reason": "contact_not_found"}
+
+        # Unsubscribe listesi kontrolü — RFC 8058 + Gmail/Yahoo bulk requirements
+        unsub = await session.execute(
+            select(Unsubscribe).where(Unsubscribe.email == contact.email.lower())
+        )
+        if unsub.scalar_one_or_none():
+            logger.info(f"[{domain}] {contact.email} unsubscribed listesinde, atlandı")
+            return {"status": "skipped", "reason": "unsubscribed"}
 
         # Email-bazlı dedup: AYNI mail adresine (farklı site_id/contact_id ile bile)
         # son 7 günde mail gittiyse atma. Aynı kuruma birden fazla subdomain'den
