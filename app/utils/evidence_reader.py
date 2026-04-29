@@ -21,7 +21,20 @@ def list_bundles() -> list[dict]:
         bundle = _bundle_summary(site_dir)
         bundles.append(bundle)
 
-    bundles.sort(key=lambda b: b.get("captured_at") or "", reverse=True)
+    def _sort_key(b):
+        ca = b.get("captured_at")
+        if ca is None:
+            return 0.0
+        if isinstance(ca, (int, float)):
+            return float(ca)
+        # String — ISO format'ı parse et, başarısızsa 0
+        try:
+            from datetime import datetime
+            return datetime.fromisoformat(str(ca).replace("Z", "+00:00")).timestamp()
+        except Exception:
+            return 0.0
+
+    bundles.sort(key=_sort_key, reverse=True)
     return bundles
 
 
