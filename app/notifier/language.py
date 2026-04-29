@@ -215,59 +215,49 @@ def describe_category(language: str, category: str) -> str:
 
 
 def get_complaint_block(language: str) -> str:
-    """Şikayet adresleri — site sahibi saldırgan domain'leri ihbar edebilsin.
+    """Mail'de tek satır profesyonel ipucu — detay raporda.
 
-    Mail'de tek satır + raporda detay. Sadece 2 link (CF + Google).
+    URL/marka adı vermeyiz; spam görünümünü düşürür ve daha kurumsal durur.
     """
     blocks = {
         "en": (
-            "\nYou can also report the attacker domains to their providers — Cloudflare "
-            "(abuse.cloudflare.com) and Google Safe Browsing accept these reports. "
-            "The full provider list is in the report.\n"
+            "\nThe report also documents the upstream providers behind the attacker "
+            "infrastructure and the appropriate abuse-reporting channels for each.\n"
         ),
         "tr": (
-            "\nSaldırgan domain'leri sağlayıcılarına da bildirebilirsiniz — Cloudflare "
-            "(abuse.cloudflare.com) ve Google Safe Browsing bu raporları kabul eder. "
-            "Sağlayıcıların tam listesi raporda yer alıyor.\n"
+            "\nSaldırgan altyapısının arkasındaki sağlayıcılar ve her biri için uygun "
+            "şikayet kanalları raporda ayrıntılı olarak belgelenmiştir.\n"
         ),
         "pt": (
-            "\nVocê também pode denunciar os domínios atacantes aos provedores — Cloudflare "
-            "(abuse.cloudflare.com) e Google Safe Browsing aceitam essas denúncias. "
-            "A lista completa de provedores está no relatório.\n"
+            "\nO relatório também documenta os provedores upstream por trás da "
+            "infraestrutura atacante e os canais apropriados de denúncia de abuso.\n"
         ),
         "es": (
-            "\nTambién puede denunciar los dominios atacantes a sus proveedores — Cloudflare "
-            "(abuse.cloudflare.com) y Google Safe Browsing aceptan estos informes. "
-            "La lista completa de proveedores está en el informe.\n"
+            "\nEl informe también documenta los proveedores upstream detrás de la "
+            "infraestructura del atacante y los canales adecuados de denuncia de abuso.\n"
         ),
         "fr": (
-            "\nVous pouvez aussi signaler les domaines des attaquants à leurs fournisseurs — "
-            "Cloudflare (abuse.cloudflare.com) et Google Safe Browsing acceptent ces signalements. "
-            "La liste complète des fournisseurs se trouve dans le rapport.\n"
+            "\nLe rapport documente également les fournisseurs en amont de "
+            "l'infrastructure de l'attaquant ainsi que les canaux de signalement appropriés.\n"
         ),
         "de": (
-            "\nSie können die Angreifer-Domains auch bei deren Anbietern melden — Cloudflare "
-            "(abuse.cloudflare.com) und Google Safe Browsing nehmen diese Meldungen entgegen. "
-            "Die vollständige Anbieterliste finden Sie im Bericht.\n"
+            "\nDer Bericht dokumentiert zudem die Upstream-Anbieter hinter der "
+            "Angreifer-Infrastruktur sowie die jeweils passenden Abuse-Meldekanäle.\n"
         ),
         "it": (
-            "\nPuoi anche segnalare i domini attaccanti ai loro provider — Cloudflare "
-            "(abuse.cloudflare.com) e Google Safe Browsing accettano queste segnalazioni. "
-            "L'elenco completo dei provider è nel rapporto.\n"
+            "\nIl rapporto documenta inoltre i provider upstream dietro "
+            "l'infrastruttura dell'aggressore e i canali appropriati di segnalazione.\n"
         ),
         "ru": (
-            "\nВы также можете сообщить о доменах злоумышленников их провайдерам — Cloudflare "
-            "(abuse.cloudflare.com) и Google Safe Browsing принимают такие отчёты. "
-            "Полный список провайдеров — в отчёте.\n"
+            "\nВ отчёте также задокументированы вышестоящие провайдеры за инфраструктурой "
+            "злоумышленника и соответствующие каналы для подачи жалоб.\n"
         ),
         "ar": (
-            "\nيمكنكم أيضاً التبليغ عن نطاقات المهاجمين لمقدمي الخدمة — Cloudflare "
-            "(abuse.cloudflare.com) و Google Safe Browsing يقبلان هذه البلاغات. "
-            "القائمة الكاملة للمزودين متاحة في التقرير.\n"
+            "\nيوثّق التقرير أيضاً مزودي الخدمة الذين تقف خلف بنية المهاجم التحتية، "
+            "إلى جانب قنوات الإبلاغ عن الإساءة المناسبة لكل منهم.\n"
         ),
         "zh": (
-            "\n您也可以将攻击者域名举报给其服务提供商——Cloudflare(abuse.cloudflare.com)和 "
-            "Google Safe Browsing 都接受此类举报。完整的提供商列表在报告中。\n"
+            "\n报告还记录了攻击者基础设施背后的上游服务提供商,以及针对每一方的适当滥用举报渠道。\n"
         ),
     }
     return blocks.get(language, blocks["en"])
