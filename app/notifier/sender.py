@@ -11,6 +11,7 @@ from config import settings
 from models.database import Contact, MailLog, Notification, Site, Unsubscribe, async_session
 
 from .evidence_picker import load_evidence_summary
+from .html_renderer import render_html_email
 from .provider import daily_limit_for, detect_email_provider
 from .language import (
     describe_category,
