@@ -33,6 +33,48 @@ async def _safe(coro):
         return {"status": "error", "reason": str(e)}
 
 
+# Bilinen registrar'lar için fallback abuse email — WHOIS RDAP boş döndüğünde
+# kullanılır. ICANN politikası gereği her registrar'ın `abuse@<registrar>.com`
+# benzeri kontağı var.
+REGISTRAR_ABUSE_FALLBACK = {
+    "atak domain": "abuse@atakdomain.com.tr",
+    "godaddy": "abuse@godaddy.com",
+    "namecheap": "abuse@namecheap.com",
+    "cloudflare": "registrar-abuse@cloudflare.com",
+    "tucows": "domainabuse@tucows.com",
+    "namesilo": "abuse@namesilo.com",
+    "porkbun": "abuse@porkbun.com",
+    "name.com": "abuse@name.com",
+    "google": "registrar-abuse@google.com",
+    "ionos": "abuse@ionos.com",
+    "epik": "abuse@epik.com",
+    "hostinger": "abuse@hostinger.com",
+    "publicdomainregistry": "abuse-contact@publicdomainregistry.com",
+    "publicdomain": "abuse-contact@publicdomainregistry.com",
+    "key-systems": "abuse@key-systems.net",
+    "openprovider": "abuse@openprovider.com",
+    "enom": "abuse@enom.com",
+    "gandi": "abuse@gandi.net",
+    "hover": "abuse@hover.com",
+    "isimtescil": "abuse@isimtescil.net",
+    "fbs": "abuse@fbs.com.tr",
+    "natro": "abuse@natro.com",
+    "turkticaret": "abuse@turkticaret.net",
+    "metunic": "abuse@metunic.com.tr",
+}
+
+
+def _registrar_abuse_fallback(registrar: str) -> str:
+    """Registrar adından bilinen abuse mail'ini ara (case-insensitive substring)."""
+    if not registrar:
+        return ""
+    rlow = registrar.lower()
+    for key, mail in REGISTRAR_ABUSE_FALLBACK.items():
+        if key in rlow:
+            return mail
+    return ""
+
+
 async def discover_attacker_meta(target_domain: str) -> dict:
     """Saldırgan domain için meta bilgi topla — paralel WHOIS + CF check."""
     info, cf = await asyncio.gather(
@@ -54,6 +96,13 @@ async def discover_attacker_meta(target_domain: str) -> dict:
         logger.debug(f"[{target_domain}] WHOIS hatası: {e}")
         info.setdefault("registrar", "")
         info.setdefault("registrar_abuse_email", "")
+
+    # WHOIS abuse email boşsa, registrar adından bilinen mapping'e bak
+    if not info.get("registrar_abuse_email"):
+        fb = _registrar_abuse_fallback(info.get("registrar", ""))
+        if fb:
+            info["registrar_abuse_email"] = fb
+            logger.info(f"[{target_domain}] registrar abuse fallback: {info['registrar']} → {fb}")
     return info
 
 
