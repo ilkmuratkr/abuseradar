@@ -222,12 +222,38 @@
         <p>Cleaning your own site stops the bleed, but the attacker keeps operating from <em>their</em> infrastructure — and very often that infrastructure sits behind a major provider like <strong>Cloudflare</strong>. Cloudflare itself is a legitimate, widely-used service; the issue is that bad actors abuse its anonymisation layer to obscure which hosting provider actually serves the spam content. They are not at fault, but they are uniquely positioned to act on well-documented reports — especially when the targets are <strong>government, education, or other public-interest institutions</strong>.</p>
         <p style="margin-top:.6rem">Filing a short, evidence-backed abuse report is one of the most effective steps you (or any technical contact at the affected institution) can take. It helps the provider identify recurring offenders and, in repeat cases, suspend the account hosting the spam network. The links below all accept reports without an account; the bundle ID and the URLs in this report are sufficient as evidence.</p>
         <ul class="play" style="margin-top:.8rem">
-          <li><strong>Cloudflare abuse</strong> — <a href="https://abuse.cloudflare.com/" target="_blank" rel="noopener">abuse.cloudflare.com</a> · choose "Phishing" or "Other" and attach this report URL. Especially impactful when the attack targets a government or .edu domain.</li>
+          <li><strong>Cloudflare</strong> — preferred form: <a href="https://abuse.cloudflare.com/" target="_blank" rel="noopener">abuse.cloudflare.com</a>. Email fallback: <a href="mailto:abuse@cloudflare.com">abuse@cloudflare.com</a> (registrar-side: <a href="mailto:registrar-abuse@cloudflare.com">registrar-abuse@cloudflare.com</a>). Especially impactful for government / .edu targets.</li>
           <li><strong>Google Safe Browsing</strong> — <a href="https://safebrowsing.google.com/safebrowsing/report_phish/" target="_blank" rel="noopener">safebrowsing.google.com/report_phish</a> · flags the attacker domains in Chrome / Search.</li>
-          <li><strong>Google Search spam report</strong> — <a href="https://www.google.com/webmasters/tools/spamreport" target="_blank" rel="noopener">google.com/webmasters/tools/spamreport</a> · for SEO-spam injections specifically.</li>
+          <li><strong>Google Search spam report</strong> — <a href="https://www.google.com/webmasters/tools/spamreport" target="_blank" rel="noopener">google.com/webmasters/tools/spamreport</a> · for SEO-spam injections.</li>
           <li><strong>Hosting provider abuse</strong> — see the WHOIS section above; most providers list an <span class="mono">abuse@…</span> address.</li>
-          <li><strong>Registrar abuse</strong> — for the registrar of each attacker domain (also listed in the WHOIS section); registrars are obliged by ICANN to act on documented abuse reports.</li>
+          <li><strong>Registrar abuse</strong> — for the registrar of each attacker domain (listed in the WHOIS section); ICANN obliges registrars to act on documented abuse reports.</li>
+          <li><strong>ICANN compliance (last resort)</strong> — <a href="https://icann.org/compliance/complaint" target="_blank" rel="noopener">icann.org/compliance/complaint</a> if a registrar ignores a documented report.</li>
         </ul>
+
+        <details style="margin-top:1rem;border:1px solid var(--border);border-radius:6px;padding:.6rem .9rem">
+          <summary style="cursor:pointer;font-weight:600;font-size:.9rem">📋 Copy-paste complaint email (one-click mailto)</summary>
+          <div style="margin-top:.7rem;font-size:.85rem;line-height:1.55">
+            <p>Use this template directly with any provider — replace <span class="mono">[ATTACKER_DOMAIN]</span> if reporting a specific one:</p>
+            <pre id="complaint-template" style="background:var(--bg-card-2);padding:.75rem;border-radius:4px;overflow:auto;font-size:.78rem;white-space:pre-wrap;border:1px solid var(--border)">Subject: Abuse report — SEO spam infrastructure
+
+Hello,
+
+I am the technical contact for <span data-domain>[VICTIM_DOMAIN]</span>, which has been compromised by an SEO-spam injection. The injected hidden links point to attacker-operated domains hosted on your infrastructure.
+
+Reference report (no sign-in required):
+<span data-report-url>[REPORT_URL]</span>
+
+The report includes screenshots, the rendered DOM, file paths, and a list of attacker domains observed.
+
+Please investigate under your acceptable-use policy and notify the responsible account holder.
+
+Thank you,
+[YOUR NAME]</pre>
+            <button id="copy-complaint" style="margin-top:.5rem;padding:.4rem .8rem;background:var(--green-soft);color:var(--green);border:1px solid var(--green);border-radius:4px;cursor:pointer;font-size:.82rem">Copy template</button>
+            <a id="mail-cf" href="mailto:abuse@cloudflare.com" style="margin-left:.4rem;font-size:.82rem">📧 Open in mail client → Cloudflare</a>
+          </div>
+        </details>
+
         <p style="margin-top:.8rem"><em>If you'd like, AbuseRadar can prepare and send these reports on your behalf — reply to <span class="mono">team@abuseradar.org</span> and we'll handle the chain (CF → registrar → hosting) using the evidence in this bundle.</em></p>
       </div>
     </div>
@@ -306,6 +332,31 @@ async function loadReport() {
   // Header
   el("i-domain").textContent = domain;
   el("t-domain").textContent = domain;
+
+  // Complaint template — domain + report URL'yi yerleştir, copy + mailto handler
+  try {
+    const reportUrl = location.href;
+    const tpl = el("complaint-template");
+    if (tpl) {
+      tpl.querySelector("[data-domain]").textContent = domain;
+      tpl.querySelector("[data-report-url]").textContent = reportUrl;
+    }
+    const copyBtn = el("copy-complaint");
+    if (copyBtn) {
+      copyBtn.addEventListener("click", async () => {
+        const text = el("complaint-template").innerText;
+        try { await navigator.clipboard.writeText(text); copyBtn.textContent = "✓ Copied"; }
+        catch { copyBtn.textContent = "Copy failed — select manually"; }
+        setTimeout(() => copyBtn.textContent = "Copy template", 2500);
+      });
+    }
+    const mailCf = el("mail-cf");
+    if (mailCf) {
+      const subj = encodeURIComponent("Abuse report — SEO spam infrastructure");
+      const bodyTxt = encodeURIComponent(`Hello,\n\nI am the technical contact for ${domain}, which has been compromised by an SEO-spam injection. The injected hidden links point to attacker-operated domains hosted on your infrastructure.\n\nReference report (no sign-in required):\n${reportUrl}\n\nThe report includes screenshots, the rendered DOM, file paths, and a list of attacker domains observed. Please investigate under your acceptable-use policy and notify the responsible account holder.\n\nThank you,\n[YOUR NAME]`);
+      mailCf.href = `mailto:abuse@cloudflare.com?subject=${subj}&body=${bodyTxt}`;
+    }
+  } catch (e) { /* best-effort */ }
 
   const raw = (hacklinks.raw_hacklinks || []).filter(l => l.href).length;
   const jsdiff = (hacklinks.js_diff_hacklinks || []).filter(l => l.href).length;

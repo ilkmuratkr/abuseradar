@@ -115,55 +115,67 @@ async def report_to_hosting(
     abuse_email: str,
     issue_type: str,
     evidence_summary: str,
+    report_url: str = "",
 ) -> dict:
-    """Hosting provider'a abuse raporu gonder.
+    """Hosting provider'in abuse adresine pasif tonlu rapor gonder.
+
+    Mail tonu: data observatory, sansasyonel dil yok ('illegal' yerine
+    'policy-violating'), 'immediate' yerine 'investigation requested'.
 
     Args:
-        domain: Hacklenmiş/ele geçirilmiş domain
-        abuse_email: Hosting provider'ın abuse email'i
-        issue_type: "injection" veya "takeover"
-        evidence_summary: Kanıt özeti
+        domain: Hacklenmiş ya da saldırgan domain
+        abuse_email: Hosting/IP block abuse contact
+        issue_type: "injection" (kurban) veya "takeover" (saldırgan)
+        evidence_summary: Kısa kanıt özeti
+        report_url: Public report linki (varsa eklenir)
     """
-    from notifier.sender import send_alert
-    from config import settings
+    from notifier.sender import _zeptomail_send
 
     if issue_type == "takeover":
-        subject = f"Abuse Report: Domain {domain} - unauthorized use for illegal gambling"
-        body = f"""Dear Abuse Team,
+        subject = f"AbuseRadar notice: {domain} — possible policy violation"
+        body = f"""Hello,
 
-We are reporting that the domain {domain}, hosted on your infrastructure,
-has been compromised and is being used for illegal online gambling operations.
+A short note from AbuseRadar, an independent web-data observatory.
 
-Type: Domain takeover / unauthorized content
-Domain: {domain}
-Issue: The domain appears to have been taken over and is now serving
-illegal gambling content instead of its legitimate purpose.
+In our recent index of public pages, the domain {domain} hosted on your
+infrastructure surfaces patterns associated with off-topic, policy-violating
+third-party content (typical SEO-spam infrastructure).
 
 {evidence_summary}
 
-This domain was previously a legitimate government/educational website.
-We request immediate investigation and suspension of the malicious content.
+This is forwarded to your abuse channel for review under your acceptable-use
+policy. We are not requesting any specific action — only that the case is
+visible to your team.
+{('Full technical bundle (no sign-in): ' + report_url) if report_url else ''}
 
-Best regards,
-AbuseRadar Research Team
+This is an automated, one-off notice. Reply to abuse@abuseradar.org if a
+follow-up is useful.
+
+— AbuseRadar Research
+abuseradar.org
 """
     else:
-        subject = f"Abuse Report: {domain} - malicious code injection detected"
-        body = f"""Dear Abuse Team,
+        subject = f"AbuseRadar notice: {domain} — third-party content observed"
+        body = f"""Hello,
 
-We are reporting that a website hosted on your infrastructure has been
-compromised with malicious code injection.
+A short note from AbuseRadar, an independent web-data observatory.
 
-Domain: {domain}
-Issue: Hidden gambling/casino backlinks have been injected into the
-website's source code without the site owner's knowledge.
+In our recent index of public pages, the website {domain} hosted on your
+infrastructure surfaces third-party links that do not fit the site's normal
+content profile. Patterns like this commonly originate from a CMS plugin or
+template file altered outside the site's usual editorial flow.
 
 {evidence_summary}
 
-We request that you notify the site owner and assist with remediation.
+This is forwarded to your abuse channel so the site owner can be notified
+and assisted with remediation.
+{('Full technical bundle (no sign-in): ' + report_url) if report_url else ''}
 
-Best regards,
-AbuseRadar Research Team
+This is an automated, one-off notice. Reply to abuse@abuseradar.org if a
+follow-up is useful.
+
+— AbuseRadar Research
+abuseradar.org
 """
 
     try:
